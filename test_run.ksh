@@ -30,6 +30,9 @@ for model in $models; do
             echo $model $num_beam $task
             echo helm-run --run-entries $task:model=$model,num_beams=$num_beam  --suite $suite --max-eval-instances 2
             #helm-run --run-entries $task:model=$model,num_beams=$num_beam  --suite $suite --max-eval-instances 2
+            
+            
+            
             helm-run --run-entries $task:model=$model,num_beams=$num_beam  --suite $suite
             # echo "\n\n\n\n\n\n\n\n\n\n"
         done
