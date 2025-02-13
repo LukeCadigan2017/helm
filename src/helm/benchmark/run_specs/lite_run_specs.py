@@ -135,7 +135,7 @@ def get_mmlu_spec(subject: str, method: str = ADAPT_MULTIPLE_CHOICE_JOINT) -> Ru
 
 
 @run_spec_function("gsm")
-def get_gsm_spec() -> RunSpec:
+def get_gsm_spec(num_beams: int=1) -> RunSpec:
     scenario_spec = ScenarioSpec(class_name="helm.benchmark.scenarios.gsm_scenario.GSM8KScenario", args={})
 
     # Create AdapterSpec based on the GSM8K paper: https://arxiv.org/pdf/2110.14168.pdf
@@ -304,4 +304,30 @@ def get_wmt_14_spec(language_pair: str, max_train_instances: int = 1) -> RunSpec
         adapter_spec=adapter_spec,
         metric_specs=get_open_ended_generation_metric_specs(),
         groups=["wmt_14"],
+    )
+
+
+@run_spec_function("gsm_iom")
+def get_gsm_iom_spec(num_beams: int=1) -> RunSpec:
+
+    scenario_spec = ScenarioSpec(class_name="helm.benchmark.scenarios.gsm_scenario.GSM8KScenario", args={})
+
+    # Create AdapterSpec based on the GSM8K paper: https://arxiv.org/pdf/2110.14168.pdf
+    adapter_spec = get_generation_adapter_spec(
+        input_noun="Q",
+        output_noun="A",
+        max_train_instances=5,  # Due to limited context and long example length
+        max_tokens=400,  # The paper uses 400 tokens as the max sample length
+        stop_sequences=["\n\n"],  # Since answer may contain newlines, we use two as SEP
+        num_beams=num_beams
+    )
+
+    return RunSpec(
+        name="gsm_iom",
+        scenario_spec=scenario_spec,
+        adapter_spec=adapter_spec,
+        metric_specs=get_basic_generation_metric_specs(["exact_match_indicator", "final_number_exact_match"])
+        + get_generic_metric_specs()
+        + get_generative_harms_metric_specs(),
+        groups=["gsm_iom"],
     )

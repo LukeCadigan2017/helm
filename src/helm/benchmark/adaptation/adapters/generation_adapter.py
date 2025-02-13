@@ -43,6 +43,7 @@ class GenerationAdapter(InContextLearningAdapter):
             prompt=prompt.text,
             num_completions=self.adapter_spec.num_outputs,
             temperature=self.adapter_spec.temperature,
+            num_beams=self.adapter_spec.num_beams,
             max_tokens=self.adapter_spec.max_tokens,
             stop_sequences=self.adapter_spec.stop_sequences,
             random=self.adapter_spec.random,

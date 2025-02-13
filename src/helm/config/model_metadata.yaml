@@ -11,6 +11,14 @@
 
 models:
 
+  - name: stas/tiny-random-llama-2
+    display_name: Tiny Llama
+    description: Tiny llama
+    creator_organization_name: stas
+    access: open
+    release_date: 2019-02-14
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG]
+
   - name: simple/model1
     display_name: Simple Model 1
     description: This is a test model.
@@ -3785,3 +3793,4 @@ models:
     num_parameters: 1330000000
     release_date: 2024-12-18
     tags: [TEXT_MODEL_TAG]
+

@@ -32,6 +32,10 @@ class Request:
     temperature: float = 1.0
     """Temperature parameter that governs diversity"""
 
+    num_beams: int=1
+    """Number of beams used for beam search"""
+
+
     num_completions: int = 1
     """Generate this many completions (by sampling from the model)"""
 

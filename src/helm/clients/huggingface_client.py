@@ -44,6 +44,7 @@ class HuggingFaceRequest(TypedDict):
     engine: str
     prompt: str
     temperature: float
+    num_beams:int
     num_return_sequences: int
     max_new_tokens: int
     top_p: float
@@ -134,9 +135,15 @@ class HuggingFaceServer:
             sequences = encoded_input["input_ids"]
             scores = output.logits
         else:
+            # print("\n\n\n\n\n LUKE: Num Beams is ",raw_request["num_beams"])
+            # print("LUKE: num_beams type is ",raw_request["num_beams"])
+            # print("LUKE: Temperature is ",raw_request["temperature"])
+            # print("LUKE: max_new_tokens is ",raw_request["max_new_tokens"])
+                # num_beams=raw_request["num_beams"]
             output = self.model.generate(
                 **encoded_input,
                 temperature=raw_request["temperature"],
+                num_beams = raw_request["num_beams"],
                 num_return_sequences=raw_request["num_return_sequences"],
                 max_new_tokens=raw_request["max_new_tokens"],
                 top_p=raw_request["top_p"],
@@ -144,7 +151,7 @@ class HuggingFaceServer:
                 return_dict_in_generate=True,
                 output_scores=True,
                 **optional_args,
-                stopping_criteria=stopping_criteria,
+                stopping_criteria=stopping_criteria, 
             )
             sequences = output.sequences
             scores = output.scores
@@ -274,11 +281,15 @@ class HuggingFaceClient(CachingClient):
         # Embedding not supported for this model
         if request.embedding:
             return EMBEDDING_UNAVAILABLE_REQUEST_RESULT
+        
+
+        # print("\n\n\n\n\n LUKE: Original Request is ",request)
 
         raw_request: HuggingFaceRequest = {
             "engine": request.model_engine,
             "prompt": request.prompt,
             "temperature": 1e-7 if request.temperature == 0 else request.temperature,
+            "num_beams": request.num_beams,
             "num_return_sequences": request.num_completions,
             "max_new_tokens": request.max_tokens,
             "top_p": request.top_p,

@@ -132,6 +132,9 @@ class AdapterSpec:
     image_generation_parameters: Optional[ImageGenerationParameters] = None
     """Parameters for image generation."""
 
+    num_beams: int = 1
+    """Number of beams used for beam search. 1=No beam search, -1=exact mode"""
+
     # Set hash=False to make `AdapterSpec` hashable
     eval_splits: Optional[List[str]] = field(default=None, hash=False)
     """The splits from which evaluation instances will be drawn."""

@@ -284,6 +284,7 @@ def get_generation_adapter_spec(
     max_tokens: int = 5,
     stop_sequences: Optional[List] = None,  # default value of `stop_sequences` is ["\n"]
     temperature: float = 0.0,
+    num_beams: int = 1,
     multi_label: bool = False,
     sample_train: bool = True,
 ) -> AdapterSpec:
@@ -325,9 +326,10 @@ def get_generation_adapter_spec(
         num_outputs=num_outputs,
         max_tokens=max_tokens,
         temperature=temperature,
+        num_beams = num_beams,
         stop_sequences=stop_sequences,
         multi_label=multi_label,
-        sample_train=sample_train,
+        sample_train=sample_train
     )
 
 
