@@ -21,18 +21,14 @@ model_deployments:
       args: 
         pretrained_model_name_or_path: stas/tiny-random-llama-2
 
-  - name: meta-llama/Meta-Llama-3-8B
-    model_name: meta-llama/Meta-Llama-3-8B
-    tokenizer_name: meta-llama/Meta-Llama-3-8B
+  - name: meta-llama/Llama-3.1-8B 
+    model_name: meta-llama/Llama-3.1-8B 
+    tokenizer_name: meta/llama-3.1-8b
     max_sequence_length: 2048
     client_spec:
       class_name: "helm.clients.huggingface_client.HuggingFaceClient"
       args: 
-        pretrained_model_name_or_path: meta-llama/Meta-Llama-3-8B
-
-
-
-        
+        pretrained_model_name_or_path: meta-llama/Llama-3.1-8B 
 
   - name: simple/model1
     model_name: simple/model1
