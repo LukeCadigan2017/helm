@@ -9,7 +9,7 @@ suite="beam_$timestamp"
 #model=simple/model1
 model="meta-llama/Llama-3.1-8B"
 # model=openai/gpt2
-eval_instances=10
+eval_instances=500
 
 
 echo model is $model
@@ -22,4 +22,3 @@ helm-run --run-entries wmt_14:language_pair=cs-en,model=$model,output_format_ins
 #helm-summarize --suite $suite
 #echo helm-server --suite $suite
 #echo "benchmark_output/runs/$suite/wmt_14\:language_pair\=cs-en\,model\=simple_model1/stats.json"
-

@@ -11,6 +11,22 @@
 tokenizer_configs:
 
   # Huggingface
+  - name: prometheus-eval/prometheus-8x7b-v2.0
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: prometheus-eval/prometheus-8x7b-v2.0
+    end_of_text_token: "</s>"
+    prefix_token: "<s>"
+
+  - name: prometheus-eval/prometheus-7b-v2.0
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: prometheus-eval/prometheus-7b-v2.0
+    end_of_text_token: "</s>"
+    prefix_token: "<s>"
+
   - name: stas/tiny-random-llama-2
     tokenizer_spec:
       class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
