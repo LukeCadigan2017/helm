@@ -16,12 +16,12 @@ export NUM_TRAIN_TRIALS=1
 
 #test
 #export MODELS_TO_RUN=stas/tiny-random-llama-2
-#export MAX_EVAL_INSTANCES=10
+export MAX_EVAL_INSTANCES=50
 #export PRIORITY=1
 
 #real
 export MODELS_TO_RUN=meta-llama/Llama-3.1-8B 
-export MAX_EVAL_INSTANCES=1000
+#export MAX_EVAL_INSTANCES=1000
 export PRIORITY=2
 
 # echo helm-run --conf-paths $RUN_ENTRIES_CONF_PATH --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES --priority $PRIORITY --suite $SUITE_NAME --models-to-run $MODELS_TO_RUN

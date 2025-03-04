@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#SBATCH --job-name=llama_gen_test
+#SBATCH --partition=gpu_h100
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=00:24:00
+
+
+#source venv/bin/activate
+source ~/miniconda3/bin/activate
+conda activate crfm-helm 
+
+source hf.env
+huggingface-cli login --token $HF_TOKEN --add-to-git-credential
+
+
+echo huggingface-cli whoami
+huggingface-cli whoami
+./run_instruction.ksh
