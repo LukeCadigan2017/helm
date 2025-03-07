@@ -56,3 +56,4 @@ notes.otl
 .nfs*
 
 node_modules
+*.txt
