@@ -276,6 +276,7 @@ class HuggingFaceClient(CachingClient):
         self._tokenizer = tokenizer
         self._kwargs = _process_huggingface_client_kwargs(kwargs)
         self._end_of_text_token = end_of_text_token
+        self._lock= Lock()
 
     def make_request(self, request: Request) -> RequestResult:
         # Embedding not supported for this model
@@ -349,6 +350,11 @@ class HuggingFaceClient(CachingClient):
             completion = GeneratedOutput(text=raw_completion["text"], logprob=sequence_logprob, tokens=tokens)
             completion = truncate_sequence(completion, request, end_of_text_token=self._end_of_text_token)
             completions.append(completion)
+        with self._lock: 
+            for completion in completions:
+                with open('completions.txt', 'a') as file: 
+                    file.write("\n"+" ".join(completion.render_lines()))
+
 
         return RequestResult(
             success=True,
