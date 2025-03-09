@@ -1,3 +1,9 @@
+
+#!/bin/bash
+
+eval "$(conda shell.bash hook)"
+conda activate crfm-helm
+
 #based on this page
 #https://crfm-helm.readthedocs.io/en/latest/reproducing_leaderboards/
 
@@ -6,7 +12,7 @@
 #is it worth doing it for all 6 trials?
 
 # Pick any suite name of your choice
-export SUITE_NAME="wmt_cs_en_test_100"
+export SUITE_NAME="wmt_de_en_test_100"
 
 # Replace this with your model or models
 
@@ -28,7 +34,7 @@ export PRIORITY=2
 
 
 # helm-run --conf-paths $RUN_ENTRIES_CONF_PATH --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES --priority $PRIORITY --suite $SUITE_NAME --models-to-run $MODELS_TO_RUN
-helm-run --run-entries wmt_14:language_pair=cs-en,model=$MODELS_TO_RUN,follow_format_instructions=instruct,num_beams=100 --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES --suite $SUITE_NAME
+helm-run --run-entries wmt_14:language_pair=de-en,model=$MODELS_TO_RUN,follow_format_instructions=instruct,num_beams=100 --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES --suite $SUITE_NAME
 
 # helm-summarize --schema $SCHEMA_PATH --suite $SUITE_NAME
 # echo helm-server --suite $SUITE_NAME
