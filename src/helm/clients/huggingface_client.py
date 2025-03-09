@@ -22,6 +22,7 @@ from helm.tokenizers.tokenizer import Tokenizer
 from helm.clients.client import CachingClient, truncate_sequence
 from helm.tokenizers.huggingface_tokenizer import HuggingFaceTokenizer, WrappedPreTrainedTokenizer
 from threading import Lock
+import json
 
 
 class StopAtSpecificTokenCriteria(StoppingCriteria):
@@ -45,6 +46,7 @@ class HuggingFaceRequest(TypedDict):
     prompt: str
     temperature: float
     num_beams:int
+    generated_output_file: str
     num_return_sequences: int
     max_new_tokens: int
     top_p: float
@@ -62,6 +64,7 @@ class HuggingFaceServer:
         wrapped_tokenizer: WrappedPreTrainedTokenizer,
         **kwargs,
     ):
+        self._lock= Lock()
         self.device: Optional[str]
         if "device_map" in kwargs:
             if "device" in kwargs:
@@ -102,6 +105,30 @@ class HuggingFaceServer:
                 )
         self.wrapped_tokenizer = wrapped_tokenizer
 
+    def save_sentences(self, prompt, all_completions, output_file) -> None:  
+        if not output_file:
+            return  
+        #will have to pass this somehow
+        def process_prompt(prompt):
+            def get_str_between(str, start_str, end_str):
+                start_idx=str.index(start_str)+len(start_str)
+                end_idx=str.index(end_str, start_idx)
+                # print(start_idx,end_idx)
+                return str[start_idx:end_idx].strip()
+            prompt_start="""
+German: """
+            prompt_end="""
+English:"""
+            return get_str_between(prompt,prompt_start, prompt_end)
+        
+        prompt=process_prompt(prompt)
+        short_completions=[{"text":completion["text"],"s_logprob":sum(completion["logprobs"])} for completion in  all_completions]
+        to_save = json.dumps({"prompt":prompt, "completions":short_completions})+"\n"
+        with self._lock: 
+            with open(output_file, 'a') as file: 
+                file.write(to_save)
+
+
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
         with self.wrapped_tokenizer as tokenizer:
             encoded_input = tokenizer(raw_request["prompt"], return_tensors="pt", return_token_type_ids=False).to(
@@ -128,6 +155,7 @@ class HuggingFaceServer:
             and raw_request["echo_prompt"]
         )
 
+        num_generated=max(raw_request["num_return_sequences"], raw_request["num_beams"])
         # Use HuggingFace's `generate` method.
         if compute_logprobs_only:
             with torch.no_grad():
@@ -135,19 +163,15 @@ class HuggingFaceServer:
             sequences = encoded_input["input_ids"]
             scores = output.logits
         else:
-            # print("\n\n\n\n\n LUKE: Num Beams is ",raw_request["num_beams"])
-            # print("LUKE: num_beams type is ",raw_request["num_beams"])
-            # print("LUKE: Temperature is ",raw_request["temperature"])
-            # print("LUKE: max_new_tokens is ",raw_request["max_new_tokens"])
-                # num_beams=raw_request["num_beams"]
             output = self.model.generate(
                 **encoded_input,
-                temperature=raw_request["temperature"],
+                # temperature=raw_request["temperature"],
                 num_beams = raw_request["num_beams"],
-                num_return_sequences=raw_request["num_return_sequences"],
+                num_return_sequences=num_generated,
                 max_new_tokens=raw_request["max_new_tokens"],
                 top_p=raw_request["top_p"],
-                do_sample=True,
+                #changed this
+                do_sample=False,
                 return_dict_in_generate=True,
                 output_scores=True,
                 **optional_args,
@@ -155,21 +179,20 @@ class HuggingFaceServer:
             )
             sequences = output.sequences
             scores = output.scores
-
         prompt_tokens_logprobs = []
         if compute_logprobs_only:
             # Append the logprob of the first token of the prompt.
             prompt_tokens_logprobs.append(0.0)
 
             # Compute logprobs of prompt tokens.
-            for completion_id in range(raw_request["num_return_sequences"]):
+            for completion_id in range(num_generated):
                 for i in range(len(sequences[completion_id]) - 1):
                     logprobs = torch.nn.functional.log_softmax(scores[completion_id][i], dim=0)
                     prompt_tokens_logprobs.append(logprobs[sequences[completion_id][i + 1]].item())
 
         # Compute logprobs of generated tokens for each completed sequence.
         all_generated_tokens_logprobs = []
-        for completion_id in range(raw_request["num_return_sequences"]):
+        for completion_id in range(num_generated):
             generated_tokens_logprobs = []
             for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
                 logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
@@ -186,11 +209,14 @@ class HuggingFaceServer:
             all_tokens = [[tokenizer.decode(token) for token in sequence_tokens] for sequence_tokens in sequences]
             all_decoded_text = tokenizer.batch_decode(sequences)
 
-        completions = []
+        all_completions = []
         for decoded_text, tokens, generated_tokens_logprobs in zip(
             all_decoded_text, all_tokens, all_generated_tokens_logprobs
         ):
-            completions.append(
+            # print("\n\n\n\n\n logprobs is", generated_tokens_logprobs)
+
+
+            all_completions.append(
                 {
                     "text": decoded_text,
                     "tokens": tokens,
@@ -198,7 +224,9 @@ class HuggingFaceServer:
                     "prompt_logprobs": prompt_tokens_logprobs,
                 }
             )
-
+        self.save_sentences(raw_request["prompt"], all_completions, raw_request["generated_output_file"])
+        completions = all_completions[:raw_request["num_return_sequences"]]
+        # print("\n<><><><>\nFinal completions is ",len(completions))
         return {"completions": completions, "input_length": len(encoded_input.input_ids[0])}
 
 
@@ -277,8 +305,11 @@ class HuggingFaceClient(CachingClient):
         self._kwargs = _process_huggingface_client_kwargs(kwargs)
         self._end_of_text_token = end_of_text_token
         self._lock= Lock()
+        self._output_file="completions.txt"
 
     def make_request(self, request: Request) -> RequestResult:
+
+        
         # Embedding not supported for this model
         if request.embedding:
             return EMBEDDING_UNAVAILABLE_REQUEST_RESULT
@@ -291,14 +322,15 @@ class HuggingFaceClient(CachingClient):
             "prompt": request.prompt,
             "temperature": 1e-7 if request.temperature == 0 else request.temperature,
             "num_beams": request.num_beams,
+            "generated_output_file": request.generated_output_file,
             "num_return_sequences": request.num_completions,
             "max_new_tokens": request.max_tokens,
             "top_p": request.top_p,
             "echo_prompt": request.echo_prompt,
             "top_k_per_token": request.top_k_per_token,
-            "stop_sequences": request.stop_sequences,
+            "stop_sequences": request.stop_sequences
         }
-
+        
         pretrained_model_name_or_path = (
             self._pretrained_model_name_or_path if self._pretrained_model_name_or_path else request.model
         )
@@ -350,10 +382,6 @@ class HuggingFaceClient(CachingClient):
             completion = GeneratedOutput(text=raw_completion["text"], logprob=sequence_logprob, tokens=tokens)
             completion = truncate_sequence(completion, request, end_of_text_token=self._end_of_text_token)
             completions.append(completion)
-        with self._lock: 
-            for completion in completions:
-                with open('completions.txt', 'a') as file: 
-                    file.write("\n"+" ".join(completion.render_lines()))
 
 
         return RequestResult(

@@ -21,7 +21,7 @@ args = parser.parse_args()
 model_clean=args.model.replace("/","_")
 
 json_file=f"./benchmark_output/runs/{args.suite_name}/{args.task},model={model_clean}/stats.json"
-print("\n\n\n\n\n\n json_file is ",json_file)
+print(f"Process results from json_file {json_file}. Saving to {args.output_csv}")
 
 with open(json_file) as f:
     infos = json.load(f)
@@ -47,9 +47,8 @@ if(len(values)==1):
             raise Exception(f"Could not process data. Data contains splits_char.\n Data: {data} split_char: {split_char} or {eol_char}")
 
     save_str=split_char.join(data_vals)+eol_char
-    print(f"saving to {args.output_csv}")
-    print(f"Saving {save_str}")
     with open(args.output_csv, "a") as text_file:
+        print("Saving Results string: save_str")
         text_file.write(save_str)
     
 else:

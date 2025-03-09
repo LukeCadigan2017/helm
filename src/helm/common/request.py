@@ -15,6 +15,10 @@ class Request:
     various APIs (e.g., GPT-3, Jurassic).
     """
 
+    generated_output_file: str=""
+    """File to save the generated outputs in 
+    """
+
     model_deployment: str = ""
     """Which model deployment to query -> Determines the Client.
     Refers to a deployment in the model deployment registry."""

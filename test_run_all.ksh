@@ -1,9 +1,25 @@
 #!/bin/bash
 
 
-#base stuff
-SUITE_BASE="test_run_all"
-OUTPUT_CSV=${SUITE_BASE}.txt
+
+#################### FUNCTIONS ####################
+clean_str () {
+    clean_run_entry=$1
+    chars="/ = , : __ -"
+    for char in $chars; do
+        # echo char is "$char"
+        clean_run_entry=${clean_run_entry//$char/_}
+    done
+}
+
+
+echo_space () {
+    echo "-------------------------------------------------------------------------------------------------"
+    echo -e "\n\n\n\n\n\n\n\n\n\n\n\n "
+
+}
+
+#################### SETTINGS ####################
 
 #task stuff
 NUM_TRAIN_TRIALS=1
@@ -11,42 +27,66 @@ TASK=wmt_14:language_pair=de-en
 METRIC=bleu_4
 
 #other configs
-NUM_BEAMS_LIST="1 5"
-MODELS="simple/model1"
+NUM_BEAMS_LIST="1 2"
+# MODELS="stas/tiny-random-llama-2"
+MODELS="meta-llama/Llama-3.1-8B"
 MAX_EVAL_INSTANCES=10
 
 
+#base stuff
+SUITE_BASE="run_all_evalnum_${MAX_EVAL_INSTANCES}"
+BASE_OUTPUT_DIR=benchmark_output
+OUTPUT_DIR=${BASE_OUTPUT_DIR}/${SUITE_BASE}
+OUTPUT_CSV=$OUTPUT_DIR/metrics_csv.txt
 
+#create files
+mkdir -p $BASE_OUTPUT_DIR
+mkdir -p $OUTPUT_DIR
+touch $OUTPUT_CSV
 
+#book-keeping
+GEN_OUTPUT_FILES=""
 cat ./test_run_all.ksh
-echo -e "\n\n\n\n\n\n\n\n\n\n\n\n "
+
+
+#do everything
 for MODEL in $MODELS; do
     for NUM_BEAMS in $NUM_BEAMS_LIST; do
-        SUITE_NAME="${SUITE_BASE}_${NUM_BEAMS}"
-        # RUN_ENTRY=wmt_14:language_pair=de-en,model=$MODEL,follow_format_instructions=instruct,num_beams=$NUM_BEAMS
-        RUN_ENTRY=${TASK},model=${MODEL},follow_format_instructions=instruct,num_beams=$NUM_BEAMS 
-        echo "RUN ENTRY IS $RUN_ENTRY"
-        helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES --suite $SUITE_NAME
+        echo_space
+
+        #get run entry and output file names
+        SUITE_NAME="${SUITE_BASE}_beams_${NUM_BEAMS}"
+        RUN_ENTRY=${TASK},model=${MODEL},follow_format_instructions=instruct,num_beams=$NUM_BEAMS
+        
+        clean_str $RUN_ENTRY
+        GEN_OUTPUT_FILE="${OUTPUT_DIR}/generated_${clean_run_entry}.json"
+        RUN_ENTRY=${RUN_ENTRY},generated_output_file=${GEN_OUTPUT_FILE}
+
+        #book-keeping
+        touch ${GEN_OUTPUT_FILE}
+        GEN_OUTPUT_FILES="${GEN_OUTPUT_FILES} ${GEN_OUTPUT_FILE}"     
+
+        
+        helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES --suite $SUITE_NAME --disable-cache
         
 
-        echo -e "\n\n\n\n\n\n\n\n\n\n\n\n <><><><><><><><><><><><><>"
-
+        #process results
         python process_results.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $METRIC \
             --suite_name $SUITE_NAME --output_csv $OUTPUT_CSV
+
+        python process_generation.py --gen_output_json $GEN_OUTPUT_FILE
+
     done
 
 done
 
-# helm-summarize --suite $suite
+echo_space
 
-
-echo helm-server --suite $suite
-echo http://localhost:8000/ 
-echo "\n\n\n\n"
-# helm-summarize --suite beam_1739389179
-#helm-server --suite beam_1739389179
-
-
+#print out relevant files
+for GEN_OUTPUT_FILE in $GEN_OUTPUT_FILES; do
+    echo "GEN_OUTPUT_FILE: ${GEN_OUTPUT_FILE}"
+done
+echo OUTPUT_CSV is $OUTPUT_CSV
 
 #USE THIS ONE 
 #helm-run --run-entries gsm_iom:model=stas/tiny-random-llama-2,num_beams=2  --suite my-suite --max-eval-instances 2 --disable-cache
