@@ -4,11 +4,10 @@
 
 #################### FUNCTIONS ####################
 clean_str () {
-    clean_run_entry=$1
+    SUITE_NAME=$1
     chars="/ = , : __ -"
     for char in $chars; do
-        # echo char is "$char"
-        clean_run_entry=${clean_run_entry//$char/_}
+        SUITE_NAME=${SUITE_NAME//$char/_}
     done
 }
 
@@ -55,11 +54,12 @@ for MODEL in $MODELS; do
         echo_space
 
         #get run entry and output file names
-        SUITE_NAME="${SUITE_BASE}_beams_${NUM_BEAMS}"
         RUN_ENTRY=${TASK},model=${MODEL},follow_format_instructions=instruct,num_beams=$NUM_BEAMS
         
-        clean_str $RUN_ENTRY
-        GEN_OUTPUT_FILE="${OUTPUT_DIR}/generated_${clean_run_entry}.json"
+        #sets SUITE_NAME
+	clean_str "SUITE_BASE_${RUN_ENTRY}"
+        
+	GEN_OUTPUT_FILE="${OUTPUT_DIR}/generated_${SUITE_NAME}.json"
         RUN_ENTRY=${RUN_ENTRY},generated_output_file=${GEN_OUTPUT_FILE}
 
         #book-keeping
