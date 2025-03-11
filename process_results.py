@@ -31,7 +31,6 @@ values=[]
 for info in infos:
     name = info["name"]
     if name["name"]==args.metric and name["split"]=="test" and "perturbation" not in name.keys():
-        print(info)
         values.append(info["mean"])
 
 #save to file
@@ -48,9 +47,10 @@ if(len(values)==1):
 
     save_str=split_char.join(data_vals)+eol_char
     with open(args.output_csv, "a") as text_file:
-        print("Saving Results string: save_str")
+        print(f"Saving results: {save_str} to file {args.output_csv}")
         text_file.write(save_str)
     
 else:
-    raise Exception("Number of values is ",len(values))
+    print(f"Wrong number values return ({len(values)}). Could not process results for {[args.model, args.task, args.num_beams, args.metric]}")
+    # raise Exception("Number of values is ",len(values))
 

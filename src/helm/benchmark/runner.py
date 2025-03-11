@@ -12,6 +12,7 @@ import numpy as np
 from tqdm import tqdm
 
 from helm.benchmark.adaptation.request_state import RequestState
+from helm.common.request import (GeneratedOutput)
 from helm.common.general import ensure_directory_exists, write, asdict_without_nones
 from helm.common.hierarchical_logger import hlog, htrack_block
 from helm.common.cache import cache_stats
@@ -36,12 +37,29 @@ from helm.benchmark.metrics.metric_name import MetricName
 from helm.benchmark.metrics.metric_service import MetricService
 from helm.benchmark.metrics.metric import MetricInterface, MetricResult, PerInstanceStats, create_metric, Stat
 from helm.benchmark.window_services.tokenizer_service import TokenizerService
-
+from dataclasses import dataclass
 
 LATEST_SYMLINK: str = "latest"
 _BENCHMARK_OUTPUT_PATH: str = "benchmark_output"
 _CACHED_MODELS_FOLDER: str = "models"
 
+
+
+@dataclass(frozen=True)
+class GeneratedOutputExamples:
+    """Split (e.g., train, valid, test)"""
+
+    prompt: str
+    """Prompt used"""
+    
+    reference: str
+    """Reference used"""
+
+    examples: List[GeneratedOutput]
+    """List of unscored examples"""
+
+    id: str
+    """id of instance"""
 
 def get_benchmark_output_path() -> str:
     """Get the benchmark output path.
@@ -223,6 +241,27 @@ class Runner:
         if not self.exit_on_error and failed_run_specs:
             failed_runs_str = ", ".join([f'"{run_spec.name}"' for run_spec in failed_run_specs])
             raise RunnerError(f"Failed runs: [{failed_runs_str}]")
+        
+    def get_instance_generations(self, request_states: List[RequestState]) -> List[GeneratedOutputExamples]:
+        """
+        Compute the corpus-level metric based on all reqeust_states.
+        """
+        instance_generations=[]
+        for request_state in request_states:
+            assert request_state.result is not None
+            assert len(request_state.instance.references) ==1
+
+
+            prompt=request_state.instance.input.text
+            examples=request_state.result.unscored_examples
+            id=request_state.instance.id
+            reference=request_state.instance.references[0]
+
+            # print("\n\n\nreference is ",reference)
+            reference=reference.output.text
+            instance_generations.append(GeneratedOutputExamples(prompt=prompt, reference=reference,examples=examples,id=id ))
+        print(f"instance_generations is {instance_generations}")
+        return instance_generations
 
     def run_one(self, run_spec: RunSpec):
         run_path: str = self._get_run_path(run_spec)
@@ -320,6 +359,8 @@ class Runner:
             if count > 1:
                 hlog(f"WARNING: duplicate metric name {metric_name}")
 
+        instance_generations=self.get_instance_generations(scenario_state.request_states)
+
         # Print out the number of stats
         hlog(f"Generated {len(stats)} stats.")
 
@@ -343,6 +384,11 @@ class Runner:
         write(
             os.path.join(run_path, "per_instance_stats.json"),
             json.dumps(list(map(asdict_without_nones, remove_per_instance_stats_nans(per_instance_stats))), indent=2),
+        )
+
+        write(
+            os.path.join(run_path, "instance_generations.json"),
+            json.dumps(list(map(asdict_without_nones, instance_generations)), indent=2),
         )
 
         cache_stats.print_status()

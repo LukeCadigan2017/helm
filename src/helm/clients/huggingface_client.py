@@ -105,28 +105,28 @@ class HuggingFaceServer:
                 )
         self.wrapped_tokenizer = wrapped_tokenizer
 
-    def save_sentences(self, prompt, all_completions, output_file) -> None:  
-        if not output_file:
-            return  
-        #will have to pass this somehow
-        def process_prompt(prompt):
-            def get_str_between(str, start_str, end_str):
-                start_idx=str.index(start_str)+len(start_str)
-                end_idx=str.index(end_str, start_idx)
-                # print(start_idx,end_idx)
-                return str[start_idx:end_idx].strip()
-            prompt_start="""
-German: """
-            prompt_end="""
-English:"""
-            return get_str_between(prompt,prompt_start, prompt_end)
+#     def save_sentences(self, prompt, all_completions, output_file) -> None:  
+#         if not output_file:
+#             return  
+#         #will have to pass this somehow
+#         def process_prompt(prompt):
+#             def get_str_between(str, start_str, end_str):
+#                 start_idx=str.index(start_str)+len(start_str)
+#                 end_idx=str.index(end_str, start_idx)
+#                 # print(start_idx,end_idx)
+#                 return str[start_idx:end_idx].strip()
+#             prompt_start="""
+# German: """
+#             prompt_end="""
+# English:"""
+#             return get_str_between(prompt,prompt_start, prompt_end)
         
-        prompt=process_prompt(prompt)
-        short_completions=[{"text":completion["text"],"s_logprob":sum(completion["logprobs"])} for completion in  all_completions]
-        to_save = json.dumps({"prompt":prompt, "completions":short_completions})+"\n"
-        with self._lock: 
-            with open(output_file, 'a') as file: 
-                file.write(to_save)
+#         prompt=process_prompt(prompt)
+#         short_completions=[{"text":completion["text"],"s_logprob":sum(completion["logprobs"])} for completion in  all_completions]
+#         to_save = json.dumps({"prompt":prompt, "completions":short_completions})+"\n"
+#         with self._lock: 
+#             with open(output_file, 'a') as file: 
+#                 file.write(to_save)
 
 
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
@@ -156,6 +156,8 @@ English:"""
         )
 
         num_generated=max(raw_request["num_return_sequences"], raw_request["num_beams"])
+        assert(raw_request["top_p"]==1)
+
         # Use HuggingFace's `generate` method.
         if compute_logprobs_only:
             with torch.no_grad():
@@ -165,7 +167,7 @@ English:"""
         else:
             output = self.model.generate(
                 **encoded_input,
-                # temperature=raw_request["temperature"],
+                temperature=raw_request["temperature"],
                 num_beams = raw_request["num_beams"],
                 num_return_sequences=num_generated,
                 max_new_tokens=raw_request["max_new_tokens"],
@@ -209,14 +211,14 @@ English:"""
             all_tokens = [[tokenizer.decode(token) for token in sequence_tokens] for sequence_tokens in sequences]
             all_decoded_text = tokenizer.batch_decode(sequences)
 
-        all_completions = []
+        raw_completions = []
         for decoded_text, tokens, generated_tokens_logprobs in zip(
             all_decoded_text, all_tokens, all_generated_tokens_logprobs
         ):
             # print("\n\n\n\n\n logprobs is", generated_tokens_logprobs)
 
 
-            all_completions.append(
+            raw_completions.append(
                 {
                     "text": decoded_text,
                     "tokens": tokens,
@@ -224,10 +226,10 @@ English:"""
                     "prompt_logprobs": prompt_tokens_logprobs,
                 }
             )
-        self.save_sentences(raw_request["prompt"], all_completions, raw_request["generated_output_file"])
-        completions = all_completions[:raw_request["num_return_sequences"]]
-        # print("\n<><><><>\nFinal completions is ",len(completions))
-        return {"completions": completions, "input_length": len(encoded_input.input_ids[0])}
+        # self.save_sentences(raw_request["prompt"], all_completions, raw_request["generated_output_file"])
+        completions = raw_completions[:raw_request["num_return_sequences"]]
+        unscored_examples=[GeneratedOutput(text=completion["text"], logprob=sum(completion["logprobs"]), tokens=[]) for completion in  raw_completions]
+        return {"completions": completions, "input_length": len(encoded_input.input_ids[0]), "unscored_examples":unscored_examples}
 
 
 class HuggingFaceServerFactory:
@@ -390,5 +392,6 @@ class HuggingFaceClient(CachingClient):
             request_time=response["request_time"],
             request_datetime=response.get("request_datetime"),
             completions=completions,
+            unscored_examples=response["unscored_examples"],
             embedding=[],
         )

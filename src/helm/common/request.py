@@ -183,7 +183,14 @@ class ErrorFlags:
     """Whether the error is fatal, i.e. the run should be discarded.
     If None, the error is treated as fatal."""
 
-
+@dataclass(frozen=False)
+class UnscoredExamples:
+    """Generated example of prompt within RequestResult. Does not affect metrics"""
+    text: str
+    """Text of the generated example"""
+    
+    s_logprob: float
+    """Probability of sentence according to the LLM that generated it"""
 @dataclass(frozen=False)
 class RequestResult:
     """What comes back due to a `Request`."""
@@ -219,6 +226,9 @@ class RequestResult:
 
     batch_request_time: Optional[float] = None
     """How long it took to process the batch? (`TogetherClient` only)"""
+
+    unscored_examples: Optional[GeneratedOutput]=None
+    """List of UnscoredExamples"""
 
     def render_lines(self) -> List[str]:
         output = [

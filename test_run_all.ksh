@@ -23,19 +23,22 @@ echo_space () {
 #task stuff
 NUM_TRAIN_TRIALS=1
 TASK=wmt_14:language_pair=de-en
-METRIC=bleu_4
+METRICS="bleu_4 comet"
 
 #other configs
+
 NUM_BEAMS_LIST="1 2"
-# MODELS="stas/tiny-random-llama-2"
 MODELS="meta-llama/Llama-3.1-8B"
+
+# NUM_BEAMS_LIST="2"
+# MODELS="stas/tiny-random-llama-2"
 MAX_EVAL_INSTANCES=10
 
 
 #base stuff
 SUITE_BASE="run_all_evalnum_${MAX_EVAL_INSTANCES}"
 BASE_OUTPUT_DIR=benchmark_output
-OUTPUT_DIR=${BASE_OUTPUT_DIR}/${SUITE_BASE}
+OUTPUT_DIR="${BASE_OUTPUT_DIR}/${SUITE_BASE}"
 OUTPUT_CSV=$OUTPUT_DIR/metrics_csv.txt
 
 #create files
@@ -57,9 +60,9 @@ for MODEL in $MODELS; do
         RUN_ENTRY=${TASK},model=${MODEL},follow_format_instructions=instruct,num_beams=$NUM_BEAMS
         
         #sets SUITE_NAME
-	clean_str "SUITE_BASE_${RUN_ENTRY}"
-        
-	GEN_OUTPUT_FILE="${OUTPUT_DIR}/generated_${SUITE_NAME}.json"
+        clean_str "${SUITE_BASE}_${RUN_ENTRY}"
+            
+        GEN_OUTPUT_FILE="${OUTPUT_DIR}/generated_${SUITE_NAME}.json"
         RUN_ENTRY=${RUN_ENTRY},generated_output_file=${GEN_OUTPUT_FILE}
 
         #book-keeping
@@ -71,10 +74,11 @@ for MODEL in $MODELS; do
         
 
         #process results
-        python process_results.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $METRIC \
-            --suite_name $SUITE_NAME --output_csv $OUTPUT_CSV
-
-        python process_generation.py --gen_output_json $GEN_OUTPUT_FILE
+        for METRIC in $METRICS; do
+            python process_results.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $METRIC \
+                --suite_name $SUITE_NAME --output_csv $OUTPUT_CSV
+        done
+        # python process_generation.py --gen_output_json $GEN_OUTPUT_FILE
 
     done
 
