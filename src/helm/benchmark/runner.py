@@ -259,11 +259,10 @@ class Runner:
             prompt=request_state.instance.input.text
             examples=request_state.result.unscored_examples
             id=request_state.instance.id
-            reference=request_state.instance.references[0]
-            completion=request_state.result.completions[0]
+            reference=request_state.instance.references[0].output.text
+            completion=request_state.result.completions[0].text
 
             # print("\n\n\nreference is ",reference)
-            reference=reference.output.text
             instance_generations.append(GeneratedOutputExamples(prompt=prompt, reference=reference,examples=examples,id=id, completion=completion))
 
         #print(f"instance_generations is {instance_generations}")

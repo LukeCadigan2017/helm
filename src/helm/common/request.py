@@ -135,7 +135,7 @@ class Token:
         ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class GeneratedOutput:
     """A `GeneratedOutput` is a single generated output that may contain text or multimodal content."""
 

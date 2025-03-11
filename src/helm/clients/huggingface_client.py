@@ -226,10 +226,8 @@ class HuggingFaceServer:
                     "prompt_logprobs": prompt_tokens_logprobs,
                 }
             )
-        # self.save_sentences(raw_request["prompt"], all_completions, raw_request["generated_output_file"])
         completions = raw_completions[:raw_request["num_return_sequences"]]
-        unscored_examples=[GeneratedOutput(text=completion["text"], logprob=sum(completion["logprobs"]), tokens=[]) for completion in  raw_completions]
-        return {"completions": completions, "input_length": len(encoded_input.input_ids[0]), "unscored_examples":unscored_examples}
+        return {"completions": completions, "input_length": len(encoded_input.input_ids[0]), "unscored_examples":raw_completions}
 
 
 class HuggingFaceServerFactory:
@@ -309,6 +307,41 @@ class HuggingFaceClient(CachingClient):
         self._lock= Lock()
         self._output_file="completions.txt"
 
+
+    def clean_completions(self, response, request, completions_to_clean):
+        
+        completions = []
+        for raw_completion in completions_to_clean:
+            sequence_logprob: float = 0
+            tokens: List[Token] = []
+
+            if request.echo_prompt:
+                # Add prompt to list of generated tokens.
+                generated_tokens = raw_completion["tokens"][response["input_length"] :]
+                if raw_completion.get("prompt_logprobs"):
+                    for token_text, logprob in zip(
+                        raw_completion["tokens"][: response["input_length"]],
+                        raw_completion["prompt_logprobs"][: response["input_length"]],
+                    ):
+                        tokens.append(Token(text=token_text, logprob=logprob))
+                        sequence_logprob += logprob
+                else:
+                    for token_text in raw_completion["tokens"][: response["input_length"]]:
+                        tokens.append(Token(text=token_text, logprob=0.0))
+
+            else:
+                generated_tokens = raw_completion["tokens"]
+
+            # Compute logprob for the entire sequence.
+            for token_text, logprob in zip(generated_tokens, raw_completion["logprobs"]):
+                tokens.append(Token(text=token_text, logprob=logprob))
+                sequence_logprob += logprob
+
+            completion = GeneratedOutput(text=raw_completion["text"], logprob=sequence_logprob, tokens=tokens)
+            completion = truncate_sequence(completion, request, end_of_text_token=self._end_of_text_token)
+            completions.append(completion)
+        return completions
+
     def make_request(self, request: Request) -> RequestResult:
 
         
@@ -354,37 +387,10 @@ class HuggingFaceClient(CachingClient):
             error: str = f"HuggingFace error: {e}"
             return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
 
-        completions = []
-        for raw_completion in response["completions"]:
-            sequence_logprob: float = 0
-            tokens: List[Token] = []
-
-            if request.echo_prompt:
-                # Add prompt to list of generated tokens.
-                generated_tokens = raw_completion["tokens"][response["input_length"] :]
-                if raw_completion.get("prompt_logprobs"):
-                    for token_text, logprob in zip(
-                        raw_completion["tokens"][: response["input_length"]],
-                        raw_completion["prompt_logprobs"][: response["input_length"]],
-                    ):
-                        tokens.append(Token(text=token_text, logprob=logprob))
-                        sequence_logprob += logprob
-                else:
-                    for token_text in raw_completion["tokens"][: response["input_length"]]:
-                        tokens.append(Token(text=token_text, logprob=0.0))
-
-            else:
-                generated_tokens = raw_completion["tokens"]
-
-            # Compute logprob for the entire sequence.
-            for token_text, logprob in zip(generated_tokens, raw_completion["logprobs"]):
-                tokens.append(Token(text=token_text, logprob=logprob))
-                sequence_logprob += logprob
-
-            completion = GeneratedOutput(text=raw_completion["text"], logprob=sequence_logprob, tokens=tokens)
-            completion = truncate_sequence(completion, request, end_of_text_token=self._end_of_text_token)
-            completions.append(completion)
-
+        completions = self.clean_completions(response, request,response["completions"])
+        unscored_examples = self.clean_completions(response, request, response["unscored_examples"])
+        for completion in unscored_examples:
+            completion.tokens=None
 
         return RequestResult(
             success=True,
@@ -392,6 +398,6 @@ class HuggingFaceClient(CachingClient):
             request_time=response["request_time"],
             request_datetime=response.get("request_datetime"),
             completions=completions,
-            unscored_examples=response["unscored_examples"],
+            unscored_examples=unscored_examples,
             embedding=[],
         )
