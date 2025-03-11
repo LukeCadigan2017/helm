@@ -55,6 +55,9 @@ class GeneratedOutputExamples:
     reference: str
     """Reference used"""
 
+    completion: str
+    """Selection completion for metrics"""
+
     examples: List[GeneratedOutput]
     """List of unscored examples"""
 
@@ -250,17 +253,20 @@ class Runner:
         for request_state in request_states:
             assert request_state.result is not None
             assert len(request_state.instance.references) ==1
+            assert len(request_state.result.completions) ==1
 
 
             prompt=request_state.instance.input.text
             examples=request_state.result.unscored_examples
             id=request_state.instance.id
             reference=request_state.instance.references[0]
+            completion=request_state.result.completions[0]
 
             # print("\n\n\nreference is ",reference)
             reference=reference.output.text
-            instance_generations.append(GeneratedOutputExamples(prompt=prompt, reference=reference,examples=examples,id=id ))
-        print(f"instance_generations is {instance_generations}")
+            instance_generations.append(GeneratedOutputExamples(prompt=prompt, reference=reference,examples=examples,id=id, completion=completion))
+
+        #print(f"instance_generations is {instance_generations}")
         return instance_generations
 
     def run_one(self, run_spec: RunSpec):
