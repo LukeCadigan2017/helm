@@ -10,7 +10,14 @@
 
 tokenizer_configs:
 
-  # Huggingface
+  ####################################################################
+  ######################### Luke Real Models #########################
+  ####################################################################
+
+
+
+  ######################### Llama #########################
+
   - name: prometheus-eval/prometheus-8x7b-v2.0
     tokenizer_spec:
       class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
@@ -36,13 +43,6 @@ tokenizer_configs:
     prefix_token: "<s>"
 
 
-  # - name:  meta-llama/Meta-Llama-3-8B
-  #   tokenizer_spec:
-  #     class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
-  #     args:
-  #       pretrained_model_name_or_path:  meta-llama/Meta-Llama-3-8B
-  #   end_of_text_token: "</s>"
-  #   prefix_token: "<s>"
 
   - name: simple/tokenizer1
     tokenizer_spec:

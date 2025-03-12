@@ -61,7 +61,7 @@ class GeneratedOutputExamples:
     examples: List[GeneratedOutput]
     """List of unscored examples"""
 
-    id: str
+    instance_id: str
     """id of instance"""
 
 def get_benchmark_output_path() -> str:
@@ -263,7 +263,7 @@ class Runner:
             completion=request_state.result.completions[0].text
 
             # print("\n\n\nreference is ",reference)
-            instance_generations.append(GeneratedOutputExamples(prompt=prompt, reference=reference,examples=examples,id=id, completion=completion))
+            instance_generations.append(GeneratedOutputExamples(prompt=prompt, reference=reference,examples=examples,instance_id=id, completion=completion))
 
         #print(f"instance_generations is {instance_generations}")
         return instance_generations

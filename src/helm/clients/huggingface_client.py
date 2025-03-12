@@ -308,8 +308,8 @@ class HuggingFaceClient(CachingClient):
         self._output_file="completions.txt"
 
 
-    def clean_completions(self, response, request, completions_to_clean):
-        
+    def clean_completions(self, response, request, completions_to_clean, should_truncate_sequence=True):
+
         completions = []
         for raw_completion in completions_to_clean:
             sequence_logprob: float = 0
@@ -338,7 +338,8 @@ class HuggingFaceClient(CachingClient):
                 sequence_logprob += logprob
 
             completion = GeneratedOutput(text=raw_completion["text"], logprob=sequence_logprob, tokens=tokens)
-            completion = truncate_sequence(completion, request, end_of_text_token=self._end_of_text_token)
+            if(should_truncate_sequence):
+                completion = truncate_sequence(completion, request, end_of_text_token=self._end_of_text_token)
             completions.append(completion)
         return completions
 
@@ -387,8 +388,8 @@ class HuggingFaceClient(CachingClient):
             error: str = f"HuggingFace error: {e}"
             return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
 
-        completions = self.clean_completions(response, request,response["completions"])
-        unscored_examples = self.clean_completions(response, request, response["unscored_examples"])
+        completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
+        unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=False)
         for completion in unscored_examples:
             completion.tokens=None
 

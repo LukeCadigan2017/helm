@@ -27,11 +27,12 @@ METRICS="bleu_4 comet"
 
 #other configs
 
-NUM_BEAMS_LIST="1 2"
-MODELS="meta-llama/Llama-3.1-8B"
+NUM_BEAMS_LIST="2"
+# MODELS="meta-llama/Llama-3.1-8B"
+MODELS="meta-llama/Llama-3.2-1B-Instruct"
+# MODELS="stas/tiny-random-llama-2"
 
 # NUM_BEAMS_LIST="2"
-# MODELS="stas/tiny-random-llama-2"
 MAX_EVAL_INSTANCES=10
 
 
@@ -87,9 +88,9 @@ done
 echo_space
 
 #print out relevant files
-for GEN_OUTPUT_FILE in $GEN_OUTPUT_FILES; do
-    echo "GEN_OUTPUT_FILE: ${GEN_OUTPUT_FILE}"
-done
+# for GEN_OUTPUT_FILE in $GEN_OUTPUT_FILES; do
+#     echo "GEN_OUTPUT_FILE: ${GEN_OUTPUT_FILE}"
+# done
 echo OUTPUT_CSV is $OUTPUT_CSV
 
 #USE THIS ONE 

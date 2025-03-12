@@ -9,8 +9,32 @@
 #    model_deployments: [] # Leave empty to disable private model deployments
 
 model_deployments:
+  ####################################################################
+  ######################### Luke Real Models #########################
+  ####################################################################
 
-  # Luke model
+  ######################### Llama #########################
+  - name: meta-llama/Llama-3.2-1B-Instruct
+    model_name: meta-llama/Llama-3.2-1B-Instruct 
+    tokenizer_name: meta/llama-3.1-8b
+    max_sequence_length: 131072
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: meta-llama/Llama-3.2-1B-Instruct
+
+  - name: meta-llama/Llama-3.1-8B 
+    model_name: meta-llama/Llama-3.1-8B 
+    tokenizer_name: meta/llama-3.1-8b
+    max_sequence_length: 131072
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: meta-llama/Llama-3.1-8B 
+
+  ######################### Prometheus #########################
+
+
   - name: prometheus-eval/prometheus-8x7b-v2.0
     model_name: prometheus-eval/prometheus-8x7b-v2.0
     tokenizer_name: prometheus-eval/prometheus-8x7b-v2.0
@@ -29,6 +53,11 @@ model_deployments:
       args: 
         pretrained_model_name_or_path: prometheus-eval/prometheus-7b-v2.0
 
+
+  ####################################################################
+  ############################ Toy Models ############################
+  ####################################################################
+
   - name: stas/tiny-random-llama-2
     model_name: stas/tiny-random-llama-2
     tokenizer_name: stas/tiny-random-llama-2
@@ -39,14 +68,6 @@ model_deployments:
       args: 
         pretrained_model_name_or_path: stas/tiny-random-llama-2
 
-  - name: meta-llama/Llama-3.1-8B 
-    model_name: meta-llama/Llama-3.1-8B 
-    tokenizer_name: meta/llama-3.1-8b
-    max_sequence_length: 2048
-    client_spec:
-      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
-      args: 
-        pretrained_model_name_or_path: meta-llama/Llama-3.1-8B 
 
   - name: simple/model1
     model_name: simple/model1
