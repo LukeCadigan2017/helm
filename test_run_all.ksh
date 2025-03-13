@@ -27,13 +27,13 @@ METRICS="bleu_4 comet"
 
 #other configs
 
-NUM_BEAMS_LIST="2"
+NUM_BEAMS_LIST="101"
+
+MAX_EVAL_INSTANCES=10
 # MODELS="meta-llama/Llama-3.1-8B"
 MODELS="meta-llama/Llama-3.2-1B-Instruct"
 # MODELS="stas/tiny-random-llama-2"
 
-# NUM_BEAMS_LIST="2"
-MAX_EVAL_INSTANCES=10
 
 
 #base stuff
