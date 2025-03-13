@@ -124,6 +124,7 @@ class HuggingFaceTokenizer(CachingTokenizer):
                     )
             else:
                 with self.get_wrapped_tokenizer() as tokenizer:
+                    print(f"\n\n\n<><><><>Special tokens map is {tokenizer.special_tokens_map}")
                     tokens = tokenizer.encode(request["text"], add_special_tokens=False)
         else:
             if "gpt" in request["tokenizer"] or request["tokenizer"] in [
@@ -149,6 +150,7 @@ class HuggingFaceTokenizer(CachingTokenizer):
                 # This would be problematic as tokenize(" Hello", encode=False) would return ["Hello"]
                 # Just like tokenize("Hello", encode=False) would return ["Hello"].
                 with self.get_wrapped_tokenizer() as tokenizer:
+                    print(f"\n\n\n<><><><>Special tokens map is {tokenizer.special_tokens_map}")
                     tokens = tokenizer.tokenize(request["text"])
                 # Some tokenizers (e.g. Qwen/Qwen-7B) return the tokens as bytes, so we have to decode them to strings.
                 if tokens and type(tokens[0]) == bytes:
