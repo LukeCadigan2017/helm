@@ -167,7 +167,7 @@ class HuggingFaceServer:
         else:
             output = self.model.generate(
                 **encoded_input,
-                temperature=raw_request["temperature"],
+                # temperature=raw_request["temperature"],
                 num_beams = raw_request["num_beams"],
                 num_return_sequences=num_generated,
                 max_new_tokens=raw_request["max_new_tokens"],
