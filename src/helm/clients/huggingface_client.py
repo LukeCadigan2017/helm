@@ -23,7 +23,7 @@ from helm.clients.client import CachingClient, truncate_sequence
 from helm.tokenizers.huggingface_tokenizer import HuggingFaceTokenizer, WrappedPreTrainedTokenizer
 from threading import Lock
 import json
-
+from pprint import pprint
 
 class StopAtSpecificTokenCriteria(StoppingCriteria):
     def __init__(self, stop_sequence: List[int]):
@@ -137,11 +137,14 @@ class HuggingFaceServer:
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
         if len(raw_request["stop_sequences"]) > 0:
+            stop_sequences = raw_request["stop_sequences"]+[tokenizer._special_tokens_map['eos_token'].content]
             with self.wrapped_tokenizer as tokenizer:
+                
                 stop_sequence_ids = tokenizer(
-                    raw_request["stop_sequences"], return_token_type_ids=False, add_special_tokens=False
+                    stop_sequences, return_token_type_ids=False, add_special_tokens=False
                 )
-            if len(stop_sequence_ids.input_ids) == 1 and len(stop_sequence_ids.input_ids[0]) == 1:
+            # if len(stop_sequence_ids.input_ids) == 1 and len(stop_sequence_ids.input_ids[0]) == 1:
+            if len(stop_sequence_ids.input_ids[0]) == 1:
                 optional_args["eos_token_id"] = stop_sequence_ids.input_ids[0][0]
             else:
                 stopping_criteria = StoppingCriteriaList()
