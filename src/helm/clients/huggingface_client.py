@@ -137,20 +137,32 @@ class HuggingFaceServer:
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
         if len(raw_request["stop_sequences"]) > 0:
-            stop_sequences = raw_request["stop_sequences"]+[tokenizer._special_tokens_map['eos_token'].content]
-            with self.wrapped_tokenizer as tokenizer:
-                
-                stop_sequence_ids = tokenizer(
-                    stop_sequences, return_token_type_ids=False, add_special_tokens=False
-                )
-            print("Luke: stop_sequence_ids is ",stop_sequence_ids)
-            # if len(stop_sequence_ids.input_ids) == 1 and len(stop_sequence_ids.input_ids[0]) == 1:
-            if len(stop_sequence_ids.input_ids[0]) == 1:
-                optional_args["eos_token_id"] = stop_sequence_ids.input_ids[0][0]
-            else:
-                stopping_criteria = StoppingCriteriaList()
-                for stop_sequence_input_ids in stop_sequence_ids.input_ids:
-                    stopping_criteria.append(StopAtSpecificTokenCriteria(stop_sequence=stop_sequence_input_ids))
+
+
+            stop_sequences = []
+            for stop_str in raw_request["stop_sequences"]:
+                stop_sequences+=[ key for (token,key) in tokenizer.get_vocab().items() if stop_str in token]
+            stop_sequences+=tokenizer( tokenizer._special_tokens_map['eos_token'].content, return_token_type_ids=False, add_special_tokens=False).input_ids
+            optional_args["eos_token_id"] =stop_sequences
+            print(f"stop_sequences is {stop_sequences}")
+            # +[tokenizer._special_tokens_map['eos_token'].content]
+            # print("stop_sequences is ",stop_sequences)
+            # with self.wrapped_tokenizer as tokenizer:
+            #     stop_sequence_ids = tokenizer(
+            #         stop_sequences, return_token_type_ids=False, add_special_tokens=False
+            #     )
+            # optional_args["eos_token_id"] = [x for xs in stop_sequence_ids.input_ids for x in xs]
+            # print(f'optional_args["eos_token_id"] is {optional_args["eos_token_id"]}')
+            
+                                             
+            # print(f'Luke2: optional_args["eos_token_id"], {optional_args["eos_token_id"]}')
+            # #if len(stop_sequence_ids.input_ids) == 1 and len(stop_sequence_ids.input_ids[0]) == 1:
+            # if len(stop_sequence_ids.input_ids[0]) == 1:
+                # optional_args["eos_token_id"] = stop_sequence_ids.input_ids[0][0]
+            # else:
+                # stopping_criteria = StoppingCriteriaList()
+                # for stop_sequence_input_ids in stop_sequence_ids.input_ids:
+                    # stopping_criteria.append(StopAtSpecificTokenCriteria(stop_sequence=stop_sequence_input_ids))
 
         # Check if we need to compute the perplexity of the prompt (#1497)
         compute_logprobs_only = (
@@ -169,13 +181,16 @@ class HuggingFaceServer:
             sequences = encoded_input["input_ids"]
             scores = output.logits
         else:
+            print("\n\n\n\n\n optional_args is ",optional_args)
+            
             output = self.model.generate(
                 **encoded_input,
+                length_penalty=0,
                 # temperature=raw_request["temperature"],
                 num_beams = raw_request["num_beams"],
                 num_return_sequences=num_generated,
                 max_new_tokens=raw_request["max_new_tokens"],
-                top_p=raw_request["top_p"],
+                # top_p=raw_request["top_p"],
                 #changed this
                 do_sample=False,
                 return_dict_in_generate=True,
