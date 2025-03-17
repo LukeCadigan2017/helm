@@ -139,9 +139,15 @@ class HuggingFaceServer:
         if len(raw_request["stop_sequences"]) > 0:
 
 
-            stop_sequences = tokenizer( raw_request["stop_sequences"][0], return_token_type_ids=False, add_special_tokens=False).input_ids
+            stop_sequences = tokenizer( '\n', return_token_type_ids=False, add_special_tokens=False).input_ids
             for stop_str in raw_request["stop_sequences"]:
-                stop_sequences+=[ key for (token,key) in tokenizer.get_vocab().items() if stop_str in token]
+                stop_sequences+=[ key for (token,key) in tokenizer.get_vocab().items() if '\n' in token]
+
+            # stop_sequences = tokenizer( raw_request["stop_sequences"][0], return_token_type_ids=False, add_special_tokens=False).input_ids
+            # for stop_str in raw_request["stop_sequences"]:
+            #     stop_sequences+=[ key for (token,key) in tokenizer.get_vocab().items() if stop_str in token]
+
+
             stop_sequences+=tokenizer( tokenizer._special_tokens_map['eos_token'].content, return_token_type_ids=False, add_special_tokens=False).input_ids
             stop_sequences = list(dict.fromkeys(stop_sequences))
             optional_args["eos_token_id"] =stop_sequences
