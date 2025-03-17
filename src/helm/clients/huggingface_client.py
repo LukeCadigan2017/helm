@@ -416,8 +416,8 @@ class HuggingFaceClient(CachingClient):
 
         completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
         unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=False)
-        # for completion in unscored_examples:
-        #     completion.tokens=None
+        for completion in unscored_examples:
+            completion.tokens=None
 
         return RequestResult(
             success=True,
