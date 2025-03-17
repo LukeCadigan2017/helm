@@ -143,6 +143,7 @@ class HuggingFaceServer:
                 stop_sequence_ids = tokenizer(
                     stop_sequences, return_token_type_ids=False, add_special_tokens=False
                 )
+            print("Luke: stop_sequence_ids is ",stop_sequence_ids)
             # if len(stop_sequence_ids.input_ids) == 1 and len(stop_sequence_ids.input_ids[0]) == 1:
             if len(stop_sequence_ids.input_ids[0]) == 1:
                 optional_args["eos_token_id"] = stop_sequence_ids.input_ids[0][0]
@@ -393,8 +394,8 @@ class HuggingFaceClient(CachingClient):
 
         completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
         unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=False)
-        for completion in unscored_examples:
-            completion.tokens=None
+        # for completion in unscored_examples:
+        #     completion.tokens=None
 
         return RequestResult(
             success=True,
