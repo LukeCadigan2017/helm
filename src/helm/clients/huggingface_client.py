@@ -38,9 +38,9 @@ class StopAtSpecificTokenCriteria(StoppingCriteria):
         current_sequence = input_ids[:, -len(self.stop_sequence) :]
         return bool(torch.all(current_sequence == stop_sequence_tensor).item())
 
-class StopOnString(StoppingCriteria):
-    def __init__(self, stop_string, tokenizer):
-        self.stop_string = stop_string
+class StopOnStrings(StoppingCriteria):
+    def __init__(self, stop_strings, tokenizer):
+        self.stop_strings = stop_strings
         self.tokenizer = tokenizer
         self.stream = ""
 
@@ -48,11 +48,17 @@ class StopOnString(StoppingCriteria):
         self.stream = ""
 
     def __call__(self, input_ids, scores, **kwargs):
+        print("input_ids shape is ",input_ids.size())
         generated = self.tokenizer.decode(input_ids[0][-1], skip_special_tokens=True)
         self.stream += generated
-        if self.stream.endswith(self.stop_string):
-            return True
-        print(generated, end="", flush=True)
+        for stop_string in self.stop_strings:
+            print("Hello! stop_string is ",stop_string)
+            print("Hello! steam is is ",self.stream)
+            if self.stream.endswith(stop_string):
+                print("Hello! got here")
+                return True
+        # self.stream = ""
+        # print(generated, end="", flush=True)
         return False
 
 
@@ -193,8 +199,8 @@ class HuggingFaceServer:
             #     # for stop_sequence_input_ids in stop_sequence_ids.input_ids:
             #         # stopping_criteria.append(StopAtSpecificTokenCriteria(stop_sequence=stop_sequence_input_ids))
             stopping_criteria = StoppingCriteriaList()
-            for stop_string in raw_request["stop_sequences"]:
-                stopping_criteria.append(StopOnString(stop_string, tokenizer))
+
+            stopping_criteria.append(StopOnStrings(raw_request["stop_sequences"], tokenizer))
 
         # Check if we need to compute the perplexity of the prompt (#1497)
         compute_logprobs_only = (
@@ -213,7 +219,8 @@ class HuggingFaceServer:
             sequences = encoded_input["input_ids"]
             scores = output.logits
         else:
-            print("\n\n\n\n\n optional_args is ",optional_args)
+            print("\n\n\n\n\n stopping_criteria is ",stopping_criteria)
+            
             
             output = self.model.generate(
                 **encoded_input,
