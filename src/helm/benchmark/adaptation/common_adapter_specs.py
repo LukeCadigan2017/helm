@@ -439,7 +439,7 @@ def get_machine_translation_adapter_spec(
         output_suffix="\n",
         max_train_instances=max_train_instances,
         num_outputs=1,
-        stop_sequences=['\n'],
+        stop_sequences=['\n','.','?','!'],
         temperature=0.0,
         num_beams=num_beams,
         generated_output_file=generated_output_file,
