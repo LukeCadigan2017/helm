@@ -130,44 +130,6 @@ class HuggingFaceServer:
                 )
         self.wrapped_tokenizer = wrapped_tokenizer
 
-#     def save_sentences(self, prompt, all_completions, output_file) -> None:  
-#         if not output_file:
-#             return  
-#         #will have to pass this somehow
-#         def process_prompt(prompt):
-#             def get_str_between(str, start_str, end_str):
-#                 start_idx=str.index(start_str)+len(start_str)
-#                 end_idx=str.index(end_str, start_idx)
-#                 # print(start_idx,end_idx)
-#                 return str[start_idx:end_idx].strip()
-#             prompt_start="""
-# German: """
-#             prompt_end="""
-# English:"""
-#             return get_str_between(prompt,prompt_start, prompt_end)
-        
-#         prompt=process_prompt(prompt)
-#         short_completions=[{"text":completion["text"],"s_logprob":sum(completion["logprobs"])} for completion in  all_completions]
-#         to_save = json.dumps({"prompt":prompt, "completions":short_completions})+"\n"
-#         with self._lock: 
-#             with open(output_file, 'a') as file: 
-#                 file.write(to_save)
-    # def get_stop_sequences(self, stop_chars, tokenizer):
-    #     return tokenizer( tokenizer._special_tokens_map['eos_token'].content, return_token_type_ids=False, add_special_tokens=False).input_ids
-        # stop_chars=['\n']
-        # stop_seq_key=" ".join(stop_chars)
-        # if stop_seq_key not in self.stop_sequence_dict.keys():
-            
-        #     stop_sequences = tokenizer( stop_chars[0], return_token_type_ids=False, add_special_tokens=False).input_ids
-        #     for stop_str in stop_chars:
-        #         contained_chars=[ key for (token,key) in tokenizer.get_vocab().items() if stop_str in token]
-        #         print("contained_chars is ",contained_chars)
-        #         stop_sequences+=contained_chars
-        #     # stop_sequences+=tokenizer( tokenizer._special_tokens_map['eos_token'].content, return_token_type_ids=False, add_special_tokens=False).input_ids
-        #     stop_sequences = list(dict.fromkeys(stop_sequences))
-        #     self.stop_sequence_dict[stop_seq_key]=stop_sequences
-        # return self.stop_sequence_dict[stop_seq_key]
-
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
         with self.wrapped_tokenizer as tokenizer:
             encoded_input = tokenizer(raw_request["prompt"], return_tensors="pt", return_token_type_ids=False).to(
@@ -176,28 +138,6 @@ class HuggingFaceServer:
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
         if len(raw_request["stop_sequences"]) > 0:
-            # stop_chars=raw_request["stop_sequences"]
-            # stop_sequences=self.get_stop_sequences(stop_chars,tokenizer)
-            # optional_args["eos_token_id"] =stop_sequences
-            # print(f"stop_sequences is {stop_sequences}")
-            # # +[tokenizer._special_tokens_map['eos_token'].content]
-            # # print("stop_sequences is ",stop_sequences)
-            # # with self.wrapped_tokenizer as tokenizer:
-            # #     stop_sequence_ids = tokenizer(
-            # #         stop_sequences, return_token_type_ids=False, add_special_tokens=False
-            # #     )
-            # # optional_args["eos_token_id"] = [x for xs in stop_sequence_ids.input_ids for x in xs]
-            # # print(f'optional_args["eos_token_id"] is {optional_args["eos_token_id"]}')
-            
-                                             
-            # # print(f'Luke2: optional_args["eos_token_id"], {optional_args["eos_token_id"]}')
-            # # #if len(stop_sequence_ids.input_ids) == 1 and len(stop_sequence_ids.input_ids[0]) == 1:
-            # # if len(stop_sequence_ids.input_ids[0]) == 1:
-            #     # optional_args["eos_token_id"] = stop_sequence_ids.input_ids[0][0]
-            # # else:
-            #     # stopping_criteria = StoppingCriteriaList()
-            #     # for stop_sequence_input_ids in stop_sequence_ids.input_ids:
-            #         # stopping_criteria.append(StopAtSpecificTokenCriteria(stop_sequence=stop_sequence_input_ids))
             stopping_criteria = StoppingCriteriaList()
 
             stopping_criteria.append(StopOnStrings(raw_request["stop_sequences"], tokenizer))
@@ -219,9 +159,6 @@ class HuggingFaceServer:
             sequences = encoded_input["input_ids"]
             scores = output.logits
         else:
-            # print("\n\n\n\n\n stopping_criteria is ",stopping_criteria)
-            
-            
             output = self.model.generate(
                 **encoded_input,
                 length_penalty=0,
@@ -237,9 +174,6 @@ class HuggingFaceServer:
                 **optional_args,
                 stopping_criteria=stopping_criteria, 
             )
-            #scores is num_tokens by num_beams by vocab
-            #len(sequences[0] is 581)
-            #why is 
             sequences = output.sequences
             scores = output.scores
         prompt_tokens_logprobs = []
@@ -253,27 +187,11 @@ class HuggingFaceServer:
                     logprobs = torch.nn.functional.log_softmax(scores[completion_id][i], dim=0)
                     prompt_tokens_logprobs.append(logprobs[sequences[completion_id][i + 1]].item())
 
-#ok, so core issue:
-
-# There are 14 words
-# There are only 13 scores
-# Fix: just don't count the last one lmao
-
-#ok, input size is 567
-
-#print(len(sequences[completion_id]))
-#So, both are 581
-#so, there are 14 sequences but we don't count the last one
-#581-567
-
-
-#i=len(scores)
-#len(scores) is 13
-
 
         # Remove prompt from the start of each sequence if echo_prompt is False.
         if raw_request["echo_prompt"]:
             raise Exception("I kind of broke echo prompt")
+        
         input_end=len(encoded_input.input_ids[0])
         sequences = [sequence[input_end: len(scores)+input_end] for sequence in sequences]
 
@@ -282,6 +200,7 @@ class HuggingFaceServer:
         for completion_id in range(num_generated):
             generated_tokens_logprobs = []
             for i in range(len(sequences[completion_id])):
+                print("scores sum is ",torch.sum(scores[i][completion_id]))
                 logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
                 generated_tokens_logprobs.append(logprobs[sequences[completion_id][i]].item())
             all_generated_tokens_logprobs.append(generated_tokens_logprobs)
