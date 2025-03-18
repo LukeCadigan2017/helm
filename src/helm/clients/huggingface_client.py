@@ -278,7 +278,7 @@ class HuggingFaceServer:
         all_generated_tokens_logprobs = []
         for completion_id in range(num_generated):
             generated_tokens_logprobs = []
-            for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
+            for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])-1):
 
 
                 ######### LUKE CODE #########
@@ -290,8 +290,8 @@ class HuggingFaceServer:
                 # print(f"completion id length is {len(sequences[completion_id])}")
                 
                 # print(f"range is {len(sequences[completion_id]) - len(encoded_input.input_ids[0])}")
-                print(f"scores length is {len(scores)}, num_tokens is {len(sequences[completion_id]) - len(encoded_input.input_ids[0])}")
-                print("get rid of all decoded text!!!!")
+                print(f"scores length is {len(scores)}, num_tokens is {len(sequences[completion_id]) - len(encoded_input.input_ids[0])-1}")
+                # print("get rid of all decoded text!!!!")
                 all_decoded_text = tokenizer.batch_decode(sequences)
                 if(i==len(scores)):
                     print("It fails here. all_decoded text is ",all_decoded_text)
