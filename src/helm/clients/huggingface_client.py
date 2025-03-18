@@ -129,19 +129,20 @@ class HuggingFaceServer:
 #             with open(output_file, 'a') as file: 
 #                 file.write(to_save)
     def get_stop_sequences(self, stop_chars, tokenizer):
-        stop_chars=['\n']
-        stop_seq_key=" ".join(stop_chars)
-        if stop_seq_key not in self.stop_sequence_dict.keys():
+        return tokenizer( tokenizer._special_tokens_map['eos_token'].content, return_token_type_ids=False, add_special_tokens=False).input_ids
+        # stop_chars=['\n']
+        # stop_seq_key=" ".join(stop_chars)
+        # if stop_seq_key not in self.stop_sequence_dict.keys():
             
-            stop_sequences = tokenizer( stop_chars[0], return_token_type_ids=False, add_special_tokens=False).input_ids
-            for stop_str in stop_chars:
-                contained_chars=[ key for (token,key) in tokenizer.get_vocab().items() if stop_str in token]
-                print("contained_chars is ",contained_chars)
-                stop_sequences+=contained_chars
-            # stop_sequences+=tokenizer( tokenizer._special_tokens_map['eos_token'].content, return_token_type_ids=False, add_special_tokens=False).input_ids
-            stop_sequences = list(dict.fromkeys(stop_sequences))
-            self.stop_sequence_dict[stop_seq_key]=stop_sequences
-        return self.stop_sequence_dict[stop_seq_key]
+        #     stop_sequences = tokenizer( stop_chars[0], return_token_type_ids=False, add_special_tokens=False).input_ids
+        #     for stop_str in stop_chars:
+        #         contained_chars=[ key for (token,key) in tokenizer.get_vocab().items() if stop_str in token]
+        #         print("contained_chars is ",contained_chars)
+        #         stop_sequences+=contained_chars
+        #     # stop_sequences+=tokenizer( tokenizer._special_tokens_map['eos_token'].content, return_token_type_ids=False, add_special_tokens=False).input_ids
+        #     stop_sequences = list(dict.fromkeys(stop_sequences))
+        #     self.stop_sequence_dict[stop_seq_key]=stop_sequences
+        # return self.stop_sequence_dict[stop_seq_key]
 
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
         with self.wrapped_tokenizer as tokenizer:
