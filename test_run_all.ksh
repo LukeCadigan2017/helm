@@ -27,10 +27,10 @@ METRICS="bleu_4 comet"
 
 #other configs
 
-NUM_BEAMS_LIST="101"
+NUM_BEAMS_LIST="2"
 
 MAX_EVAL_INSTANCES=10
-# MODELS="meta-llama/Llama-3.1-8B"
+#MODELS="meta-llama/Llama-3.1-8B"
 MODELS="meta-llama/Llama-3.2-1B-Instruct"
 # MODELS="stas/tiny-random-llama-2"
 
@@ -85,13 +85,13 @@ for MODEL in $MODELS; do
 
 done
 
-echo_space
+#echo_space
 
 #print out relevant files
 # for GEN_OUTPUT_FILE in $GEN_OUTPUT_FILES; do
 #     echo "GEN_OUTPUT_FILE: ${GEN_OUTPUT_FILE}"
 # done
-echo OUTPUT_CSV is $OUTPUT_CSV
+#echo OUTPUT_CSV is $OUTPUT_CSV
 
 #USE THIS ONE 
 #helm-run --run-entries gsm_iom:model=stas/tiny-random-llama-2,num_beams=2  --suite my-suite --max-eval-instances 2 --disable-cache
