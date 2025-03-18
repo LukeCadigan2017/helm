@@ -219,7 +219,7 @@ class HuggingFaceServer:
             sequences = encoded_input["input_ids"]
             scores = output.logits
         else:
-            print("\n\n\n\n\n stopping_criteria is ",stopping_criteria)
+            # print("\n\n\n\n\n stopping_criteria is ",stopping_criteria)
             
             
             output = self.model.generate(
@@ -290,16 +290,16 @@ class HuggingFaceServer:
                 # print(f"completion id length is {len(sequences[completion_id])}")
                 
                 # print(f"range is {len(sequences[completion_id]) - len(encoded_input.input_ids[0])}")
-                print(f"scores length is {len(scores)}, num_tokens is {len(sequences[completion_id]) - len(encoded_input.input_ids[0])-1}")
+                # print(f"scores length is {len(scores)}, num_tokens is {len(sequences[completion_id]) - len(encoded_input.input_ids[0])-1}")
                 # print("get rid of all decoded text!!!!")
                 all_decoded_text = tokenizer.batch_decode(sequences)
                 if(i==len(scores)):
                     print("It fails here. all_decoded text is ",all_decoded_text)
                     # breakpoint()
-                else:
-                    print("It succeeds here. all_decoded text is ",all_decoded_text)
-                print(f"scores len is {len(scores)} i is {i}")
-                print(f"scores[i] len is {len(scores[i])} completion_id is {completion_id}")
+                # else:
+                #     print("It succeeds here. all_decoded text is ",all_decoded_text)
+                # print(f"scores len is {len(scores)} i is {i}")
+                # print(f"scores[i] len is {len(scores[i])} completion_id is {completion_id}")
                 ######### LUKE CODE #########
                 
                 logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)

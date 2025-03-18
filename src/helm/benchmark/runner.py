@@ -58,6 +58,9 @@ class GeneratedOutputExamples:
     completion: str
     """Selection completion for metrics"""
 
+    # The sum of the log probabilities of all tokens
+    logprob: float
+
     examples: List[GeneratedOutput]
     """List of unscored examples"""
 
@@ -261,9 +264,10 @@ class Runner:
             id=request_state.instance.id
             reference=request_state.instance.references[0].output.text
             completion=request_state.result.completions[0].text
+            logprob=request_state.result.completions[0].logprob
 
             # print("\n\n\nreference is ",reference)
-            instance_generations.append(GeneratedOutputExamples(prompt=prompt, reference=reference,examples=examples,instance_id=id, completion=completion))
+            instance_generations.append(GeneratedOutputExamples(prompt=prompt, reference=reference,examples=examples,instance_id=id, completion=completion, logprob=logprob))
 
         #print(f"instance_generations is {instance_generations}")
         return instance_generations
