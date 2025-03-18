@@ -54,7 +54,7 @@ class StopOnStrings(StoppingCriteria):
         for stop_string in self.stop_strings:
             # print("Hello! stop_string is ",stop_string)
             # print("Hello! steam is is ",self.stream)
-            if self.stream.endswith(stop_string):
+            if self.stream[:-1].endswith(stop_string):
                 # print("Hello! got here")
                 return True
         # self.stream = ""
@@ -271,47 +271,23 @@ class HuggingFaceServer:
 #len(scores) is 13
 
 
-
-
+        # Remove prompt from the start of each sequence if echo_prompt is False.
+        if raw_request["echo_prompt"]:
+            raise Exception("I kind of broke echo prompt")
+        input_end=len(encoded_input.input_ids[0])
+        sequences = [sequence[input_end: len(scores)+input_end] for sequence in sequences]
 
         # Compute logprobs of generated tokens for each completed sequence.
         all_generated_tokens_logprobs = []
         for completion_id in range(num_generated):
             generated_tokens_logprobs = []
-            for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])-1):
-
-
-                ######### LUKE CODE #########
-                # breakpoint()
-
-
-                # for x in encoded_input.input_ids:
-                #     print("encoded_input len is ",len(encoded_input.input_ids[0]))                
-                # print(f"completion id length is {len(sequences[completion_id])}")
-                
-                # print(f"range is {len(sequences[completion_id]) - len(encoded_input.input_ids[0])}")
-                # print(f"scores length is {len(scores)}, num_tokens is {len(sequences[completion_id]) - len(encoded_input.input_ids[0])-1}")
-                # print("get rid of all decoded text!!!!")
-                all_decoded_text = tokenizer.batch_decode(sequences)
-                if(i==len(scores)):
-                    print("It fails here. all_decoded text is ",all_decoded_text)
-                    # breakpoint()
-                # else:
-                #     print("It succeeds here. all_decoded text is ",all_decoded_text)
-                # print(f"scores len is {len(scores)} i is {i}")
-                # print(f"scores[i] len is {len(scores[i])} completion_id is {completion_id}")
-                ######### LUKE CODE #########
-                
+            for i in range(len(sequences[completion_id])):
                 logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
-                # Get log probability of chosen token.
-                j = i + len(encoded_input.input_ids[0])
-                generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())
+                generated_tokens_logprobs.append(logprobs[sequences[completion_id][i]].item())
             all_generated_tokens_logprobs.append(generated_tokens_logprobs)
 
-        # Remove prompt from the start of each sequence if echo_prompt is False.
-        if not raw_request["echo_prompt"]:
-            sequences = [sequence[len(encoded_input.input_ids[0]) :] for sequence in sequences]
 
+        
         with self.wrapped_tokenizer as tokenizer:
             all_tokens = [[tokenizer.decode(token) for token in sequence_tokens] for sequence_tokens in sequences]
             all_decoded_text = tokenizer.batch_decode(sequences)
@@ -495,8 +471,8 @@ class HuggingFaceClient(CachingClient):
 
         completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
         unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=False)
-        for completion in unscored_examples:
-            completion.tokens=None
+        # for completion in unscored_examples:
+            #completion.tokens=None
 
         return RequestResult(
             success=True,
