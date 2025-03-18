@@ -48,14 +48,14 @@ class StopOnStrings(StoppingCriteria):
         self.stream = ""
 
     def __call__(self, input_ids, scores, **kwargs):
-        print("input_ids shape is ",input_ids.size())
+        # print("input_ids shape is ",input_ids.size())
         generated = self.tokenizer.decode(input_ids[0][-1], skip_special_tokens=True)
         self.stream += generated
         for stop_string in self.stop_strings:
-            print("Hello! stop_string is ",stop_string)
-            print("Hello! steam is is ",self.stream)
+            # print("Hello! stop_string is ",stop_string)
+            # print("Hello! steam is is ",self.stream)
             if self.stream.endswith(stop_string):
-                print("Hello! got here")
+                # print("Hello! got here")
                 return True
         # self.stream = ""
         # print(generated, end="", flush=True)
@@ -237,6 +237,9 @@ class HuggingFaceServer:
                 **optional_args,
                 stopping_criteria=stopping_criteria, 
             )
+            #scores is num_tokens by num_beams by vocab
+            #len(sequences[0] is 581)
+            #why is 
             sequences = output.sequences
             scores = output.scores
         prompt_tokens_logprobs = []
@@ -250,11 +253,55 @@ class HuggingFaceServer:
                     logprobs = torch.nn.functional.log_softmax(scores[completion_id][i], dim=0)
                     prompt_tokens_logprobs.append(logprobs[sequences[completion_id][i + 1]].item())
 
+#ok, so core issue:
+
+# There are 14 words
+# There are only 13 scores
+# Fix: just don't count the last one lmao
+
+#ok, input size is 567
+
+#print(len(sequences[completion_id]))
+#So, both are 581
+#so, there are 14 sequences but we don't count the last one
+#581-567
+
+
+#i=len(scores)
+#len(scores) is 13
+
+
+
+
+
         # Compute logprobs of generated tokens for each completed sequence.
         all_generated_tokens_logprobs = []
         for completion_id in range(num_generated):
             generated_tokens_logprobs = []
             for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
+
+
+                ######### LUKE CODE #########
+                # breakpoint()
+
+
+                # for x in encoded_input.input_ids:
+                #     print("encoded_input len is ",len(encoded_input.input_ids[0]))                
+                # print(f"completion id length is {len(sequences[completion_id])}")
+                
+                # print(f"range is {len(sequences[completion_id]) - len(encoded_input.input_ids[0])}")
+                print(f"scores length is {len(scores)}, num_tokens is {len(sequences[completion_id]) - len(encoded_input.input_ids[0])}")
+                print("get rid of all decoded text!!!!")
+                all_decoded_text = tokenizer.batch_decode(sequences)
+                if(i==len(scores)):
+                    print("It fails here. all_decoded text is ",all_decoded_text)
+                    # breakpoint()
+                else:
+                    print("It succeeds here. all_decoded text is ",all_decoded_text)
+                print(f"scores len is {len(scores)} i is {i}")
+                print(f"scores[i] len is {len(scores[i])} completion_id is {completion_id}")
+                ######### LUKE CODE #########
+                
                 logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
                 # Get log probability of chosen token.
                 j = i + len(encoded_input.input_ids[0])
@@ -434,17 +481,17 @@ class HuggingFaceClient(CachingClient):
             wrapped_tokenizer=self._wrapped_tokenizer,
             **self._kwargs,
         )
+        def do_it() -> Dict[str, Any]:
+            return huggingface_model.serve_request(raw_request)
+        cache_key = CachingClient.make_cache_key(raw_request, request)
+        response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
 
-        try:
-
-            def do_it() -> Dict[str, Any]:
-                return huggingface_model.serve_request(raw_request)
-
-            cache_key = CachingClient.make_cache_key(raw_request, request)
-            response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
-        except Exception as e:  # Do something if error is encountered.
-            error: str = f"HuggingFace error: {e}"
-            return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
+        # try:
+        #     cache_key = CachingClient.make_cache_key(raw_request, request)
+        #     response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
+        # except Exception as e:  # Do something if error is encountered.
+        #     error: str = f"HuggingFace error: {e}"
+        #     return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
 
         completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
         unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=False)
