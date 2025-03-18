@@ -65,6 +65,7 @@ class HuggingFaceServer:
         **kwargs,
     ):
         self._lock= Lock()
+        self.stop_sequence_dict={}
         self.device: Optional[str]
         if "device_map" in kwargs:
             if "device" in kwargs:
@@ -127,7 +128,17 @@ class HuggingFaceServer:
 #         with self._lock: 
 #             with open(output_file, 'a') as file: 
 #                 file.write(to_save)
-
+    def get_stop_sequences(self, stop_chars, tokenizer):
+        stop_seq_key=" ".join(stop_chars)
+        if stop_seq_key in self.stop_sequence_dict.keys():
+            return self.stop_sequence_dict[stop_seq_key]
+        else:
+            stop_sequences = tokenizer( stop_chars[0], return_token_type_ids=False, add_special_tokens=False).input_ids
+            for stop_str in stop_chars:
+                stop_sequences+=[ key for (token,key) in tokenizer.get_vocab().items() if stop_str in token]
+            # stop_sequences+=tokenizer( tokenizer._special_tokens_map['eos_token'].content, return_token_type_ids=False, add_special_tokens=False).input_ids
+            stop_sequences = list(dict.fromkeys(stop_sequences))
+            self.stop_sequence_dict[stop_seq_key]=stop_sequences
 
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
         with self.wrapped_tokenizer as tokenizer:
@@ -137,19 +148,8 @@ class HuggingFaceServer:
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
         if len(raw_request["stop_sequences"]) > 0:
-
-
-            stop_sequences = tokenizer( '\n', return_token_type_ids=False, add_special_tokens=False).input_ids
-            for stop_str in raw_request["stop_sequences"]:
-                stop_sequences+=[ key for (token,key) in tokenizer.get_vocab().items() if '\n' in token]
-
-            # stop_sequences = tokenizer( raw_request["stop_sequences"][0], return_token_type_ids=False, add_special_tokens=False).input_ids
-            # for stop_str in raw_request["stop_sequences"]:
-            #     stop_sequences+=[ key for (token,key) in tokenizer.get_vocab().items() if stop_str in token]
-
-
-            stop_sequences+=tokenizer( tokenizer._special_tokens_map['eos_token'].content, return_token_type_ids=False, add_special_tokens=False).input_ids
-            stop_sequences = list(dict.fromkeys(stop_sequences))
+            stop_chars=raw_request["stop_sequences"]
+            stop_sequences=self.get_stop_sequences(stop_chars,tokenizer)
             optional_args["eos_token_id"] =stop_sequences
             print(f"stop_sequences is {stop_sequences}")
             # +[tokenizer._special_tokens_map['eos_token'].content]
