@@ -38,28 +38,28 @@ class StopAtSpecificTokenCriteria(StoppingCriteria):
         current_sequence = input_ids[:, -len(self.stop_sequence) :]
         return bool(torch.all(current_sequence == stop_sequence_tensor).item())
 
-class StopOnStrings(StoppingCriteria):
-    def __init__(self, stop_strings, tokenizer):
-        self.stop_strings = stop_strings
-        self.tokenizer = tokenizer
-        self.stream = ""
+# class StopOnStrings(StoppingCriteria):
+#     def __init__(self, stop_strings, tokenizer):
+#         self.stop_strings = stop_strings
+#         self.tokenizer = tokenizer
+#         self.stream = ""
 
-    def reset(self):
-        self.stream = ""
+#     def reset(self):
+#         self.stream = ""
 
-    def __call__(self, input_ids, scores, **kwargs):
-        # print("input_ids shape is ",input_ids.size())
-        generated = self.tokenizer.decode(input_ids[0][-1], skip_special_tokens=True)
-        self.stream += generated
-        for stop_string in self.stop_strings:
-            # print("Hello! stop_string is ",stop_string)
-            # print("Hello! steam is is ",self.stream)
-            if self.stream[:-1].endswith(stop_string):
-                # print("Hello! got here")
-                return True
-        # self.stream = ""
-        # print(generated, end="", flush=True)
-        return False
+#     def __call__(self, input_ids, scores, **kwargs):
+#         # print("input_ids shape is ",input_ids.size())
+#         generated = self.tokenizer.decode(input_ids[0][-1], skip_special_tokens=True)
+#         self.stream += generated
+#         for stop_string in self.stop_strings:
+#             # print("Hello! stop_string is ",stop_string)
+#             # print("Hello! steam is is ",self.stream)
+#             if self.stream[:-1].endswith(stop_string):
+#                 # print("Hello! got here")
+#                 return True
+#         # self.stream = ""
+#         # print(generated, end="", flush=True)
+#         return False
 
 
 
@@ -139,8 +139,8 @@ class HuggingFaceServer:
         optional_args = {}
         if len(raw_request["stop_sequences"]) > 0:
             stopping_criteria = StoppingCriteriaList()
-
-            stopping_criteria.append(StopOnStrings(raw_request["stop_sequences"], tokenizer))
+            raise Exception("Not implemented!!")
+            # stopping_criteria.append(StopOnStrings(raw_request["stop_sequences"], tokenizer))
 
         # Check if we need to compute the perplexity of the prompt (#1497)
         compute_logprobs_only = (
@@ -152,6 +152,7 @@ class HuggingFaceServer:
         num_generated=max(raw_request["num_return_sequences"], raw_request["num_beams"])
         assert(raw_request["top_p"]==1)
 
+
         # Use HuggingFace's `generate` method.
         if compute_logprobs_only:
             with torch.no_grad():
@@ -159,6 +160,8 @@ class HuggingFaceServer:
             sequences = encoded_input["input_ids"]
             scores = output.logits
         else:
+            # print(f"stopping_criteria is {stopping_criteria}")
+            # print(f"optional_args is {optional_args}")
             output = self.model.generate(
                 **encoded_input,
                 length_penalty=0,
@@ -176,33 +179,58 @@ class HuggingFaceServer:
             )
             sequences = output.sequences
             scores = output.scores
+
+        eos_token=sequences[0][-1]
+        # print("\n\n\n\n eos token is ",eos_token)
         prompt_tokens_logprobs = []
-        if compute_logprobs_only:
-            # Append the logprob of the first token of the prompt.
-            prompt_tokens_logprobs.append(0.0)
+        # if compute_logprobs_only:
+        #     # Append the logprob of the first token of the prompt.
+        #     prompt_tokens_logprobs.append(0.0)
 
-            # Compute logprobs of prompt tokens.
-            for completion_id in range(num_generated):
-                for i in range(len(sequences[completion_id]) - 1):
-                    logprobs = torch.nn.functional.log_softmax(scores[completion_id][i], dim=0)
-                    prompt_tokens_logprobs.append(logprobs[sequences[completion_id][i + 1]].item())
+        #     # Compute logprobs of prompt tokens.
+        #     for completion_id in range(num_generated):
+        #         for i in range(len(sequences[completion_id]) - 1):
+        #             logprobs = torch.nn.functional.log_softmax(scores[completion_id][i], dim=0)
+        #             prompt_tokens_logprobs.append(logprobs[sequences[completion_id][i + 1]].item())
 
 
-        # Remove prompt from the start of each sequence if echo_prompt is False.
+        # for completion_id in range(num_generated):
+        #     print("len[sequences] is ",len(sequences[completion_id]))
+
+        # input_end=len(encoded_input.input_ids[0])
+
+        score_len=len(scores)
+        for idx, sequence in enumerate(sequences):
+            assert (len(encoded_input.input_ids[0])+score_len)==len(sequence), f"Input len: {len(encoded_input.input_ids[0])}, score len {score_len}, sequence len {len(sequence)}, idx {idx}"
+        
+        sequences = [sequence[-score_len:] for sequence in sequences]
+        
+        # breakpoint()
         if raw_request["echo_prompt"]:
             raise Exception("I kind of broke echo prompt")
-        
-        input_end=len(encoded_input.input_ids[0])
-        sequences = [sequence[input_end: len(scores)+input_end] for sequence in sequences]
 
         # Compute logprobs of generated tokens for each completed sequence.
         all_generated_tokens_logprobs = []
         for completion_id in range(num_generated):
             generated_tokens_logprobs = []
+            found_eos=False
             for i in range(len(sequences[completion_id])):
-                print("scores sum is ",torch.sum(scores[i][completion_id]))
-                logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
-                generated_tokens_logprobs.append(logprobs[sequences[completion_id][i]].item())
+                if(found_eos):
+                    generated_tokens_logprobs.append(0)
+                else:
+                    token_id=sequences[completion_id][i]
+                    
+                    logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
+                    generated_tokens_logprobs.append(logprobs[token_id].item())
+                    found_eos=(token_id==eos_token)
+                    if(found_eos):
+                        print("\n\n\n\n")
+                        probs, indices= torch.topk(scores[i][completion_id], 5,largest=True)
+                        with self.wrapped_tokenizer as tokenizer:
+                            words=tokenizer.batch_decode(indices)
+                            print("Highest probs for eos token:", list(zip(probs, words)))
+                            
+                            breakpoint()
             all_generated_tokens_logprobs.append(generated_tokens_logprobs)
 
 
@@ -210,7 +238,6 @@ class HuggingFaceServer:
         with self.wrapped_tokenizer as tokenizer:
             all_tokens = [[tokenizer.decode(token) for token in sequence_tokens] for sequence_tokens in sequences]
             all_decoded_text = tokenizer.batch_decode(sequences)
-
         raw_completions = []
         for decoded_text, tokens, generated_tokens_logprobs in zip(
             all_decoded_text, all_tokens, all_generated_tokens_logprobs
@@ -315,22 +342,22 @@ class HuggingFaceClient(CachingClient):
             sequence_logprob: float = 0
             tokens: List[Token] = []
 
-            if request.echo_prompt:
-                # Add prompt to list of generated tokens.
-                generated_tokens = raw_completion["tokens"][response["input_length"] :]
-                if raw_completion.get("prompt_logprobs"):
-                    for token_text, logprob in zip(
-                        raw_completion["tokens"][: response["input_length"]],
-                        raw_completion["prompt_logprobs"][: response["input_length"]],
-                    ):
-                        tokens.append(Token(text=token_text, logprob=logprob))
-                        sequence_logprob += logprob
-                else:
-                    for token_text in raw_completion["tokens"][: response["input_length"]]:
-                        tokens.append(Token(text=token_text, logprob=0.0))
+            # if request.echo_prompt:
+            #     # Add prompt to list of generated tokens.
+            #     generated_tokens = raw_completion["tokens"][response["input_length"] :]
+            #     if raw_completion.get("prompt_logprobs"):
+            #         for token_text, logprob in zip(
+            #             raw_completion["tokens"][: response["input_length"]],
+            #             raw_completion["prompt_logprobs"][: response["input_length"]],
+            #         ):
+            #             tokens.append(Token(text=token_text, logprob=logprob))
+            #             sequence_logprob += logprob
+            #     else:
+            #         for token_text in raw_completion["tokens"][: response["input_length"]]:
+            #             tokens.append(Token(text=token_text, logprob=0.0))
 
-            else:
-                generated_tokens = raw_completion["tokens"]
+            # else:
+            generated_tokens = raw_completion["tokens"]
 
             # Compute logprob for the entire sequence.
             for token_text, logprob in zip(generated_tokens, raw_completion["logprobs"]):
