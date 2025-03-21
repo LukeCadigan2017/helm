@@ -199,12 +199,50 @@ class HuggingFaceServer:
 
         # input_end=len(encoded_input.input_ids[0])
 
-        score_len=len(scores)
-        for idx, sequence in enumerate(sequences):
-            assert (len(encoded_input.input_ids[0])+score_len)==len(sequence), f"Input len: {len(encoded_input.input_ids[0])}, score len {score_len}, sequence len {len(sequence)}, idx {idx}"
+        # score_len=len(scores)
+        # for idx, sequence in enumerate(sequences):
+        #     assert (len(encoded_input.input_ids[0])+score_len)==len(sequence), f"Input len: {len(encoded_input.input_ids[0])}, score len {score_len}, sequence len {len(sequence)}, idx {idx}"
         
-        sequences = [sequence[-score_len:] for sequence in sequences]
+        # sequences = [sequence[-score_len:] for sequence in sequences]
         
+
+
+        ########## THEIR ATTEMPT ##########
+
+        all_generated_tokens_logprobs = []
+        for completion_id in range(raw_request["num_return_sequences"]):
+            generated_tokens_logprobs = []
+            found_eos=False
+            for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
+                if(found_eos):
+                    generated_tokens_logprobs.append(0)
+                else:
+                    logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
+                    # Get log probability of chosen token.
+                    j = i + len(encoded_input.input_ids[0])
+                    token_id=sequences[completion_id][j]
+                    generated_tokens_logprobs.append(logprobs[token_id].item())
+                    found_eos=(token_id==eos_token)
+
+                    #this is just debugging
+                    if(found_eos):
+                        print("\n\n\n\n")
+                        probs, indices= torch.topk(scores[i][completion_id], 5,largest=True)
+                        with self.wrapped_tokenizer as tokenizer:
+                            words=tokenizer.batch_decode(indices)
+                            print("Highest probs for eos token:", list(zip(probs, words)))
+            all_generated_tokens_logprobs.append(generated_tokens_logprobs)
+
+
+        if not raw_request["echo_prompt"]:
+            sequences = [sequence[len(encoded_input.input_ids[0]) :] for sequence in sequences]
+
+
+        ########## THEIR ATTEMPT ##########
+
+
+
+        ########## MY ATTEMPT ##########
         # breakpoint()
         if raw_request["echo_prompt"]:
             raise Exception("I kind of broke echo prompt")
@@ -229,11 +267,9 @@ class HuggingFaceServer:
                         with self.wrapped_tokenizer as tokenizer:
                             words=tokenizer.batch_decode(indices)
                             print("Highest probs for eos token:", list(zip(probs, words)))
-                            
-                            breakpoint()
             all_generated_tokens_logprobs.append(generated_tokens_logprobs)
 
-
+        ########## MY ATTEMPT ##########
         
         with self.wrapped_tokenizer as tokenizer:
             all_tokens = [[tokenizer.decode(token) for token in sequence_tokens] for sequence_tokens in sequences]
