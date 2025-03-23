@@ -160,8 +160,6 @@ class HuggingFaceServer:
             sequences = encoded_input["input_ids"]
             scores = output.logits
         else:
-            # print(f"stopping_criteria is {stopping_criteria}")
-            # print(f"optional_args is {optional_args}")
             output = self.model.generate(
                 **encoded_input,
                 length_penalty=0,
@@ -179,97 +177,37 @@ class HuggingFaceServer:
             )
             sequences = output.sequences
             scores = output.scores
-
-        eos_token=sequences[0][-1]
+        
         # print("\n\n\n\n eos token is ",eos_token)
+        
         prompt_tokens_logprobs = []
-        # if compute_logprobs_only:
-        #     # Append the logprob of the first token of the prompt.
-        #     prompt_tokens_logprobs.append(0.0)
+        if compute_logprobs_only:
+            # Append the logprob of the first token of the prompt.
+            prompt_tokens_logprobs.append(0.0)
 
-        #     # Compute logprobs of prompt tokens.
-        #     for completion_id in range(num_generated):
-        #         for i in range(len(sequences[completion_id]) - 1):
-        #             logprobs = torch.nn.functional.log_softmax(scores[completion_id][i], dim=0)
-        #             prompt_tokens_logprobs.append(logprobs[sequences[completion_id][i + 1]].item())
-
-
-        # for completion_id in range(num_generated):
-        #     print("len[sequences] is ",len(sequences[completion_id]))
-
-        # input_end=len(encoded_input.input_ids[0])
-
-        # score_len=len(scores)
-        # for idx, sequence in enumerate(sequences):
-        #     assert (len(encoded_input.input_ids[0])+score_len)==len(sequence), f"Input len: {len(encoded_input.input_ids[0])}, score len {score_len}, sequence len {len(sequence)}, idx {idx}"
-        
-        # sequences = [sequence[-score_len:] for sequence in sequences]
-        
-
-
-        ########## THEIR ATTEMPT ##########
-
-        all_generated_tokens_logprobs = []
-        for completion_id in range(raw_request["num_return_sequences"]):
-            generated_tokens_logprobs = []
-            found_eos=False
-            for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
-                if(found_eos):
-                    generated_tokens_logprobs.append(0)
-                else:
-                    logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
-                    # Get log probability of chosen token.
-                    j = i + len(encoded_input.input_ids[0])
-                    token_id=sequences[completion_id][j]
-                    generated_tokens_logprobs.append(logprobs[token_id].item())
-                    found_eos=(token_id==eos_token)
-
-                    #this is just debugging
-                    if(found_eos):
-                        print("\n\n\n\n")
-                        probs, indices= torch.topk(scores[i][completion_id], 5,largest=True)
-                        with self.wrapped_tokenizer as tokenizer:
-                            words=tokenizer.batch_decode(indices)
-                            print("Highest probs for eos token:", list(zip(probs, words)))
-            all_generated_tokens_logprobs.append(generated_tokens_logprobs)
-
-
-        if not raw_request["echo_prompt"]:
-            sequences = [sequence[len(encoded_input.input_ids[0]) :] for sequence in sequences]
-
-
-        ########## THEIR ATTEMPT ##########
-
-
-
-        ########## MY ATTEMPT ##########
-        # breakpoint()
-        if raw_request["echo_prompt"]:
-            raise Exception("I kind of broke echo prompt")
+            # Compute logprobs of prompt tokens.
+            for completion_id in range(raw_request["num_return_sequences"]):
+                for i in range(len(sequences[completion_id]) - 1):
+                    logprobs = torch.nn.functional.log_softmax(scores[completion_id][i], dim=0)
+                    prompt_tokens_logprobs.append(logprobs[sequences[completion_id][i + 1]].item())
 
         # Compute logprobs of generated tokens for each completed sequence.
         all_generated_tokens_logprobs = []
-        for completion_id in range(num_generated):
+        
+        for completion_id in range(raw_request["num_return_sequences"]):
             generated_tokens_logprobs = []
-            found_eos=False
-            for i in range(len(sequences[completion_id])):
-                if(found_eos):
-                    generated_tokens_logprobs.append(0)
-                else:
-                    token_id=sequences[completion_id][i]
-                    
-                    logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
-                    generated_tokens_logprobs.append(logprobs[token_id].item())
-                    found_eos=(token_id==eos_token)
-                    if(found_eos):
-                        print("\n\n\n\n")
-                        probs, indices= torch.topk(scores[i][completion_id], 5,largest=True)
-                        with self.wrapped_tokenizer as tokenizer:
-                            words=tokenizer.batch_decode(indices)
-                            print("Highest probs for eos token:", list(zip(probs, words)))
+            for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
+                logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
+                # Get log probability of chosen token.
+                j = i + len(encoded_input.input_ids[0])
+                generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())                
+                if(sequences[completion_id][j]==sequences[completion_id][-1]):
+                    break
             all_generated_tokens_logprobs.append(generated_tokens_logprobs)
 
-        ########## MY ATTEMPT ##########
+        # Remove prompt from the start of each sequence if echo_prompt is False.
+        if not raw_request["echo_prompt"]:
+            sequences = [sequence[len(encoded_input.input_ids[0]) :] for sequence in sequences]
         
         with self.wrapped_tokenizer as tokenizer:
             all_tokens = [[tokenizer.decode(token) for token in sequence_tokens] for sequence_tokens in sequences]
@@ -278,9 +216,6 @@ class HuggingFaceServer:
         for decoded_text, tokens, generated_tokens_logprobs in zip(
             all_decoded_text, all_tokens, all_generated_tokens_logprobs
         ):
-            # print("\n\n\n\n\n logprobs is", generated_tokens_logprobs)
-
-
             raw_completions.append(
                 {
                     "text": decoded_text,
@@ -414,7 +349,6 @@ class HuggingFaceClient(CachingClient):
             return EMBEDDING_UNAVAILABLE_REQUEST_RESULT
         
 
-        # print("\n\n\n\n\n LUKE: Original Request is ",request)
 
         raw_request: HuggingFaceRequest = {
             "engine": request.model_engine,
