@@ -135,12 +135,20 @@ class HuggingFaceServer:
             encoded_input = tokenizer(raw_request["prompt"], return_tensors="pt", return_token_type_ids=False).to(
                 0 if self.device is None else self.device
             )
+      
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
         if len(raw_request["stop_sequences"]) > 0:
-            stopping_criteria = StoppingCriteriaList()
-            raise Exception("Not implemented!!")
-            # stopping_criteria.append(StopOnStrings(raw_request["stop_sequences"], tokenizer))
+            with self.wrapped_tokenizer as tokenizer:
+                stop_sequence_ids = tokenizer(
+                    raw_request["stop_sequences"], return_token_type_ids=False, add_special_tokens=False
+                )
+            if len(stop_sequence_ids.input_ids) == 1 and len(stop_sequence_ids.input_ids[0]) == 1:
+                optional_args["eos_token_id"] = stop_sequence_ids.input_ids[0][0]
+            else:
+                stopping_criteria = StoppingCriteriaList()
+                for stop_sequence_input_ids in stop_sequence_ids.input_ids:
+                    stopping_criteria.append(StopAtSpecificTokenCriteria(stop_sequence=stop_sequence_input_ids))
 
         # Check if we need to compute the perplexity of the prompt (#1497)
         compute_logprobs_only = (
@@ -178,6 +186,22 @@ class HuggingFaceServer:
             sequences = output.sequences
             scores = output.scores
         
+
+            #This is the prompt:
+
+
+            #end of prompt:
+            # Airbus erklärt, die konkurrierende Version des A350 befördere 350 Personen in 18 Zoll breiten Sitzen in der Touristenklasse, wobei es neun pro Reihe gibt
+            print("\n\n\n\n------- prompt -----")
+            print(raw_request["prompt"])
+
+            print("\n\n\n\n------- encoded input -----")
+            print(tokenizer.batch_decode(encoded_input["input_ids"]))
+
+            print("\n\n\n\n------- sequences -----")
+            print(tokenizer.batch_decode(sequences)[0])
+            # breakpoint()
+            
         # print("\n\n\n\n eos token is ",eos_token)
         
         prompt_tokens_logprobs = []
@@ -213,6 +237,10 @@ class HuggingFaceServer:
             all_tokens = [[tokenizer.decode(token) for token in sequence_tokens] for sequence_tokens in sequences]
             all_decoded_text = tokenizer.batch_decode(sequences)
         raw_completions = []
+
+        
+
+
         for decoded_text, tokens, generated_tokens_logprobs in zip(
             all_decoded_text, all_tokens, all_generated_tokens_logprobs
         ):
@@ -225,6 +253,14 @@ class HuggingFaceServer:
                 }
             )
         completions = raw_completions[:raw_request["num_return_sequences"]]
+        
+
+
+        # with open('debug.txt', 'w') as f:
+        #     txt=completions[0].txt.split("<|endoftext|>")[0]
+        #     txt=txt.split("<|endoftext|>")[0]
+        #     f.write(f"Prompt is {raw_request['prompt']}")
+        #     f.write(f"Completion is {}")
         return {"completions": completions, "input_length": len(encoded_input.input_ids[0]), "unscored_examples":raw_completions}
 
 
@@ -373,17 +409,18 @@ class HuggingFaceClient(CachingClient):
             wrapped_tokenizer=self._wrapped_tokenizer,
             **self._kwargs,
         )
-        def do_it() -> Dict[str, Any]:
-            return huggingface_model.serve_request(raw_request)
-        cache_key = CachingClient.make_cache_key(raw_request, request)
-        response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
 
-        # try:
-        #     cache_key = CachingClient.make_cache_key(raw_request, request)
-        #     response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
-        # except Exception as e:  # Do something if error is encountered.
-        #     error: str = f"HuggingFace error: {e}"
-        #     return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
+        # cache_key = CachingClient.make_cache_key(raw_request, request)
+        # response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
+
+        try:
+            def do_it() -> Dict[str, Any]:
+                return huggingface_model.serve_request(raw_request)
+            cache_key = CachingClient.make_cache_key(raw_request, request)
+            response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
+        except Exception as e:  # Do something if error is encountered.
+            error: str = f"HuggingFace error: {e}"
+            return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
 
         completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
         unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=False)
