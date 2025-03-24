@@ -210,7 +210,7 @@ class HuggingFaceServer:
             prompt_tokens_logprobs.append(0.0)
 
             # Compute logprobs of prompt tokens.
-            for completion_id in range(raw_request["num_return_sequences"]):
+            for completion_id in range(num_generated):
                 for i in range(len(sequences[completion_id]) - 1):
                     logprobs = torch.nn.functional.log_softmax(scores[completion_id][i], dim=0)
                     prompt_tokens_logprobs.append(logprobs[sequences[completion_id][i + 1]].item())
@@ -218,7 +218,7 @@ class HuggingFaceServer:
         # Compute logprobs of generated tokens for each completed sequence.
         all_generated_tokens_logprobs = []
         
-        for completion_id in range(raw_request["num_return_sequences"]):
+        for completion_id in range(num_generated):
             generated_tokens_logprobs = []
             for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
                 logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
@@ -239,7 +239,7 @@ class HuggingFaceServer:
         raw_completions = []
 
         
-
+        # breakpoint()
 
         for decoded_text, tokens, generated_tokens_logprobs in zip(
             all_decoded_text, all_tokens, all_generated_tokens_logprobs
@@ -252,10 +252,14 @@ class HuggingFaceServer:
                     "prompt_logprobs": prompt_tokens_logprobs,
                 }
             )
-        print("\n\n\n\n\n\n raw_completions",raw_completions)
+        
+
+        
+        print(f"\n\n\n\n\n\n raw_completions len: {len(raw_completions)}\n{raw_completions}")
         raw_completions.sort(key=lambda x:x["logprobs"],reverse=True)
         completions = raw_completions[:raw_request["num_return_sequences"]]
-        
+        print(f"\n\n\n\n\n\n raw_completions len: {len(raw_completions)}\completions len: {len(completions)}\n")
+        breakpoint()
 
 
         # with open('debug.txt', 'w') as f:
