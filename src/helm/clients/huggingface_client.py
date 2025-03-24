@@ -252,6 +252,8 @@ class HuggingFaceServer:
                     "prompt_logprobs": prompt_tokens_logprobs,
                 }
             )
+        print("\n\n\n\n\n\n raw_completions",raw_completions)
+        raw_completions.sort(key=lambda x:x["logprobs"],reverse=True)
         completions = raw_completions[:raw_request["num_return_sequences"]]
         
 
