@@ -229,6 +229,9 @@ class RequestResult:
 
     unscored_examples: Optional[GeneratedOutput]=None
     """List of UnscoredExamples"""
+    
+    full_prompt: str=None
+    """List of UnscoredExamples"""
 
     def render_lines(self) -> List[str]:
         output = [

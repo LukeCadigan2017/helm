@@ -48,6 +48,8 @@ _CACHED_MODELS_FOLDER: str = "models"
 @dataclass(frozen=True)
 class GeneratedOutputExamples:
     """Split (e.g., train, valid, test)"""
+    instance_id: str
+    """id of instance"""
 
     prompt: str
     """Prompt used"""
@@ -59,13 +61,15 @@ class GeneratedOutputExamples:
     """Selection completion for metrics"""
 
     # The sum of the log probabilities of all tokens
-    logprob: float
+    completion_logprob: float
+    """Completion probability"""
+
+    full_prompt: str
 
     examples: List[GeneratedOutput]
     """List of unscored examples"""
 
-    instance_id: str
-    """id of instance"""
+
 
 def get_benchmark_output_path() -> str:
     """Get the benchmark output path.
@@ -258,8 +262,8 @@ class Runner:
             assert len(request_state.instance.references) ==1
             assert len(request_state.result.completions) ==1
 
-
             prompt=request_state.instance.input.text
+            full_prompt=request_state.result.full_prompt
             examples=request_state.result.unscored_examples
             id=request_state.instance.id
             reference=request_state.instance.references[0].output.text
@@ -267,7 +271,9 @@ class Runner:
             logprob=request_state.result.completions[0].logprob
 
             # print("\n\n\nreference is ",reference)
-            instance_generations.append(GeneratedOutputExamples(prompt=prompt, reference=reference,examples=examples,instance_id=id, completion=completion, logprob=logprob))
+            instance_generations.append(GeneratedOutputExamples(prompt=prompt, reference=reference,examples=examples,instance_id=id, 
+                                                                completion=completion, completion_logprob=logprob,
+                                                                full_prompt=full_prompt))
 
         #print(f"instance_generations is {instance_generations}")
         return instance_generations

@@ -192,15 +192,15 @@ class HuggingFaceServer:
 
             #end of prompt:
             # Airbus erklärt, die konkurrierende Version des A350 befördere 350 Personen in 18 Zoll breiten Sitzen in der Touristenklasse, wobei es neun pro Reihe gibt
-            print("\n\n\n\n------- prompt -----")
-            print(raw_request["prompt"])
+            # print("\n\n\n\n------- prompt -----")
+            # print(raw_request["prompt"])
 
-            print("\n\n\n\n------- encoded input -----")
-            print(tokenizer.batch_decode(encoded_input["input_ids"]))
+            # print("\n\n\n\n------- encoded input -----")
+            # print(tokenizer.batch_decode(encoded_input["input_ids"]))
 
-            print("\n\n\n\n------- sequences -----")
-            print(tokenizer.batch_decode(sequences)[0])
-            # breakpoint()
+            # print("\n\n\n\n------- sequences -----")
+            # print(tokenizer.batch_decode(sequences)[0])
+            # # breakpoint()
             
         # print("\n\n\n\n eos token is ",eos_token)
         
@@ -338,6 +338,11 @@ class HuggingFaceClient(CachingClient):
         self._tokenizer = tokenizer
         self._kwargs = _process_huggingface_client_kwargs(kwargs)
         self._end_of_text_token = end_of_text_token
+        
+        if self._end_of_text_token==None:
+            with self._wrapped_tokenizer as mytokenizer:
+                self._end_of_text_token=mytokenizer.special_tokens_map['eos_token']
+
         self._lock= Lock()
         self._output_file="completions.txt"
 
@@ -373,6 +378,7 @@ class HuggingFaceClient(CachingClient):
 
             completion = GeneratedOutput(text=raw_completion["text"], logprob=sequence_logprob, tokens=tokens)
             if(should_truncate_sequence):
+                print(f"\n\n\n\n_end_of_text_token is {self._end_of_text_token}")
                 completion = truncate_sequence(completion, request, end_of_text_token=self._end_of_text_token)
             completions.append(completion)
         return completions
@@ -423,7 +429,7 @@ class HuggingFaceClient(CachingClient):
             return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
 
         completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
-        unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=False)
+        unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=True)
         # for completion in unscored_examples:
             #completion.tokens=None
 
@@ -435,4 +441,5 @@ class HuggingFaceClient(CachingClient):
             completions=completions,
             unscored_examples=unscored_examples,
             embedding=[],
+            full_prompt=raw_request["prompt"]
         )
