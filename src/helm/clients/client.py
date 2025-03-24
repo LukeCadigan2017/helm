@@ -82,14 +82,19 @@ def truncate_sequence(
 
         # Strip `stop` off the tokens
         new_tokens: List[Token] = []
+        completion_eos_token=None
         # Need to start
         for token in sequence.tokens:
             # Note: we can only strip at token boundaries
             if token.text.startswith(stop):
-                new_tokens.append(token)
+                completion_eos_token=token
                 break
             new_tokens.append(token)
 
+        new_text="".join([token.text for token in new_tokens])
+        if(completion_eos_token):
+            new_tokens.append(completion_eos_token)
+            
         if len(new_text) < len(sequence.text) and len(new_tokens) == len(sequence.tokens):
             hlog(
                 f"WARNING: Stripped characters from text ({len(sequence.text)} -> {len(new_text)}), "
