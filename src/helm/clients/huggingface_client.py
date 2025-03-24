@@ -259,7 +259,6 @@ class HuggingFaceServer:
         raw_completions.sort(key=lambda x:x["logprobs"],reverse=True)
         completions = raw_completions[:raw_request["num_return_sequences"]]
         print(f"\n\n\n\n\n\n raw_completions len: {len(raw_completions)}\completions len: {len(completions)}\n")
-        breakpoint()
 
 
         # with open('debug.txt', 'w') as f:
