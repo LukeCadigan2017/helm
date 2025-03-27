@@ -80,7 +80,7 @@ def truncate_sequence(
     
     # Strip `stop` off the tokens
     new_tokens: List[Token] = []
-    print("Final token before: ",sequence.tokens[-1])
+    # print("Final token before: ",sequence.tokens[-1])
     # Need to start
     for token in sequence.tokens:
         # Note: we can only strip at token boundaries
@@ -88,7 +88,7 @@ def truncate_sequence(
         if token==end_of_text_token:
             break
     
-    print("Final token after: ",new_tokens[-1])
+    # print("Final token after: ",new_tokens[-1])
 
     # Recompute log probability
     new_logprob = sum(token.logprob for token in new_tokens)
@@ -111,7 +111,7 @@ def truncate_sequence(
 
         sequence = GeneratedOutput(text=new_text, logprob=new_logprob, tokens=new_tokens)
     final_token_len=len(sequence.tokens)
-    print(f"Initial token len {initial_token_len} final_token_len {final_token_len}")
+    # print(f"Initial token len {initial_token_len} final_token_len {final_token_len}")
     return sequence
 
 
