@@ -23,9 +23,13 @@ model_clean=args.model.replace("/","_")
 json_file=f"./benchmark_output/runs/{args.suite_name}/{args.task},model={model_clean}/stats.json"
 print(f"Process results from json_file {json_file}. Saving to {args.output_csv}")
 
-with open(json_file) as f:
-    infos = json.load(f)
-
+infos=None
+try:
+    with open(json_file) as f:
+        infos = json.load(f)
+except:
+    print(f"Unable to process results. Could not find file {json_file}")
+    sys.exit()
 #parse json file
 values=[]
 for info in infos:

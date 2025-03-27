@@ -168,23 +168,65 @@ class HuggingFaceServer:
             sequences = encoded_input["input_ids"]
             scores = output.logits
         else:
-            output = self.model.generate(
-                **encoded_input,
-                length_penalty=0,
-                # temperature=raw_request["temperature"],
-                num_beams = raw_request["num_beams"],
-                num_return_sequences=num_generated,
-                max_new_tokens=raw_request["max_new_tokens"],
-                # top_p=raw_request["top_p"],
-                #changed this
-                do_sample=False,
-                return_dict_in_generate=True,
-                output_scores=True,
-                **optional_args,
-                stopping_criteria=stopping_criteria, 
-            )
-            sequences = output.sequences
-            scores = output.scores
+            if(raw_request["num_beams"] >1):
+                with torch.no_grad():
+                    output = self.model.generate(
+                        **encoded_input,
+                        num_beams = raw_request["num_beams"],
+                        num_return_sequences=num_generated,
+                        max_new_tokens=raw_request["max_new_tokens"],
+                        #changed this
+                        do_sample=False,
+                        return_dict_in_generate=True,
+                        output_scores=True,
+                        length_penalty=0,
+                        **optional_args,
+                        stopping_criteria=stopping_criteria, 
+                        # temperature=raw_request["temperature"],
+                        # top_p=raw_request["top_p"],
+                    )
+                sequences = output.sequences
+                scores = output.scores
+            else:
+                print("\n\n\n\n\n Running here!")
+                print(f" Max {raw_request['max_new_tokens']}")
+                #the difference: length_penalty cannot be set if num_beams>1
+                # output = self.model.generate(
+                #     **encoded_input,
+                #     num_beams = raw_request["num_beams"],
+                #     num_return_sequences=num_generated,
+                #     max_new_tokens=raw_request["max_new_tokens"],
+                #     #changed this
+                #     do_sample=True,
+                #     return_dict_in_generate=True,
+                #     output_scores=True,
+                #     **optional_args,
+                #     stopping_criteria=stopping_criteria, 
+                #     # temperature=raw_request["temperature"],
+                #     # top_p=raw_request["top_p"],
+                # )
+                print(f'raw_request["temperature"]{raw_request["temperature"]}')
+                print(f'raw_request["num_return_sequences"]{raw_request["num_return_sequences"]}')
+                print(f'raw_request["max_new_tokens"]{raw_request["max_new_tokens"]}')
+                print(f'raw_request["top_p"]{raw_request["top_p"]}')
+                print(f'raw_request["top_p"]{raw_request["top_p"]}')
+
+
+                with torch.no_grad():
+                    output = self.model.generate(
+                        **encoded_input,
+                        temperature=raw_request["temperature"],
+                        num_return_sequences=raw_request["num_return_sequences"],
+                        max_new_tokens=raw_request["max_new_tokens"],
+                        top_p=raw_request["top_p"],
+                        do_sample=True,
+                        return_dict_in_generate=True,
+                        output_scores=True,
+                        **optional_args,
+                        stopping_criteria=stopping_criteria,
+                    )
+                sequences = output.sequences
+                scores = output.scores
         
 
             #This is the prompt:
