@@ -30,6 +30,13 @@ MODELS=$1
 NUM_BEAMS_LIST=$2
 MAX_EVAL_INSTANCES=$3
 
+# ./test_run_all.ksh meta-llama/Llama-3.2-1B-Instruct 2 600
+echo ARGS is "$#"
+if [ "$#" -lt 3 ]; then
+    echo "Usage: $0 <MODEL> <NUM_BEAMS> <EVAL_INSTANCES>"
+    exit 1
+fi
+
 # ./test_run_all.ksh MODEL NUM_BEAMS_LIST MAX_EVAL_INSTANCES
 # ./test_run_all.ksh distilbert/distilgpt2 2 1
 
