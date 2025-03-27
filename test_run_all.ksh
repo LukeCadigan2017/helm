@@ -25,14 +25,17 @@ NUM_TRAIN_TRIALS=1
 TASK=wmt_14:language_pair=de-en
 METRICS="bleu_4 comet"
 
-#other configs
 
-NUM_BEAMS_LIST="2"
+MODELS=$1
+NUM_BEAMS_LIST=$2
+MAX_EVAL_INSTANCES=$3
 
-MAX_EVAL_INSTANCES=10
-#MODELS="meta-llama/Llama-3.1-8B"
-MODELS="meta-llama/Llama-3.2-1B-Instruct"
-# MODELS="stas/tiny-random-llama-2"
+# ./test_run_all.ksh MODEL NUM_BEAMS_LIST MAX_EVAL_INSTANCES
+# ./test_run_all.ksh distilbert/distilgpt2 2 1
+
+# MODELS="distilbert/distilgpt2"
+# NUM_BEAMS_LIST="2"
+# MAX_EVAL_INSTANCES=1
 
 
 
@@ -51,6 +54,9 @@ touch $OUTPUT_CSV
 GEN_OUTPUT_FILES=""
 cat ./test_run_all.ksh
 
+echo MODELS IS $MODELS
+echo MAX_EVAL_INSTANCES is $MAX_EVAL_INSTANCES
+echo NUM_BEAMS_LIST is $NUM_BEAMS_LIST
 
 #do everything
 for MODEL in $MODELS; do
@@ -84,6 +90,8 @@ for MODEL in $MODELS; do
     done
 
 done
+
+# echo NOTE DISABLE CACHE IS OFF
 
 #echo_space
 
