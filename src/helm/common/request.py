@@ -154,6 +154,9 @@ class GeneratedOutput:
     # Could be a sequence made up of multimedia content
     multimodal_content: Optional[MultimediaObject] = None
 
+    #before concatenation
+    full_text: str=None
+    
     def __add__(self, other: "GeneratedOutput") -> "GeneratedOutput":
         return GeneratedOutput(self.text + other.text, self.logprob + other.logprob, self.tokens + other.tokens)
 

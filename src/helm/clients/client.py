@@ -67,6 +67,7 @@ def truncate_sequence(
         if request.max_tokens != 0:
             hlog("WARNING: don't know how to handle echo_prompt and max_tokens > 0, not truncating")
         return sequence
+    full_text=sequence.text
     new_text = sequence.text
     all_stops = request.stop_sequences+[end_of_text_token]
     for stop in all_stops:
@@ -92,7 +93,7 @@ def truncate_sequence(
     # Recompute log probability
     new_logprob = sum(token.logprob for token in new_tokens)
 
-    sequence = GeneratedOutput(text=new_text, logprob=new_logprob, tokens=new_tokens)
+    sequence = GeneratedOutput(text=new_text, logprob=new_logprob, tokens=new_tokens, full_text=full_text)
     # Truncate based on the max number of tokens.
     if len(sequence.tokens) > request.max_tokens:
         # if print_warning:
@@ -108,8 +109,7 @@ def truncate_sequence(
 
         new_logprob = sum(token.logprob for token in new_tokens)
 
-        sequence = GeneratedOutput(text=new_text, logprob=new_logprob, tokens=new_tokens)
-    final_token_len=len(sequence.tokens)
+        sequence = GeneratedOutput(text=new_text, logprob=new_logprob, tokens=new_tokens, full_text=full_text)
     # print(f"Initial token len {initial_token_len} final_token_len {final_token_len}")
     return sequence
 
