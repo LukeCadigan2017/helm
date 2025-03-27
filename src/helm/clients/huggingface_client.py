@@ -244,7 +244,7 @@ class HuggingFaceServer:
         
         for completion_id in range(num_generated):
             generated_tokens_logprobs = []
-            print(f"{len(sequences[completion_id])} , {len(encoded_input.input_ids[0])} {len(scores)}")
+            # print(f"{len(sequences[completion_id])} , {len(encoded_input.input_ids[0])} {len(scores)}")
             # assert  len(sequences[completion_id])==len(encoded_input.input_ids[0])+len(scores)
             for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
                 logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
@@ -428,19 +428,19 @@ class HuggingFaceClient(CachingClient):
             **self._kwargs,
         )
 
-        def do_it() -> Dict[str, Any]:
-            return huggingface_model.serve_request(raw_request)
-        cache_key = CachingClient.make_cache_key(raw_request, request)
-        response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
+        # def do_it() -> Dict[str, Any]:
+        #     return huggingface_model.serve_request(raw_request)
+        # cache_key = CachingClient.make_cache_key(raw_request, request)
+        # response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
 
-        # try:
-            # def do_it() -> Dict[str, Any]:
-            #     return huggingface_model.serve_request(raw_request)
-        #     cache_key = CachingClient.make_cache_key(raw_request, request)
-        #     response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
-        # except Exception as e:  # Do something if error is encountered.
-        #     error: str = f"HuggingFace error: {e}"
-        #     return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
+        try:
+            def do_it() -> Dict[str, Any]:
+                return huggingface_model.serve_request(raw_request)
+            cache_key = CachingClient.make_cache_key(raw_request, request)
+            response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
+        except Exception as e:  # Do something if error is encountered.
+            error: str = f"HuggingFace error: {e}"
+            return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
 
         completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
         unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=True)
