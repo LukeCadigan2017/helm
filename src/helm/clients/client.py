@@ -63,7 +63,6 @@ def truncate_sequence(
     # know how many tokens the prompt takes up.
     # In the benchmark, usually echo_prompt is only used for language modeling,
     # where max_tokens = 0, so there's nothing to truncate.
-    initial_token_len=len(sequence.tokens)
     if request.echo_prompt:
         if request.max_tokens != 0:
             hlog("WARNING: don't know how to handle echo_prompt and max_tokens > 0, not truncating")
@@ -73,7 +72,7 @@ def truncate_sequence(
     for stop in all_stops:
         # Find `stop` in the text
         try:
-            new_text = sequence.text[: sequence.text.index(stop)]
+            new_text = new_text[: sequence.text.index(stop)]
         except ValueError:
             # The stop sequence doesn't exist, but it might exist in the list of tokens.
             pass
