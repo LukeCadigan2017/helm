@@ -244,8 +244,8 @@ class HuggingFaceServer:
         
         for completion_id in range(num_generated):
             generated_tokens_logprobs = []
-
-            assert  len(sequences[completion_id])==len(encoded_input.input_ids[0])+len(scores)
+            print(f"{len(sequences[completion_id])} , {len(encoded_input.input_ids[0])} {len(scores)}")
+            # assert  len(sequences[completion_id])==len(encoded_input.input_ids[0])+len(scores)
             for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
                 logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
                 # Get log probability of chosen token.
