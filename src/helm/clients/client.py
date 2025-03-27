@@ -63,56 +63,41 @@ def truncate_sequence(
     # know how many tokens the prompt takes up.
     # In the benchmark, usually echo_prompt is only used for language modeling,
     # where max_tokens = 0, so there's nothing to truncate.
+    initial_token_len=len(sequence.tokens)
     if request.echo_prompt:
         if request.max_tokens != 0:
             hlog("WARNING: don't know how to handle echo_prompt and max_tokens > 0, not truncating")
         return sequence
-
-    if end_of_text_token:
-        stop_sequences = request.stop_sequences + [end_of_text_token]
-    else:
-        stop_sequences = request.stop_sequences
-    for stop in stop_sequences:
+    new_text = sequence.text
+    all_stops = request.stop_sequences+[end_of_text_token]
+    for stop in all_stops:
         # Find `stop` in the text
         try:
             new_text = sequence.text[: sequence.text.index(stop)]
         except ValueError:
             # The stop sequence doesn't exist, but it might exist in the list of tokens.
-            new_text = sequence.text
+            pass
+    
+    # Strip `stop` off the tokens
+    new_tokens: List[Token] = []
+    print("Final token before: ",sequence.tokens[-1])
+    # Need to start
+    for token in sequence.tokens:
+        # Note: we can only strip at token boundaries
+        new_tokens.append(token)
+        if token==end_of_text_token:
+            break
+    
+    print("Final token after: ",new_tokens[-1])
 
-        # Strip `stop` off the tokens
-        new_tokens: List[Token] = []
-        completion_eos_token=None
-        # Need to start
-        for token in sequence.tokens:
-            # Note: we can only strip at token boundaries
-            if token.text.startswith(stop):
-                completion_eos_token=token
-                break
-            new_tokens.append(token)
+    # Recompute log probability
+    new_logprob = sum(token.logprob for token in new_tokens)
 
-        new_text="".join([token.text for token in new_tokens])
-        if(completion_eos_token):
-            new_tokens.append(completion_eos_token)
-            
-        if len(new_text) < len(sequence.text) and len(new_tokens) == len(sequence.tokens):
-            hlog(
-                f"WARNING: Stripped characters from text ({len(sequence.text)} -> {len(new_text)}), "
-                f"but wasn't able to strip the tokens"
-            )
-
-        # Recompute log probability
-        new_logprob = sum(token.logprob for token in new_tokens)
-
-        if print_warning:
-            hlog(f"WARNING: truncate_sequence needs to strip {json.dumps(stop)}")
-
-        sequence = GeneratedOutput(text=new_text, logprob=new_logprob, tokens=new_tokens)
-
+    sequence = GeneratedOutput(text=new_text, logprob=new_logprob, tokens=new_tokens)
     # Truncate based on the max number of tokens.
     if len(sequence.tokens) > request.max_tokens:
-        if print_warning:
-            hlog(f"WARNING: truncate_sequence needs to truncate {len(sequence.tokens)} down to {request.max_tokens}")
+        # if print_warning:
+        print(f"\n\n\n\n\n WARNING: truncate_sequence needs to truncate {len(sequence.tokens)} down to {request.max_tokens}")
         new_tokens = sequence.tokens[: request.max_tokens]
 
         # This is imperfect stitching together of tokens, so just to make sure this is okay
@@ -125,7 +110,8 @@ def truncate_sequence(
         new_logprob = sum(token.logprob for token in new_tokens)
 
         sequence = GeneratedOutput(text=new_text, logprob=new_logprob, tokens=new_tokens)
-
+    final_token_len=len(sequence.tokens)
+    print(f"Initial token len {initial_token_len} final_token_len {final_token_len}")
     return sequence
 
 

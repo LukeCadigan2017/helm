@@ -138,17 +138,17 @@ class HuggingFaceServer:
       
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
-        if len(raw_request["stop_sequences"]) > 0:
-            with self.wrapped_tokenizer as tokenizer:
-                stop_sequence_ids = tokenizer(
-                    raw_request["stop_sequences"], return_token_type_ids=False, add_special_tokens=False
-                )
-            if len(stop_sequence_ids.input_ids) == 1 and len(stop_sequence_ids.input_ids[0]) == 1:
-                optional_args["eos_token_id"] = stop_sequence_ids.input_ids[0][0]
-            else:
-                stopping_criteria = StoppingCriteriaList()
-                for stop_sequence_input_ids in stop_sequence_ids.input_ids:
-                    stopping_criteria.append(StopAtSpecificTokenCriteria(stop_sequence=stop_sequence_input_ids))
+        # if len(raw_request["stop_sequences"]) > 0:
+        #     with self.wrapped_tokenizer as tokenizer:
+        #         stop_sequence_ids = tokenizer(
+        #             raw_request["stop_sequences"], return_token_type_ids=False, add_special_tokens=False
+        #         )
+        #     if len(stop_sequence_ids.input_ids) == 1 and len(stop_sequence_ids.input_ids[0]) == 1:
+        #         optional_args["eos_token_id"] = stop_sequence_ids.input_ids[0][0]
+        #     else:
+        #         stopping_criteria = StoppingCriteriaList()
+        #         for stop_sequence_input_ids in stop_sequence_ids.input_ids:
+        #             stopping_criteria.append(StopAtSpecificTokenCriteria(stop_sequence=stop_sequence_input_ids))
 
         # Check if we need to compute the perplexity of the prompt (#1497)
         compute_logprobs_only = (
@@ -188,30 +188,22 @@ class HuggingFaceServer:
                 sequences = output.sequences
                 scores = output.scores
             else:
-                print("\n\n\n\n\n Running here!")
-                print(f" Max {raw_request['max_new_tokens']}")
-                #the difference: length_penalty cannot be set if num_beams>1
-                # output = self.model.generate(
-                #     **encoded_input,
-                #     num_beams = raw_request["num_beams"],
-                #     num_return_sequences=num_generated,
-                #     max_new_tokens=raw_request["max_new_tokens"],
-                #     #changed this
-                #     do_sample=True,
-                #     return_dict_in_generate=True,
-                #     output_scores=True,
-                #     **optional_args,
-                #     stopping_criteria=stopping_criteria, 
-                #     # temperature=raw_request["temperature"],
-                #     # top_p=raw_request["top_p"],
-                # )
-                print(f'raw_request["temperature"]{raw_request["temperature"]}')
-                print(f'raw_request["num_return_sequences"]{raw_request["num_return_sequences"]}')
-                print(f'raw_request["max_new_tokens"]{raw_request["max_new_tokens"]}')
-                print(f'raw_request["top_p"]{raw_request["top_p"]}')
-                print(f'raw_request["top_p"]{raw_request["top_p"]}')
-
-
+                # #the difference: length_penalty cannot be set if num_beams>1
+                # with torch.no_grad():
+                #     output = self.model.generate(
+                #         **encoded_input,
+                #         num_beams = raw_request["num_beams"],
+                #         num_return_sequences=num_generated,
+                #         max_new_tokens=raw_request["max_new_tokens"],
+                #         #changed this
+                #         do_sample=False,
+                #         return_dict_in_generate=True,
+                #         output_scores=True,
+                #         **optional_args,
+                #         stopping_criteria=stopping_criteria, 
+                #         # temperature=raw_request["temperature"],
+                #         # top_p=raw_request["top_p"],
+                #     )
                 with torch.no_grad():
                     output = self.model.generate(
                         **encoded_input,
@@ -247,28 +239,18 @@ class HuggingFaceServer:
         # print("\n\n\n\n eos token is ",eos_token)
         
         prompt_tokens_logprobs = []
-        if compute_logprobs_only:
-            # Append the logprob of the first token of the prompt.
-            prompt_tokens_logprobs.append(0.0)
-
-            # Compute logprobs of prompt tokens.
-            for completion_id in range(num_generated):
-                for i in range(len(sequences[completion_id]) - 1):
-                    logprobs = torch.nn.functional.log_softmax(scores[completion_id][i], dim=0)
-                    prompt_tokens_logprobs.append(logprobs[sequences[completion_id][i + 1]].item())
-
         # Compute logprobs of generated tokens for each completed sequence.
         all_generated_tokens_logprobs = []
         
         for completion_id in range(num_generated):
             generated_tokens_logprobs = []
+
+            assert  len(sequences[completion_id])==len(encoded_input.input_ids[0])+len(scores)
             for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
                 logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
                 # Get log probability of chosen token.
                 j = i + len(encoded_input.input_ids[0])
                 generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())                
-                if(sequences[completion_id][j]==sequences[completion_id][-1]):
-                    break
             all_generated_tokens_logprobs.append(generated_tokens_logprobs)
 
         # Remove prompt from the start of each sequence if echo_prompt is False.
@@ -279,9 +261,6 @@ class HuggingFaceServer:
             all_tokens = [[tokenizer.decode(token) for token in sequence_tokens] for sequence_tokens in sequences]
             all_decoded_text = tokenizer.batch_decode(sequences)
         raw_completions = []
-
-        
-        # breakpoint()
 
         for decoded_text, tokens, generated_tokens_logprobs in zip(
             all_decoded_text, all_tokens, all_generated_tokens_logprobs
@@ -297,10 +276,8 @@ class HuggingFaceServer:
         
 
         
-        print(f"\n\n\n\n\n\n raw_completions len: {len(raw_completions)}\n{raw_completions}")
         raw_completions.sort(key=lambda x:x["logprobs"],reverse=True)
         completions = raw_completions[:raw_request["num_return_sequences"]]
-        print(f"\n\n\n\n\n\n raw_completions len: {len(raw_completions)}\completions len: {len(completions)}\n")
 
 
         # with open('debug.txt', 'w') as f:
@@ -389,33 +366,20 @@ class HuggingFaceClient(CachingClient):
         if self._end_of_text_token==None:
             with self._wrapped_tokenizer as mytokenizer:
                 self._end_of_text_token=mytokenizer.special_tokens_map['eos_token']
-
         self._lock= Lock()
         self._output_file="completions.txt"
 
 
     def clean_completions(self, response, request, completions_to_clean, should_truncate_sequence=True):
 
+        #completion: calculate up until \n
+        #tokens: calculate up until eos
+        #token probability: calculate up until eos
+        
         completions = []
         for raw_completion in completions_to_clean:
             sequence_logprob: float = 0
             tokens: List[Token] = []
-
-            # if request.echo_prompt:
-            #     # Add prompt to list of generated tokens.
-            #     generated_tokens = raw_completion["tokens"][response["input_length"] :]
-            #     if raw_completion.get("prompt_logprobs"):
-            #         for token_text, logprob in zip(
-            #             raw_completion["tokens"][: response["input_length"]],
-            #             raw_completion["prompt_logprobs"][: response["input_length"]],
-            #         ):
-            #             tokens.append(Token(text=token_text, logprob=logprob))
-            #             sequence_logprob += logprob
-            #     else:
-            #         for token_text in raw_completion["tokens"][: response["input_length"]]:
-            #             tokens.append(Token(text=token_text, logprob=0.0))
-
-            # else:
             generated_tokens = raw_completion["tokens"]
 
             # Compute logprob for the entire sequence.
@@ -423,9 +387,10 @@ class HuggingFaceClient(CachingClient):
                 tokens.append(Token(text=token_text, logprob=logprob))
                 sequence_logprob += logprob
 
+                if(token_text==self._end_of_text_token):
+                    break
             completion = GeneratedOutput(text=raw_completion["text"], logprob=sequence_logprob, tokens=tokens)
             if(should_truncate_sequence):
-                print(f"\n\n\n\n_end_of_text_token is {self._end_of_text_token}")
                 completion = truncate_sequence(completion, request, end_of_text_token=self._end_of_text_token)
             completions.append(completion)
         return completions
@@ -463,17 +428,19 @@ class HuggingFaceClient(CachingClient):
             **self._kwargs,
         )
 
-        # cache_key = CachingClient.make_cache_key(raw_request, request)
-        # response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
+        def do_it() -> Dict[str, Any]:
+            return huggingface_model.serve_request(raw_request)
+        cache_key = CachingClient.make_cache_key(raw_request, request)
+        response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
 
-        try:
-            def do_it() -> Dict[str, Any]:
-                return huggingface_model.serve_request(raw_request)
-            cache_key = CachingClient.make_cache_key(raw_request, request)
-            response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
-        except Exception as e:  # Do something if error is encountered.
-            error: str = f"HuggingFace error: {e}"
-            return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
+        # try:
+            # def do_it() -> Dict[str, Any]:
+            #     return huggingface_model.serve_request(raw_request)
+        #     cache_key = CachingClient.make_cache_key(raw_request, request)
+        #     response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
+        # except Exception as e:  # Do something if error is encountered.
+        #     error: str = f"HuggingFace error: {e}"
+        #     return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
 
         completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
         unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=True)
