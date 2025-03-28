@@ -4,6 +4,7 @@ from transformers import AutoModelForCausalLM
 from transformers.generation.stopping_criteria import (
     StoppingCriteria,
     StoppingCriteriaList,
+    StopStringCriteria
 )
 from typing import Any, Dict, List, Optional, TypedDict
 
@@ -38,23 +39,24 @@ from pprint import pprint
 #         current_sequence = input_ids[:, -len(self.stop_sequence) :]
 #         return bool(torch.all(current_sequence == stop_sequence_tensor).item())
 
-class StopOnStrings(StoppingCriteria):
-    def __init__(self, stop_strings, tokenizer):
-        self.stop_strings = stop_strings
-        self.tokenizer = tokenizer
-        self.stream = ""
-        self.prev_generated= ""
+# class StopOnStrings(StoppingCriteria):
+#     def __init__(self, stop_strings, tokenizer):
+#         self.stop_strings = stop_strings
+#         self.tokenizer = tokenizer
+#         self.stream = ""
+#         self.prev_generated= ""
 
-    def reset(self):
-        self.stream = ""
+#     def reset(self):
+#         self.stream = ""
 
-    def __call__(self, input_ids, scores, **kwargs):
+#     def __call__(self, input_ids, scores, **kwargs):
 
-        generated = self.tokenizer.decode(input_ids[0][-1], skip_special_tokens=True)
-        for stop_string in self.stop_strings:
-            if stop_string in generated:
-                return True
-        return False
+#         print("input_ids is ",input_ids.shape)
+#         generated = self.tokenizer.decode(input_ids[0][-1], skip_special_tokens=True)
+#         for stop_string in self.stop_strings:
+#             if stop_string in generated:
+#                 return True
+#         return False
     # def __call__(self, input_ids, scores, **kwargs):
     #     generated = self.tokenizer.decode(input_ids[0][-1], skip_special_tokens=True)
     #     self.stream += generated
@@ -148,7 +150,8 @@ class HuggingFaceServer:
             if len(raw_request["stop_sequences"]) > 0:
                 stopping_criteria = StoppingCriteriaList()
                 stop_strings=[eos_token_string]+raw_request["stop_sequences"]
-                stopping_criteria.append(StopOnStrings(stop_strings=stop_strings,tokenizer=tokenizer))
+                stopping_criteria.append(StopStringCriteria(tokenizer, stop_strings))
+                # stopping_criteria.append(StopOnStrings(stop_strings=stop_strings,tokenizer=tokenizer))
 
         # if len(raw_request["stop_sequences"]) > 0:
             # with self.wrapped_tokenizer as tokenizer:
@@ -264,7 +267,7 @@ class HuggingFaceServer:
                 # print(f"{len(sequences[completion_id])} , {len(encoded_input.input_ids[0])} {len(scores)}")
                 # with self.wrapped_tokenizer as tokenizer:
                 #     print("hello")
-                #     breakpoint()
+
                 #     print(len(sequences[completion_id]))
                 #     print(tokenizer.decode(sequences[completion_id]))
                 #     print(tokenizer.decode(encoded_input.input_ids[0]))
@@ -272,7 +275,7 @@ class HuggingFaceServer:
                 # 
                 # 209 , 174 #34
                 
-                # breakpoint()
+
                 #so, scores does not contain 
                 logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
                 # Get log probability of chosen token.
