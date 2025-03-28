@@ -262,8 +262,9 @@ class HuggingFaceServer:
             generated_tokens_logprobs = []
             # print(f"{len(sequences[completion_id])} , {len(encoded_input.input_ids[0])} {len(scores)}")
             # assert  len(sequences[completion_id])==len(encoded_input.input_ids[0])+len(scores)
-            # for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])-1):
-            for i in range(len(scores)):
+            # for i in range():
+            sentence_length=min( len(sequences[completion_id]) - len(encoded_input.input_ids[0]), len(scores))
+            for i in range(sentence_length):
                 # print(f"{len(sequences[completion_id])} , {len(encoded_input.input_ids[0])} {len(scores)}")
                 # with self.wrapped_tokenizer as tokenizer:
                 #     print("hello")
