@@ -432,17 +432,43 @@ def get_machine_translation_adapter_spec(
     """
     return AdapterSpec(
         method=ADAPT_GENERATION,
-        instructions=f"Translate the following sentences from {source_language} to {target_language}.",
+        instructions=f"Translate the following sentences from {source_language} to {target_language}. Follow the format of the previous examples and only provide the translated sentence.\n",
         input_prefix=f"{source_language}: ",
-        input_suffix="\n",
+        input_suffix="<|endoftext|>\n",
         output_prefix=f"{target_language}: ",
-        output_suffix="\n",
+        output_suffix="<|endoftext|>\n",
         max_train_instances=max_train_instances,
         num_outputs=1,
-        stop_sequences=['\n'],
+        # stop_sequences=['<|endoftext|>'],
         # stop_sequences=['\n','.','?','!'],
         temperature=0.0,
         num_beams=num_beams,
         generated_output_file=generated_output_file,
         **kwargs,
     )
+
+# def get_machine_translation_adapter_spec(
+#     source_language, target_language, max_train_instances,generated_output_file:str ="" , num_beams: int = 1, **kwargs
+# ) -> AdapterSpec:
+#     """
+#     Used for machine translation.
+#     """
+#     return AdapterSpec(
+#         method=ADAPT_GENERATION,
+#         # instructions=f"Translate the following sentences from {source_language} to {target_language}.",
+#         instructions=f"Translate the final sentences from {source_language} to {target_language}. Only provide the translated sentence and follow the format of the previous examples.",
+#         input_prefix=f"{source_language}: ",
+#         input_suffix="\n",
+#         output_prefix=f"{target_language}: ",
+#         output_suffix="\n",
+#         output_suffix="\n",
+#         max_train_instances=max_train_instances,
+#         num_outputs=1,
+#         stop_sequences=['<|endoftext|>'],
+#         # stop_sequences=['\n','.','?','!'],
+#         temperature=0.0,
+#         num_beams=num_beams,
+#         generated_output_file=generated_output_file,
+#         **kwargs,
+#     )
+

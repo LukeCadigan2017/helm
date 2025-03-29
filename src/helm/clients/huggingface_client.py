@@ -4,7 +4,8 @@ from transformers import AutoModelForCausalLM
 from transformers.generation.stopping_criteria import (
     StoppingCriteria,
     StoppingCriteriaList,
-    StopStringCriteria
+    StopStringCriteria,
+    EosTokenCriteria
 )
 from typing import Any, Dict, List, Optional, TypedDict
 
@@ -63,7 +64,6 @@ from pprint import pprint
     #     for stop_string in self.stop_strings:
     #         if stop_string in self.stream[:-1]:
     #             # print(f"stop_string is {stop_string}, stream is{self.stream}")
-    #             # breakpoint()
     #             # print("hello")
     #             return True
     #     return False
@@ -138,6 +138,7 @@ class HuggingFaceServer:
         self.wrapped_tokenizer = wrapped_tokenizer
 
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
+        print("\n\n\nprompt: ",raw_request["prompt"])
         eos_token_string=None
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
@@ -148,9 +149,13 @@ class HuggingFaceServer:
             )
             eos_token_string=tokenizer.special_tokens_map['eos_token']
             if len(raw_request["stop_sequences"]) > 0:
-                stopping_criteria = StoppingCriteriaList()
-                stop_strings=[eos_token_string]+raw_request["stop_sequences"]
-                stopping_criteria.append(StopStringCriteria(tokenizer, stop_strings))
+                raise Exception("Haven't implemented stop_sequences")
+                # stopping_criteria = StoppingCriteriaList()
+                # stop_strings=[eos_token_string]+["."]#raw_request["stop_sequences"]
+                # stopping_criteria.append(StopStringCriteria(tokenizer, [",","<|endoftext|>"]))
+                
+                # stopping_criteria.append(EosTokenCriteria(eos_token_id=13))
+                
                 # stopping_criteria.append(StopOnStrings(stop_strings=stop_strings,tokenizer=tokenizer))
 
         # if len(raw_request["stop_sequences"]) > 0:
@@ -184,7 +189,7 @@ class HuggingFaceServer:
             sequences = encoded_input["input_ids"]
             scores = output.logits
         else:
-            # breakpoint()
+
             if(raw_request["num_beams"] >1):
                 with torch.no_grad():
                     output = self.model.generate(
@@ -237,7 +242,9 @@ class HuggingFaceServer:
                 sequences = output.sequences
                 scores = output.scores
         
-
+            # for sequence in output.sequences:
+            #     if "\n" in "".join(tokenizer.batch_decode(sequence[len(encoded_input[0]):-1])):
+            #         print("seq contains text:")
             #This is the prompt:
 
 
@@ -415,7 +422,9 @@ class HuggingFaceClient(CachingClient):
 
             # Compute logprob for the entire sequence.
             for token_text, logprob in zip(generated_tokens, raw_completion["logprobs"]):
-                tokens.append(Token(text=token_text, logprob=logprob))
+                with self._wrapped_tokenizer as tokenizer:
+                    tokens.append(Token(text=token_text, logprob=logprob, token_id=tokenizer.encode(token_text)[0]))
+                # tokens.append(Token(text=token_text, logprob=logprob))
                 sequence_logprob += logprob
 
                 if(token_text==self._end_of_text_token):
@@ -424,6 +433,20 @@ class HuggingFaceClient(CachingClient):
             if(should_truncate_sequence):
                 completion = truncate_sequence(completion, request, end_of_text_token=self._end_of_text_token)
             completions.append(completion)
+            if(completion.full_text):
+                print("full text: ",completion.full_text)
+
+            # "<|endoftext|>"
+            # "."=="13"
+            # "<|endoftext|>"=50256
+            # end_token_found=False
+            # for token in completion.tokens:
+            #     if token.token_id==13:
+            #         end_token_found=True
+            #     if end_token_found and token.text != self._end_of_text_token:
+            #         print("error found ")
+            #         print("\n\n\n\n\n\n\n\n\n\n\n\n\n",completion.full_text)
+                    
         return completions
 
     def make_request(self, request: Request) -> RequestResult:

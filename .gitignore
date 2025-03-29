@@ -58,3 +58,4 @@ notes.otl
 node_modules
 *.txt
 march_30_investigation
+local_test.ksh
