@@ -138,7 +138,7 @@ class HuggingFaceServer:
         self.wrapped_tokenizer = wrapped_tokenizer
 
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
-        print("\n\n\nprompt: ",raw_request["prompt"])
+        # print("\n\n\nprompt: ",raw_request["prompt"])
         eos_token_string=None
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
@@ -433,8 +433,8 @@ class HuggingFaceClient(CachingClient):
             if(should_truncate_sequence):
                 completion = truncate_sequence(completion, request, end_of_text_token=self._end_of_text_token)
             completions.append(completion)
-            if(completion.full_text):
-                print("full text: ",completion.full_text)
+            # if(completion.full_text):
+            #     print("full text: ",completion.full_text)
 
             # "<|endoftext|>"
             # "."=="13"
@@ -482,19 +482,19 @@ class HuggingFaceClient(CachingClient):
             **self._kwargs,
         )
 
-        def do_it() -> Dict[str, Any]:
-            return huggingface_model.serve_request(raw_request)
-        cache_key = CachingClient.make_cache_key(raw_request, request)
-        response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
+        # def do_it() -> Dict[str, Any]:
+        #     return huggingface_model.serve_request(raw_request)
+        # cache_key = CachingClient.make_cache_key(raw_request, request)
+        # response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
 
-        # try:
-        #     def do_it() -> Dict[str, Any]:
-        #         return huggingface_model.serve_request(raw_request)
-        #     cache_key = CachingClient.make_cache_key(raw_request, request)
-        #     response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
-        # except Exception as e:  # Do something if error is encountered.
-        #     error: str = f"HuggingFace error: {e}"
-        #     return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
+        try:
+            def do_it() -> Dict[str, Any]:
+                return huggingface_model.serve_request(raw_request)
+            cache_key = CachingClient.make_cache_key(raw_request, request)
+            response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
+        except Exception as e:  # Do something if error is encountered.
+            error: str = f"HuggingFace error: {e}"
+            return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
 
         completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
         unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=True)

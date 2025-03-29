@@ -8,6 +8,7 @@ from collections import Counter
 import dataclasses
 from typing import Any, Dict, List
 import numpy as np
+import datetime
 
 from tqdm import tqdm
 
@@ -402,7 +403,7 @@ class Runner:
         )
 
         write(
-            os.path.join(run_path, "instance_generations.json"),
+            os.path.join(run_path, "instance_generations_"+'{:%Y_%m_%d_%H_%M_%S}'.format(datetime.datetime.now())+".json"),
             json.dumps(list(map(asdict_without_nones, instance_generations)), indent=2),
         )
 

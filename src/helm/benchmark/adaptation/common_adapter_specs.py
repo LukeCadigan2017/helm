@@ -432,7 +432,7 @@ def get_machine_translation_adapter_spec(
     """
     return AdapterSpec(
         method=ADAPT_GENERATION,
-        instructions=f"Translate the following sentences from {source_language} to {target_language}. Follow the format of the previous examples and only provide the translated sentence.\n",
+        instructions=f"Translate the following sentences from {source_language} to {target_language}.\n",
         input_prefix=f"{source_language}: ",
         input_suffix="<|eot_id|>\n",
         output_prefix=f"{target_language}: ",
