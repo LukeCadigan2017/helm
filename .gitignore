@@ -5,7 +5,7 @@ txt
 notes.txt
 a.txt
 test.py
-*.env
+
 
 # General Python stuff
 venv
