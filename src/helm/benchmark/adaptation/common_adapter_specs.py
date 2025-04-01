@@ -309,11 +309,11 @@ def get_generation_adapter_spec(
         """
         prefix: str = f"{noun}:" if noun is not None else ""
         if len(prefix) > 0:
-            prefix += "\n" if append_new_line else " "
+            prefix += "<|helm_eot_id|>\n" if append_new_line else " "
         return prefix
 
-    if stop_sequences is None:
-        stop_sequences = ["\n"]
+    # if stop_sequences is None:
+    #     stop_sequences = ["\n"]
 
     return AdapterSpec(
         method=ADAPT_GENERATION,
@@ -327,7 +327,7 @@ def get_generation_adapter_spec(
         max_tokens=max_tokens,
         temperature=temperature,
         num_beams = num_beams,
-        stop_sequences=stop_sequences,
+        # stop_sequences=stop_sequences,
         multi_label=multi_label,
         sample_train=sample_train
     )
@@ -434,9 +434,9 @@ def get_machine_translation_adapter_spec(
         method=ADAPT_GENERATION,
         instructions=f"Translate the following sentences from {source_language} to {target_language}.\n",
         input_prefix=f"{source_language}: ",
-        input_suffix="<|eot_id|>\n",
+        input_suffix="<|helm_eot_id|>\n",
         output_prefix=f"{target_language}: ",
-        output_suffix="<|eot_id|>\n",
+        output_suffix="<|helm_eot_id|>\n",
         max_train_instances=max_train_instances,
         num_outputs=1,
         # stop_sequences=['<|endoftext|>'],

@@ -144,7 +144,7 @@ def get_gsm_spec(num_beams: int=1) -> RunSpec:
         output_noun="A",
         max_train_instances=5,  # Due to limited context and long example length
         max_tokens=400,  # The paper uses 400 tokens as the max sample length
-        stop_sequences=["\n\n"],  # Since answer may contain newlines, we use two as SEP
+        # stop_sequences=["\n\n"],  # Since answer may contain newlines, we use two as SEP
     )
 
     return RunSpec(

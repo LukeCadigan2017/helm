@@ -46,8 +46,8 @@ _CACHED_MODELS_FOLDER: str = "models"
 
 
 
-@dataclass(frozen=True)
-class GeneratedOutputExamples:
+@dataclass(frozen=False)
+class InstanceGenerations:
     """Split (e.g., train, valid, test)"""
     instance_id: str
     """id of instance"""
@@ -216,7 +216,8 @@ class Runner:
         ensure_directory_exists(self.eval_cache_path)
 
     def _get_run_path(self, run_spec: RunSpec) -> str:
-        return os.path.join(self.runs_path, run_spec.name)
+        return self.runs_path
+        # return os.path.join(self.runs_path, run_spec.name)
 
     def _is_run_completed(self, run_path: str):
         """Return whether the run was previously completed.
@@ -253,7 +254,7 @@ class Runner:
             failed_runs_str = ", ".join([f'"{run_spec.name}"' for run_spec in failed_run_specs])
             raise RunnerError(f"Failed runs: [{failed_runs_str}]")
         
-    def get_instance_generations(self, request_states: List[RequestState]) -> List[GeneratedOutputExamples]:
+    def get_instance_generations(self, request_states: List[RequestState]) -> List[InstanceGenerations]:
         """
         Compute the corpus-level metric based on all reqeust_states.
         """
@@ -272,7 +273,7 @@ class Runner:
             logprob=request_state.result.completions[0].logprob
 
             # print("\n\n\nreference is ",reference)
-            instance_generations.append(GeneratedOutputExamples(prompt=prompt, reference=reference,examples=examples,instance_id=id, 
+            instance_generations.append(InstanceGenerations(prompt=prompt, reference=reference,examples=examples,instance_id=id, 
                                                                 completion=completion, completion_logprob=logprob,
                                                                 full_prompt=full_prompt))
 
@@ -403,7 +404,8 @@ class Runner:
         )
 
         write(
-            os.path.join(run_path, "instance_generations_"+'{:%Y_%m_%d_%H_%M_%S}'.format(datetime.datetime.now())+".json"),
+            # os.path.join(run_path, "instance_generations_"+'{:%Y_%m_%d_%H_%M_%S}'.format(datetime.datetime.now())+".json"),
+            os.path.join(run_path, "instance_generations.json"),
             json.dumps(list(map(asdict_without_nones, instance_generations)), indent=2),
         )
 

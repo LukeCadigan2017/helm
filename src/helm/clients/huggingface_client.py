@@ -93,6 +93,7 @@ class HuggingFaceServer:
         self,
         pretrained_model_name_or_path: str,
         wrapped_tokenizer: WrappedPreTrainedTokenizer,
+        end_of_text_token:str,
         **kwargs,
     ):
         self._lock= Lock()
@@ -119,6 +120,7 @@ class HuggingFaceServer:
             hlog('Hugging Face device set to "cpu" because CUDA is unavailable.')
             self.device = "cpu"
 
+        self._end_of_text_token=end_of_text_token
         # Security issue: currently we trust remote code by default.
         # We retain this temporarily to maintain reverse compatibility.
         # TODO: Delete if-else and don't set trust_remote_code=True
@@ -138,16 +140,17 @@ class HuggingFaceServer:
         self.wrapped_tokenizer = wrapped_tokenizer
 
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
-        # print("\n\n\nprompt: ",raw_request["prompt"])
         eos_token_string=None
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
+        prompt=raw_request["prompt"]
+        prompt.replace("<|helm_eot_id|>", self._end_of_text_token)
+        print("prompt is ",prompt)
         with self.wrapped_tokenizer as tokenizer:
             
-            encoded_input = tokenizer(raw_request["prompt"], return_tensors="pt", return_token_type_ids=False).to(
+            encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to(
                 0 if self.device is None else self.device
             )
-            eos_token_string=tokenizer.special_tokens_map['eos_token']
             if len(raw_request["stop_sequences"]) > 0:
                 raise Exception("Haven't implemented stop_sequences")
                 # stopping_criteria = StoppingCriteriaList()
@@ -251,7 +254,7 @@ class HuggingFaceServer:
             #end of prompt:
             # Airbus erklärt, die konkurrierende Version des A350 befördere 350 Personen in 18 Zoll breiten Sitzen in der Touristenklasse, wobei es neun pro Reihe gibt
             # print("\n\n\n\n------- prompt -----")
-            # print(raw_request["prompt"])
+            # print(prompt)
 
             # print("\n\n\n\n------- encoded input -----")
             # print(tokenizer.batch_decode(encoded_input["input_ids"]))
@@ -337,6 +340,7 @@ class HuggingFaceServerFactory:
         helm_model_name: str,
         pretrained_model_name_or_path: str,
         wrapped_tokenizer: WrappedPreTrainedTokenizer,
+        end_of_text_token: str,
         **kwargs,
     ) -> Any:
         """
@@ -350,7 +354,7 @@ class HuggingFaceServerFactory:
                     f"for HELM model {helm_model_name} with Hugging Face Transformers"
                 ):
                     HuggingFaceServerFactory._servers[helm_model_name] = HuggingFaceServer(
-                        pretrained_model_name_or_path, wrapped_tokenizer, **kwargs
+                        pretrained_model_name_or_path, wrapped_tokenizer, end_of_text_token, **kwargs
                     )
 
         return HuggingFaceServerFactory._servers[helm_model_name]
@@ -479,6 +483,7 @@ class HuggingFaceClient(CachingClient):
             helm_model_name=request.model,
             pretrained_model_name_or_path=pretrained_model_name_or_path,
             wrapped_tokenizer=self._wrapped_tokenizer,
+            end_of_text_token=self._end_of_text_token,
             **self._kwargs,
         )
 

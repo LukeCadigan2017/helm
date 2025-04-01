@@ -4,10 +4,10 @@
 
 #################### FUNCTIONS ####################
 clean_str () {
-    SUITE_NAME=$1
-    chars="/ = , : __ -"
+    CLEAN_STR=$1
+    chars="= , : __ - / "
     for char in $chars; do
-        SUITE_NAME=${SUITE_NAME//$char/_}
+        CLEAN_STR=${CLEAN_STR//$char/_}
     done
 }
 
@@ -20,105 +20,73 @@ echo_space () {
 
 #################### SETTINGS ####################
 
-#task stuff
-NUM_TRAIN_TRIALS=1
-TASK=wmt_14:language_pair=de-en
-METRICS="bleu_4 comet"
 
+TASK_NAME=$1
+MODEL=$2
+NUM_BEAMS_LIST=$3
+MAX_EVAL_INSTANCES=$4
 
-MODELS=$1
-NUM_BEAMS_LIST=$2
-MAX_EVAL_INSTANCES=$3
+echo TASK_ENV is $TASK_ENV
+echo MODEL is $MODEL
+echo NUM_BEAMS_LIST is $NUM_BEAMS_LIST
+echo MAX_EVAL_INSTANCES is $MAX_EVAL_INSTANCES
 
-# ./test_run_all.ksh meta-llama/Llama-3.2-1B-Instruct 2 600
-echo ARGS is "$#"
-if [ "$#" -lt 3 ]; then
-    echo "Usage: $0 <MODEL> <NUM_BEAMS> <EVAL_INSTANCES>"
+if [ "$#" -lt 4 ]; then
+    echo "Usage: $0 <TASK_NAME> <MODEL> <NUM_BEAMS_LIST> <EVAL_INSTANCES>"
     exit 1
 fi
 
-# ./test_run_all.ksh MODEL NUM_BEAMS_LIST MAX_EVAL_INSTANCES
-# ./test_run_all.ksh distilbert/distilgpt2 2 1
+. $TASK_NAME.env
 
-# MODELS="distilbert/distilgpt2"
-# NUM_BEAMS_LIST="2"
-# MAX_EVAL_INSTANCES=1
-
-
-
-#base stuff
-SUITE_BASE="run_all_evalnum_${MAX_EVAL_INSTANCES}"
-BASE_OUTPUT_DIR=benchmark_output
-OUTPUT_DIR="${BASE_OUTPUT_DIR}/${SUITE_BASE}"
-OUTPUT_CSV=$OUTPUT_DIR/metrics_csv.txt
-
-#create files
-mkdir -p $BASE_OUTPUT_DIR
-mkdir -p $OUTPUT_DIR
-touch $OUTPUT_CSV
-
-#book-keeping
-GEN_OUTPUT_FILES=""
 cat ./test_run_all.ksh
+SUITE=eval_$MAX_EVAL_INSTANCES
+SUITE_OUTPUT_DIR=helm_output/${SUITE}
+mkdir -p $SUITE_OUTPUT_DIR
+OUTPUT_CSV=$SUITE_OUTPUT_DIR/metrics_csv.txt
 
-echo MODELS IS $MODELS
-echo MAX_EVAL_INSTANCES is $MAX_EVAL_INSTANCES
-echo NUM_BEAMS_LIST is $NUM_BEAMS_LIST
+# $OUTPUT_DIR=$(./create_output_directory.ksh eval_100 wmt meta-llama/Llama-3.2-1B-Instruct 2)
 
-#do everything
-for MODEL in $MODELS; do
-    for NUM_BEAMS in $NUM_BEAMS_LIST; do
-        echo_space
+echo $OUTPUT_DIR
 
-        #get run entry and output file names
-        RUN_ENTRY=${TASK},model=${MODEL},follow_format_instructions=instruct,num_beams=$NUM_BEAMS
-        
-        #sets SUITE_NAME
-        clean_str "${SUITE_BASE}_${RUN_ENTRY}"
-            
-        GEN_OUTPUT_FILE="${OUTPUT_DIR}/generated_${SUITE_NAME}.json"
-        RUN_ENTRY=${RUN_ENTRY},generated_output_file=${GEN_OUTPUT_FILE}
+# #do everything
 
-        #book-keeping
-        touch ${GEN_OUTPUT_FILE}
-        GEN_OUTPUT_FILES="${GEN_OUTPUT_FILES} ${GEN_OUTPUT_FILE}"     
+for NUM_BEAMS in $NUM_BEAMS_LIST; do
+    echo_space
 
-        
-        helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES --suite $SUITE_NAME --disable-cache
-        
+    #get run entry and output file names
+    RUN_ENTRY=${TASK},model=${MODEL},follow_format_instructions=instruct,num_beams=$NUM_BEAMS
 
-        #process results
-        for METRIC in $METRICS; do
-            python process_results.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $METRIC \
-                --suite_name $SUITE_NAME --output_csv $OUTPUT_CSV
-        done
-        # python process_generation.py --gen_output_json $GEN_OUTPUT_FILE
+    OUTPUT_PATH="$(./get_output_dir.ksh $SUITE_OUTPUT_DIR $TASK_NAME $MODEL $NUM_BEAMS)"
 
+    # if [ -d "$OUTPUT_PATH" ]; then
+    #     echo Cannot run! Directory $OUTPUT_PATH already exists
+    #     echo $OUTPUT_PATH
+    #     ls $OUTPUT_PATH
+    #     exit 1 
+    # fi
+    
+    mkdir -p $OUTPUT_PATH
+
+    STATS_FILE=$OUTPUT_PATH/runs/$SUITE/stats.json
+    
+    helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
+        -o $OUTPUT_PATH --suite $SUITE --disable-cache
+    echo STATS_FILE is $STATS_FILE
+
+    #process results
+    for METRIC in $METRICS; do
+        python process_stats.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $METRIC \
+                --stats_file $STATS_FILE --output_csv $OUTPUT_CSV
     done
 
 done
 
-# echo NOTE DISABLE CACHE IS OFF
+# #     #GSM
+# #   {description: "gsm:model=text_code,follow_format_instructions=instruct", priority: 2}
 
-#echo_space
-
-#print out relevant files
-# for GEN_OUTPUT_FILE in $GEN_OUTPUT_FILES; do
-#     echo "GEN_OUTPUT_FILE: ${GEN_OUTPUT_FILE}"
-# done
-#echo OUTPUT_CSV is $OUTPUT_CSV
-
-#USE THIS ONE 
-#helm-run --run-entries gsm_iom:model=stas/tiny-random-llama-2,num_beams=2  --suite my-suite --max-eval-instances 2 --disable-cache
-# beam_1739389179
-
-
-#     #GSM
-#   {description: "gsm:model=text_code,follow_format_instructions=instruct", priority: 2}
-
-#   # WMT14
-#   {description: "wmt_14:language_pair=cs-en,model=text,follow_format_instructions=instruct", priority: 2}
-#   {description: "wmt_14:language_pair=de-en,model=text,follow_format_instructions=instruct", priority: 2}
-#   {description: "wmt_14:language_pair=fr-en,model=text,follow_format_instructions=instruct", priority: 2}
-#   {description: "wmt_14:language_pair=hi-en,model=text,follow_format_instructions=instruct", priority: 2}
-#   {description: "wmt_14:language_pair=ru-en,model=text,follow_format_instructions=instruct", priority: 2}
+# #   # WMT14
+# #   {description: "wmt_14:language_pair=cs-en,model=text,follow_format_instructions=instruct", priority: 2}
+# #   {description: "wmt_14:language_pair=de-en,model=text,follow_format_instructions=instruct", priority: 2}
+# #   {description: "wmt_14:language_pair=fr-en,model=text,follow_format_instructions=instruct", priority: 2}
+# #   {description: "wmt_14:language_pair=hi-en,model=text,follow_format_instructions=instruct", priority: 2}
+# #   {description: "wmt_14:language_pair=ru-en,model=text,follow_format_instructions=instruct", priority: 2}

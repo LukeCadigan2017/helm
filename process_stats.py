@@ -8,7 +8,7 @@ parser.add_argument("--task", help="task name", type=str)
 parser.add_argument("--num_beams", help="number of beams", type=str)
 parser.add_argument("--metric", help="metric in question", type=str)
 
-parser.add_argument("--suite_name", help="suite name", type=str)
+parser.add_argument("--stats_file", help="suite name", type=str)
 parser.add_argument("--output_csv", help="suite name", type=str)
 args = parser.parse_args()
 # Usage example
@@ -20,7 +20,8 @@ args = parser.parse_args()
 
 model_clean=args.model.replace("/","_")
 
-json_file=f"./benchmark_output/runs/{args.suite_name}/{args.task},model={model_clean}/stats.json"
+# json_file=f"./benchmark_output/runs/{args.suite_name}/{args.task},model={model_clean}/stats.json"
+json_file=args.stats_file
 print(f"Process results from json_file {json_file}. Saving to {args.output_csv}")
 
 infos=None

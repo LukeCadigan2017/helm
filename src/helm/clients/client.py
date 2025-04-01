@@ -73,7 +73,7 @@ def truncate_sequence(
     for stop in all_stops:
         # Find `stop` in the text
         try:
-            new_text = new_text[: sequence.text.index(stop)]
+            new_text = new_text[: new_text.index(stop)]
         except ValueError:
             # The stop sequence doesn't exist, but it might exist in the list of tokens.
             pass

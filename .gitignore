@@ -1,4 +1,7 @@
 #New stuff
+prev
+helm_output
+txt
 notes.txt
 a.txt
 test.py
@@ -59,3 +62,4 @@ node_modules
 *.txt
 march_30_investigation
 local_test.ksh
+full_tests/beam2_8B.json
