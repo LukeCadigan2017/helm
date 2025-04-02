@@ -3,5 +3,9 @@ eval "$(conda shell.bash hook)"
 conda activate crfm-helm2
 
 # #model beam_num num_eval
-# rm -rf eval_1/wmt/distilbert_distilgpt2/2_beams
-./test_run_all.ksh wmt distilbert/distilgpt2 2 1
+# MODEL=distilbert/distilgpt2
+MODEL=meta-llama/Llama-3.1-8B-Instruct
+TASK=wmt
+EVAL_INSTANCES=1
+NUM_BEAMS=2
+./test_run_all.ksh $TASK $MODEL $NUM_BEAMS $EVAL_INSTANCES

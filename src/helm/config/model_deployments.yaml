@@ -33,8 +33,10 @@ model_deployments:
   #       pretrained_model_name_or_path: meta-llama/Llama-3.1-8B 
 
   - name: meta-llama/Llama-3.1-8B-Instruct
-    model_name: meta-llama/Llama-3.1-8B-Instruct 
-    tokenizer_name: meta/llama-3-8b-instruct
+    model_name: meta-llama/Llama-3.1-8B-Instruct  
+    tokenizer_name: meta-llama/Llama-3.1-8B-Instruct 
+    # meta/llama-3.1-8b-instruct
+    # meta/llama-3-8b-instruct
     max_sequence_length: 131072
     client_spec:
       class_name: "helm.clients.huggingface_client.HuggingFaceClient"
