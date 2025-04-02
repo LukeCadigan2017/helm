@@ -460,7 +460,7 @@ class HuggingFaceClient(CachingClient):
         
 
         prompt=request.prompt.replace("<|helm_eot_id|>", self._end_of_text_token)
-        print("-------------\n\n\n\n prompt is ",prompt )
+        # print("-------------\n\n\n\n prompt is ",prompt )
         
         raw_request: HuggingFaceRequest = {
             "engine": request.model_engine,
