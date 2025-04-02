@@ -407,7 +407,7 @@ class HuggingFaceClient(CachingClient):
                 self._end_of_text_token=mytokenizer.special_tokens_map['eos_token']
         self._lock= Lock()
         self._output_file="completions.txt"
-        print("\nClient end_of_text_token",self._end_of_text_token)
+        # print("\nClient end_of_text_token",self._end_of_text_token)
 
 
     def clean_completions(self, response, request, completions_to_clean, should_truncate_sequence=True):
