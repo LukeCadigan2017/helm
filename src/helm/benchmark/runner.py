@@ -9,9 +9,10 @@ import dataclasses
 from typing import Any, Dict, List
 import numpy as np
 import datetime
+import pprint
 
 from tqdm import tqdm
-
+from helm.benchmark.adaptation.adapter_spec import AdapterSpec
 from helm.benchmark.adaptation.request_state import RequestState
 from helm.common.request import (GeneratedOutput)
 from helm.common.general import ensure_directory_exists, write, asdict_without_nones
@@ -70,6 +71,11 @@ class InstanceGenerations:
     examples: List[GeneratedOutput]
     """List of unscored examples"""
 
+@dataclass(frozen=False)
+class GenerationSummary:
+    task_name:str
+    instance_generations :List[InstanceGenerations]
+    adapter_spec: AdapterSpec
 
 
 def get_benchmark_output_path() -> str:
@@ -252,9 +258,9 @@ class Runner:
                     failed_run_specs.append(run_spec)
         if not self.exit_on_error and failed_run_specs:
             failed_runs_str = ", ".join([f'"{run_spec.name}"' for run_spec in failed_run_specs])
-            raise RunnerError(f"Failed runs: [{failed_runs_str}]")
-        
-    def get_instance_generations(self, request_states: List[RequestState]) -> List[InstanceGenerations]:
+            raise RunnerError(f"Failed runs: [{failed_runs_str}]")    
+
+    def get_generation_summary(self, request_states: List[RequestState], adapter_spec: AdapterSpec, run_spec: RunSpec) -> GenerationSummary:
         """
         Compute the corpus-level metric based on all reqeust_states.
         """
@@ -276,9 +282,7 @@ class Runner:
             instance_generations.append(InstanceGenerations(prompt=prompt, reference=reference,examples=examples,instance_id=id, 
                                                                 completion=completion, completion_logprob=logprob,
                                                                 full_prompt=full_prompt))
-
-        #print(f"instance_generations is {instance_generations}")
-        return instance_generations
+        return GenerationSummary(instance_generations=instance_generations, adapter_spec=adapter_spec, task_name=run_spec.name)
 
     def run_one(self, run_spec: RunSpec):
         run_path: str = self._get_run_path(run_spec)
@@ -376,7 +380,7 @@ class Runner:
             if count > 1:
                 hlog(f"WARNING: duplicate metric name {metric_name}")
 
-        instance_generations=self.get_instance_generations(scenario_state.request_states)
+        generation_summary=self.get_generation_summary(scenario_state.request_states, scenario_state.adapter_spec, run_spec=run_spec)
 
         # Print out the number of stats
         hlog(f"Generated {len(stats)} stats.")
@@ -405,8 +409,8 @@ class Runner:
 
         write(
             # os.path.join(run_path, "instance_generations_"+'{:%Y_%m_%d_%H_%M_%S}'.format(datetime.datetime.now())+".json"),
-            os.path.join(run_path, "instance_generations.json"),
-            json.dumps(list(map(asdict_without_nones, instance_generations)), indent=2),
+            os.path.join(run_path, "generation_summary.json"),
+            json.dumps(asdict_without_nones(generation_summary),indent=2)
         )
 
         cache_stats.print_status()

@@ -144,10 +144,7 @@ class HuggingFaceServer:
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
         prompt=raw_request["prompt"]
-        prompt.replace("<|helm_eot_id|>", self._end_of_text_token)
-        print("prompt is ",prompt)
         with self.wrapped_tokenizer as tokenizer:
-            
             encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to(
                 0 if self.device is None else self.device
             )
@@ -311,7 +308,7 @@ class HuggingFaceServer:
                     "text": decoded_text,
                     "tokens": tokens,
                     "logprobs": generated_tokens_logprobs,
-                    "prompt_logprobs": prompt_tokens_logprobs,
+                    "prompt_logprobs": prompt_tokens_logprobs
                 }
             )
         
@@ -410,6 +407,7 @@ class HuggingFaceClient(CachingClient):
                 self._end_of_text_token=mytokenizer.special_tokens_map['eos_token']
         self._lock= Lock()
         self._output_file="completions.txt"
+        print("\nClient end_of_text_token",self._end_of_text_token)
 
 
     def clean_completions(self, response, request, completions_to_clean, should_truncate_sequence=True):
@@ -461,10 +459,12 @@ class HuggingFaceClient(CachingClient):
             return EMBEDDING_UNAVAILABLE_REQUEST_RESULT
         
 
-
+        prompt=request.prompt.replace("<|helm_eot_id|>", self._end_of_text_token)
+        print("-------------\n\n\n\n prompt is ",prompt )
+        
         raw_request: HuggingFaceRequest = {
             "engine": request.model_engine,
-            "prompt": request.prompt,
+            "prompt": prompt,
             "temperature": 1e-7 if request.temperature == 0 else request.temperature,
             "num_beams": request.num_beams,
             "generated_output_file": request.generated_output_file,

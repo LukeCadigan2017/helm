@@ -85,7 +85,7 @@ def truncate_sequence(
     for token in sequence.tokens:
         # Note: we can only strip at token boundaries
         new_tokens.append(token)
-        if token==end_of_text_token:
+        if token.text==end_of_text_token:
             break
     
     # print("Final token after: ",new_tokens[-1])
