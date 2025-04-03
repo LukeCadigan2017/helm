@@ -54,7 +54,7 @@ for NUM_BEAMS in $NUM_BEAMS_LIST; do
     echo_space
 
     #get run entry and output file names
-    RUN_ENTRY=${TASK},model=${MODEL},follow_format_instructions=instruct,num_beams=$NUM_BEAMS
+    RUN_ENTRY=${TASK}model=${MODEL},follow_format_instructions=instruct,num_beams=$NUM_BEAMS
 
     OUTPUT_PATH="$(./get_output_dir.ksh $SUITE_OUTPUT_DIR $TASK_NAME $MODEL $NUM_BEAMS)"
 
