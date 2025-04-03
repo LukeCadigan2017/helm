@@ -69,6 +69,8 @@ for NUM_BEAMS in $NUM_BEAMS_LIST; do
 
     STATS_FILE=$OUTPUT_PATH/runs/$SUITE/stats.json
     
+    echo helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
+        -o $OUTPUT_PATH --suite $SUITE --disable-cache
     helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
         -o $OUTPUT_PATH --suite $SUITE --disable-cache
     echo STATS_FILE is $STATS_FILE
