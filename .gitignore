@@ -67,3 +67,4 @@ node_modules
 march_30_investigation
 local_test.ksh
 full_tests/beam2_8B.json
+test_gens.ipynb

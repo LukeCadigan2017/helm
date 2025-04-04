@@ -22,13 +22,13 @@ def get_instruction_following_critique_metric_specs(num_respondents: int) -> Lis
 
 
 @run_spec_function("self_instruct")
-def get_self_instruct_spec(num_respondents: int) -> RunSpec:
+def get_self_instruct_spec(num_respondents: int, num_beams: int=1) -> RunSpec:
     scenario_spec = ScenarioSpec(
         class_name="helm.benchmark.scenarios.self_instruct_scenario.SelfInstructScenario",
         args={},
     )
 
-    adapter_spec = get_instruct_adapter_spec()
+    adapter_spec = get_instruct_adapter_spec(num_beams=num_beams)
 
     return RunSpec(
         name="self_instruct",
