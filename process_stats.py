@@ -43,13 +43,17 @@ for info in infos:
 split_char=","
 eol_char="\n"
 
+def clean_data(data,replace_chars):
+    if(isinstance(data, str)):
+        for replace_char in replace_chars:
+            data=data.replace(replace_char,"_")
+    return data
+
 if(len(values)==1):
     value=values[0]
     data_vals=[args.model, args.task, args.num_beams, args.metric, str(value)]
-    for data in data_vals:
-        if(isinstance(data, str)):
-            for replace_char in [split_char, eol_char]:
-                data=data.replace(replace_char,"_")
+    data_vals=[clean_data(data, [split_char, eol_char]) for data in data_vals]
+
     for data in data_vals:
         if(split_char in data or eol_char in data):
             raise Exception(f"Could not process data. Data contains splits_char.\n Data: {data} split_char: {split_char} or {eol_char}")
