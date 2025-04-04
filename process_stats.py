@@ -47,6 +47,10 @@ if(len(values)==1):
     value=values[0]
     data_vals=[args.model, args.task, args.num_beams, args.metric, str(value)]
     for data in data_vals:
+        if(isinstance(data, str)):
+            for replace_char in [split_char, eol_char]:
+                data=data.replace(replace_char,"_")
+    for data in data_vals:
         if(split_char in data or eol_char in data):
             raise Exception(f"Could not process data. Data contains splits_char.\n Data: {data} split_char: {split_char} or {eol_char}")
 
