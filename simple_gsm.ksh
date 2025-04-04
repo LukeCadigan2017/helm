@@ -1,0 +1,1 @@
+helm-run --run-entries gsm:model=distilbert/distilgpt2,follow_format_instructions=instruct,num_beams=2 --num-train-trials 1 --max-eval-instances 2 -o helm_output/eval_2/gsm/distilbert_distilgpt2/2_beams --suite eval_2 --disable-cache

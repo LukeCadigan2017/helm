@@ -68,17 +68,19 @@ for NUM_BEAMS in $NUM_BEAMS_LIST; do
     mkdir -p $OUTPUT_PATH
 
     STATS_FILE=$OUTPUT_PATH/runs/$SUITE/stats.json
-    
-    echo helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
-        -o $OUTPUT_PATH --suite $SUITE --disable-cache
-    helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
-        -o $OUTPUT_PATH --suite $SUITE --disable-cache
-    echo STATS_FILE is $STATS_FILE
+
+    # echo helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
+    #     -o $OUTPUT_PATH --suite $SUITE --disable-cache
+    # helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
+    #     -o $OUTPUT_PATH --suite $SUITE --disable-cache
+    # echo STATS_FILE is $STATS_FILE
 
     #process results
     for METRIC in $METRICS; do
-        python process_stats.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $METRIC \
+        echo python process_stats.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $METRIC \
                 --stats_file $STATS_FILE --output_csv $OUTPUT_CSV
+        # python process_stats.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $METRIC \
+        #         --stats_file $STATS_FILE --output_csv $OUTPUT_CSV
     done
 
 done
