@@ -5,6 +5,10 @@ txt
 notes.txt
 a.txt
 test.py
+full_gens/
+gen_tests/
+generations/
+hf.env
 
 
 # General Python stuff
