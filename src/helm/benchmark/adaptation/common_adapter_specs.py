@@ -346,7 +346,7 @@ def get_instruct_adapter_spec(
         method=ADAPT_GENERATION,
         instructions="",
         input_prefix="",
-        input_suffix="\n",
+        input_suffix="<|helm_eot_id|>\n",
         output_prefix="",
         output_suffix="",
         max_train_instances=0,
