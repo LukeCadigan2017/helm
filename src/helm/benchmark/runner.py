@@ -56,9 +56,6 @@ class InstanceGenerations:
     prompt: str
     """Prompt used"""
     
-    reference: str
-    """Reference used"""
-
     completion: str
     """Selection completion for metrics"""
 
@@ -70,6 +67,9 @@ class InstanceGenerations:
 
     examples: List[GeneratedOutput]
     """List of unscored examples"""
+
+    reference: str=None
+    """Reference used"""
 
 @dataclass(frozen=False)
 class GenerationSummary:
@@ -267,14 +267,15 @@ class Runner:
         instance_generations=[]
         for request_state in request_states:
             assert request_state.result is not None
-            assert len(request_state.instance.references) ==1
+            # assert len(request_state.instance.references) ==1
             assert len(request_state.result.completions) ==1
 
             prompt=request_state.instance.input.text
             full_prompt=request_state.result.full_prompt
             examples=request_state.result.unscored_examples
             id=request_state.instance.id
-            reference=request_state.instance.references[0].output.text
+            references=request_state.instance.references
+            reference=references[0].output.text if len(references)>0 else None
             completion=request_state.result.completions[0].text
             logprob=request_state.result.completions[0].logprob
 

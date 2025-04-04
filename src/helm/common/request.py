@@ -129,7 +129,7 @@ class Token:
     # Log probability of generating that
     logprob: float
 
-    token_id:None
+    token_id: int = None
     def render_lines(self) -> List[str]:
         return [
             f"{format_text(self.text)} logprob={self.logprob}",
