@@ -269,7 +269,7 @@ class ScaleCritiqueClient(CritiqueClient):
             #     "Factuality": [
             #         "3"
             #     ],
-            #     "Keyword Feedback": "Two out of five answers were not understandable"
+            #     "Keyword_Feedback": "Two out of five answers were not understandable"
             #     },
             #     {
             #     "Helpfulness": [
@@ -290,7 +290,7 @@ class ScaleCritiqueClient(CritiqueClient):
             #     "Factuality": [
             #         "1"
             #     ],
-            #     "Keyword Feedback": "typos"
+            #     "Keyword_Feedback": "typos"
             #     }
             # ]
             # First, we get the list of respondents
