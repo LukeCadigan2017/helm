@@ -210,6 +210,8 @@ class HuggingFaceServer:
                 sequences = output.sequences
                 scores = output.scores
             else:
+
+                raise Exception("Beam search did not run")
                 # #the difference: length_penalty cannot be set if num_beams>1
                 # with torch.no_grad():
                 #     output = self.model.generate(
