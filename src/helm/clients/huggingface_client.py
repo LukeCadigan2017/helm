@@ -200,7 +200,8 @@ class HuggingFaceServer:
                         #changed this
                         do_sample=False,
                         return_dict_in_generate=True,
-                        output_scores=True,
+                        # output_scores=True,
+                        output_logits=True,
                         length_penalty=0,
                         **optional_args,
                         stopping_criteria=stopping_criteria, 
@@ -208,7 +209,9 @@ class HuggingFaceServer:
                         # top_p=raw_request["top_p"],
                     )
                 sequences = output.sequences
-                scores = output.scores
+                # scores = output.scores
+                logits=output.logits
+
             else:
 
                 raise Exception("Beam search did not run")
@@ -237,12 +240,13 @@ class HuggingFaceServer:
                         top_p=raw_request["top_p"],
                         do_sample=True,
                         return_dict_in_generate=True,
-                        output_scores=True,
+                        # output_scores=True,
+                        output_logits=True,
                         **optional_args,
                         stopping_criteria=stopping_criteria,
                     )
                 sequences = output.sequences
-                scores = output.scores
+                scores = output.logits
         
             # for sequence in output.sequences:
             #     if "\n" in "".join(tokenizer.batch_decode(sequence[len(encoded_input[0]):-1])):
@@ -271,24 +275,9 @@ class HuggingFaceServer:
             generated_tokens_logprobs = []
             # print(f"{len(sequences[completion_id])} , {len(encoded_input.input_ids[0])} {len(scores)}")
             # assert  len(sequences[completion_id])==len(encoded_input.input_ids[0])+len(scores)
-            # for i in range():
-            sentence_length=min( len(sequences[completion_id]) - len(encoded_input.input_ids[0]), len(scores))
-            for i in range(sentence_length):
-                # print(f"{len(sequences[completion_id])} , {len(encoded_input.input_ids[0])} {len(scores)}")
-                # with self.wrapped_tokenizer as tokenizer:
-                #     print("hello")
-
-                #     print(len(sequences[completion_id]))
-                #     print(tokenizer.decode(sequences[completion_id]))
-                #     print(tokenizer.decode(encoded_input.input_ids[0]))
-                # sequences(completion_id)=209 long
-                # 
-                # 209 , 174 #34
-                
-
-                #so, scores does not contain 
-                logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
-                # Get log probability of chosen token.
+            sentence_length=min( len(sequences[completion_id]) - len(encoded_input.input_ids[0]), len(logits))
+            for i in range(sentence_length): 
+                logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=0)
                 j = i + len(encoded_input.input_ids[0])
                 generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())                
             all_generated_tokens_logprobs.append(generated_tokens_logprobs)
