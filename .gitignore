@@ -9,7 +9,7 @@ full_gens/
 gen_tests/
 generations/
 hf.env
-
+snellius_copies
 
 # General Python stuff
 venv
