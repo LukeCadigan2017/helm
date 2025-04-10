@@ -99,12 +99,15 @@ class HuggingFaceServer:
         self._lock= Lock()
         self.stop_sequence_dict={}
         self.device: Optional[str]
+        print("\n\n\n\n kwargs is {kwargs}")
         if "device_map" in kwargs:
             if "device" in kwargs:
                 raise ValueError("At most one of one of `device` and `device_map` may be specified.")
             try:
                 import accelerate  # noqa: F401
+                print("accelerate installed!!!!")
             except ModuleNotFoundError as e:
+                print("accelerate not installed!!!")
                 handle_module_not_found_error(e, ["accelerate"])
             hlog(f'Hugging Face device_map set to "{kwargs["device_map"]}" from kwargs.')
             self.device = None
@@ -205,6 +208,7 @@ class HuggingFaceServer:
                         length_penalty=0,
                         **optional_args,
                         stopping_criteria=stopping_criteria, 
+                        early_stopping="never"
                         # temperature=raw_request["temperature"],
                         # top_p=raw_request["top_p"],
                     )
