@@ -100,6 +100,8 @@ class HuggingFaceServer:
         self.stop_sequence_dict={}
         self.device: Optional[str]
         print(f"\n\n\n\n kwargs is {kwargs}")
+        kwargs["device_map"]="auto"
+        print(f"kwargs is {kwargs}")
         if "device_map" in kwargs:
             if "device" in kwargs:
                 raise ValueError("At most one of one of `device` and `device_map` may be specified.")
