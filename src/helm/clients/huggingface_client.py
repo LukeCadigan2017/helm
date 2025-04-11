@@ -316,7 +316,8 @@ class HuggingFaceServer:
             sentence_length=min( len(generated_sequence), len(logits))
             for i in range(sentence_length): 
                 cur_token=generated_sequence[i]
-                token_logprob=transition_scores[completion_id][i]
+                token_logprob=transition_scores[completion_id][i].item()
+                # breakpoint()
                 # logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=-1)
                 # token_logprob=logprobs[cur_token].item()
                 # token_score=output.scores[i][completion_id][cur_token].item()
