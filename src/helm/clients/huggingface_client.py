@@ -211,7 +211,8 @@ class HuggingFaceServer:
                         length_penalty=0,
                         **optional_args,
                         stopping_criteria=stopping_criteria, 
-                        early_stopping=False
+                        early_stopping=False,
+                        top_k = 0
                         # temperature=raw_request["temperature"],
                         # top_p=raw_request["top_p"],
                     )
