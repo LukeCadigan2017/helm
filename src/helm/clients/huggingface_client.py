@@ -100,7 +100,8 @@ class HuggingFaceServer:
         self.stop_sequence_dict={}
         self.device: Optional[str]
         print(f"\n\n\n\n kwargs is {kwargs}")
-        kwargs["device_map"]="auto"
+        if torch.cuda.is_available():
+            kwargs["device_map"]="auto"
         print(f"kwargs is {kwargs}")
         if "device_map" in kwargs:
             if "device" in kwargs:
@@ -205,18 +206,34 @@ class HuggingFaceServer:
                         #changed this
                         do_sample=False,
                         return_dict_in_generate=True,
-                        # output_scores=True,
+                        output_scores=True,
                         output_logits=True,
                         length_penalty=0,
                         **optional_args,
                         stopping_criteria=stopping_criteria, 
-                        early_stopping="never"
+                        early_stopping=False
                         # temperature=raw_request["temperature"],
                         # top_p=raw_request["top_p"],
                     )
-                sequences = output.sequences
-                # scores = output.scores
-                logits=output.logits
+                # with self.wrapped_tokenizer as tokenizer:
+                    sequences = output.sequences
+                    scores = output.scores
+                    logits=output.logits
+                    
+
+                    # def get_variables(i):
+                    #     completion_id=0
+                    #     j = len(encoded_input.input_ids[0])+i
+                    #     vocab_scores=logits[i][completion_id]
+                    #     token=sequences[completion_id][j]
+                    #     logprobs=torch.nn.functional.log_softmax(logits[i][completion_id], dim=0)
+                    #     vocab_score=vocab_scores[token]
+                    #     logit_score=logprobs[token]
+                    #     print(f"for i {i}, vocab_score: {vocab_score} logit_score {logit_score}")
+                    # get_variables(0)
+                    # get_variables(1)
+                    # breakpoint()
+                    # print("")
 
             else:
 
@@ -277,15 +294,30 @@ class HuggingFaceServer:
         # Compute logprobs of generated tokens for each completed sequence.
         all_generated_tokens_logprobs = []
         
+        # for completion_id in range(num_generated):
+        #     generated_tokens_logprobs = []
+        #     # print(f"{len(sequences[completion_id])} , {len(encoded_input.input_ids[0])} {len(scores)}")
+        #     # assert  len(sequences[completion_id])==len(encoded_input.input_ids[0])+len(scores)
+        #     sentence_length=min( len(sequences[completion_id]) - len(encoded_input.input_ids[0]), len(logits))
+        #     for i in range(sentence_length): 
+        #         logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=0)
+        #         j = i + len(encoded_input.input_ids[0])
+        #         generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())                
+        #     all_generated_tokens_logprobs.append(generated_tokens_logprobs)
+
         for completion_id in range(num_generated):
+            generated_sequence=sequences[completion_id, len(encoded_input.input_ids[0]):]
+            # print("sequence is ", tokenizer.batch_decode(generated_sequence, skip_special_tokens=True))
             generated_tokens_logprobs = []
-            # print(f"{len(sequences[completion_id])} , {len(encoded_input.input_ids[0])} {len(scores)}")
-            # assert  len(sequences[completion_id])==len(encoded_input.input_ids[0])+len(scores)
-            sentence_length=min( len(sequences[completion_id]) - len(encoded_input.input_ids[0]), len(logits))
+            sentence_length=min( len(generated_sequence), len(logits))
             for i in range(sentence_length): 
-                logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=0)
-                j = i + len(encoded_input.input_ids[0])
-                generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())                
+                cur_token=generated_sequence[i]
+                logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=-1)
+                token_logprob=logprobs[cur_token].item()
+                token_score=output.scores[i][completion_id][cur_token].item()
+                assert token_score==token_logprob  
+                # print(f"cur_token is {tokenizer.decode(cur_token)} \tscore: {token_score} \ttoken_logprob {token_logprob}")     
+                generated_tokens_logprobs.append(token_logprob)      
             all_generated_tokens_logprobs.append(generated_tokens_logprobs)
 
         # Remove prompt from the start of each sequence if echo_prompt is False.
