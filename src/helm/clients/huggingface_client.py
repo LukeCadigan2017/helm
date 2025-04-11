@@ -99,7 +99,7 @@ class HuggingFaceServer:
         self._lock= Lock()
         self.stop_sequence_dict={}
         self.device: Optional[str]
-        print(f"\n\n\n\n kwargs is {kwargs}")
+        # print(f"\n\n\n\n kwargs is {kwargs}")
         if torch.cuda.is_available():
             kwargs["device_map"]="auto"
         print(f"kwargs is {kwargs}")
@@ -108,7 +108,7 @@ class HuggingFaceServer:
                 raise ValueError("At most one of one of `device` and `device_map` may be specified.")
             try:
                 import accelerate  # noqa: F401
-                print("accelerate installed!!!!")
+                
             except ModuleNotFoundError as e:
                 print("accelerate not installed!!!")
                 handle_module_not_found_error(e, ["accelerate"])
@@ -222,6 +222,9 @@ class HuggingFaceServer:
                     logits=output.logits
                     
 
+                    transition_scores = self.model.compute_transition_scores(output.sequences, output.scores, normalize_logits=True)
+
+
                     # def get_variables(i):
                     #     completion_id=0
                     #     j = len(encoded_input.input_ids[0])+i
@@ -313,10 +316,11 @@ class HuggingFaceServer:
             sentence_length=min( len(generated_sequence), len(logits))
             for i in range(sentence_length): 
                 cur_token=generated_sequence[i]
-                logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=-1)
-                token_logprob=logprobs[cur_token].item()
-                token_score=output.scores[i][completion_id][cur_token].item()
-                assert token_score==token_logprob  
+                token_logprob=transition_scores[completion_id][i]
+                # logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=-1)
+                # token_logprob=logprobs[cur_token].item()
+                # token_score=output.scores[i][completion_id][cur_token].item()
+                # assert token_score==token_logprob  
                 # print(f"cur_token is {tokenizer.decode(cur_token)} \tscore: {token_score} \ttoken_logprob {token_logprob}")     
                 generated_tokens_logprobs.append(token_logprob)      
             all_generated_tokens_logprobs.append(generated_tokens_logprobs)
