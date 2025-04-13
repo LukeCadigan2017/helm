@@ -197,28 +197,30 @@ class HuggingFaceServer:
         else:
 
             if(raw_request["num_beams"] >1):
-                #should be this?
+                # should be this?
                 # with torch.no_grad():
-                #     outputs = self.model.generate(
-                #         **encoded_input,
-                #         num_beams = raw_request["num_beams"],
-                #         num_return_sequences=num_generated,
-                #         max_new_tokens=raw_request["max_new_tokens"],
-                #         #changed this
-                #         do_sample=False,
-                #         return_dict_in_generate=True,
-                #         output_scores=True,
-                #         output_logits=True,
-                #         length_penalty=0,
-                #         **optional_args,
-                #         stopping_criteria=stopping_criteria, 
-                #         early_stopping=False,
-                #         top_k = 0
+                    # outputs = self.model.generate(
+                    #     **encoded_input,
+                    #     num_beams = raw_request["num_beams"],
+                    #     num_return_sequences=num_generated,
+                    #     max_new_tokens=raw_request["max_new_tokens"],
+                    #     #changed this
+                    #     do_sample=False,
+                    #     return_dict_in_generate=True,
+                    #     output_scores=True,
+                    #     output_logits=True,
+                    #     length_penalty=0,
+                    #     **optional_args,
+                    #     stopping_criteria=stopping_criteria, 
+                    #     early_stopping=False,
+                    #     top_k = 0
 
-                #     )
+                    # )
 
                 with torch.no_grad():
-                        output = self.model.generate(**encoded_input, max_new_tokens=10, num_beams=raw_request["num_beams"],
+                        output = self.model.generate(**encoded_input, 
+                            max_new_tokens=raw_request["max_new_tokens"], 
+                            num_beams=raw_request["num_beams"],
                             num_return_sequences=num_generated,
                             do_sample=False,
                             return_dict_in_generate=True,
@@ -511,8 +513,8 @@ class HuggingFaceClient(CachingClient):
             error: str = f"HuggingFace error: {e}"
             return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
 
-        completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
-        unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=True)
+        completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=False)
+        unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=False)
 
 
         # for completion in unscored_examples:
