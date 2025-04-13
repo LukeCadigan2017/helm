@@ -197,50 +197,42 @@ class HuggingFaceServer:
         else:
 
             if(raw_request["num_beams"] >1):
+                #should be this?
+                # with torch.no_grad():
+                #     outputs = self.model.generate(
+                #         **encoded_input,
+                #         num_beams = raw_request["num_beams"],
+                #         num_return_sequences=num_generated,
+                #         max_new_tokens=raw_request["max_new_tokens"],
+                #         #changed this
+                #         do_sample=False,
+                #         return_dict_in_generate=True,
+                #         output_scores=True,
+                #         output_logits=True,
+                #         length_penalty=0,
+                #         **optional_args,
+                #         stopping_criteria=stopping_criteria, 
+                #         early_stopping=False,
+                #         top_k = 0
+
+                #     )
+
                 with torch.no_grad():
-                    output = self.model.generate(
-                        **encoded_input,
-                        num_beams = raw_request["num_beams"],
-                        num_return_sequences=num_generated,
-                        max_new_tokens=raw_request["max_new_tokens"],
-                        #changed this
-                        do_sample=False,
-                        return_dict_in_generate=True,
-                        output_scores=True,
-                        output_logits=True,
-                        length_penalty=0,
-                        **optional_args,
-                        stopping_criteria=stopping_criteria, 
-                        early_stopping=False,
-                        top_k = 0
-                        # temperature=raw_request["temperature"],
-                        # top_p=raw_request["top_p"],
-                    )
+                        output = self.model.generate(**encoded_input, max_new_tokens=10, num_beams=raw_request["num_beams"],
+                            num_return_sequences=num_generated,
+                            do_sample=False,
+                            return_dict_in_generate=True,
+                            output_scores=True,
+                            output_logits=True,
+                            length_penalty=0,
+                            early_stopping=False
+                            )
                 # with self.wrapped_tokenizer as tokenizer:
-                    sequences = output.sequences
-                    scores = output.scores
-                    logits=output.logits
-                    
-
-                    transition_scores = self.model.compute_transition_scores(output.sequences, output.scores, normalize_logits=True)
-
-
-                    # def get_variables(i):
-                    #     completion_id=0
-                    #     j = len(encoded_input.input_ids[0])+i
-                    #     vocab_scores=logits[i][completion_id]
-                    #     token=sequences[completion_id][j]
-                    #     logprobs=torch.nn.functional.log_softmax(logits[i][completion_id], dim=0)
-                    #     vocab_score=vocab_scores[token]
-                    #     logit_score=logprobs[token]
-                    #     print(f"for i {i}, vocab_score: {vocab_score} logit_score {logit_score}")
-                    # get_variables(0)
-                    # get_variables(1)
-                    # breakpoint()
-                    # print("")
-
+                        sequences = output.sequences
+                        scores = output.scores
+                        logits=output.logits
+                        transition_scores = self.model.compute_transition_scores(output.sequences, output.scores, output.beam_indices, normalize_logits=True)
             else:
-
                 raise Exception("Beam search did not run")
                 # #the difference: length_penalty cannot be set if num_beams>1
                 # with torch.no_grad():
@@ -275,56 +267,35 @@ class HuggingFaceServer:
                 sequences = output.sequences
                 scores = output.logits
         
-            # for sequence in output.sequences:
-            #     if "\n" in "".join(tokenizer.batch_decode(sequence[len(encoded_input[0]):-1])):
-            #         print("seq contains text:")
-            #This is the prompt:
-
-
-            #end of prompt:
-            # Airbus erklärt, die konkurrierende Version des A350 befördere 350 Personen in 18 Zoll breiten Sitzen in der Touristenklasse, wobei es neun pro Reihe gibt
-            # print("\n\n\n\n------- prompt -----")
-            # print(prompt)
-
-            # print("\n\n\n\n------- encoded input -----")
-            # print(tokenizer.batch_decode(encoded_input["input_ids"]))
-
-            # print("\n\n\n\n------- sequences -----")
-            # print(tokenizer.batch_decode(sequences)[0])
-            
-        # print("\n\n\n\n eos token is ",eos_token)
         
         prompt_tokens_logprobs = []
         # Compute logprobs of generated tokens for each completed sequence.
         all_generated_tokens_logprobs = []
-        
-        # for completion_id in range(num_generated):
-        #     generated_tokens_logprobs = []
-        #     # print(f"{len(sequences[completion_id])} , {len(encoded_input.input_ids[0])} {len(scores)}")
-        #     # assert  len(sequences[completion_id])==len(encoded_input.input_ids[0])+len(scores)
-        #     sentence_length=min( len(sequences[completion_id]) - len(encoded_input.input_ids[0]), len(logits))
-        #     for i in range(sentence_length): 
-        #         logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=0)
-        #         j = i + len(encoded_input.input_ids[0])
-        #         generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())                
-        #     all_generated_tokens_logprobs.append(generated_tokens_logprobs)
-
         for completion_id in range(num_generated):
+            generated_tokens_logprobs=[]
             generated_sequence=sequences[completion_id, len(encoded_input.input_ids[0]):]
-            # print("sequence is ", tokenizer.batch_decode(generated_sequence, skip_special_tokens=True))
-            generated_tokens_logprobs = []
             sentence_length=min( len(generated_sequence), len(logits))
             for i in range(sentence_length): 
-                cur_token=generated_sequence[i]
                 token_logprob=transition_scores[completion_id][i].item()
-                # breakpoint()
-                # logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=-1)
-                # token_logprob=logprobs[cur_token].item()
-                # token_score=output.scores[i][completion_id][cur_token].item()
-                # assert token_score==token_logprob  
-                # print(f"cur_token is {tokenizer.decode(cur_token)} \tscore: {token_score} \ttoken_logprob {token_logprob}")     
-                generated_tokens_logprobs.append(token_logprob)      
+                generated_tokens_logprobs.append(token_logprob)
             all_generated_tokens_logprobs.append(generated_tokens_logprobs)
+
+        # for completion_id in range(num_generated):
+        #     generated_sequence=sequences[completion_id, len(encoded_input.input_ids[0]):]
+        #     # print("sequence is ", tokenizer.batch_decode(generated_sequence, skip_special_tokens=True))
+        #     generated_tokens_logprobs = []
+        #     sentence_length=min( len(generated_sequence), len(transition_scores))
+        #     for i in range(sentence_length): 
+        #         cur_token=generated_sequence[i]
+        #         token_logprob=transition_scores[completion_id][i].item()
+        #         # breakpoint()
+        #         # logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=-1)
+        #         # token_logprob=logprobs[cur_token].item()
+        #         # token_score=output.scores[i][completion_id][cur_token].item()
+        #         # assert token_score==token_logprob  
+        #         # print(f"cur_token is {tokenizer.decode(cur_token)} \tscore: {token_score} \ttoken_logprob {token_logprob}")     
+        #         generated_tokens_logprobs.append(token_logprob)      
+        #     all_generated_tokens_logprobs.append(generated_tokens_logprobs)
 
         # Remove prompt from the start of each sequence if echo_prompt is False.
         if not raw_request["echo_prompt"]:
@@ -470,19 +441,23 @@ class HuggingFaceClient(CachingClient):
             if(should_truncate_sequence):
                 completion = truncate_sequence(completion, request, end_of_text_token=self._end_of_text_token)
             completions.append(completion)
-            # if(completion.full_text):
-            #     print("full text: ",completion.full_text)
 
-            # "<|endoftext|>"
-            # "."=="13"
-            # "<|endoftext|>"=50256
-            # end_token_found=False
-            # for token in completion.tokens:
-            #     if token.token_id==13:
-            #         end_token_found=True
-            #     if end_token_found and token.text != self._end_of_text_token:
-            #         print("error found ")
-            #         print("\n\n\n\n\n\n\n\n\n\n\n\n\n",completion.full_text)
+
+
+            # 
+            # # if(completion.full_text):
+            # #     print("full text: ",completion.full_text)
+
+            # # "<|endoftext|>"
+            # # "."=="13"
+            # # "<|endoftext|>"=50256
+            # # end_token_found=False
+            # # for token in completion.tokens:
+            # #     if token.token_id==13:
+            # #         end_token_found=True
+            # #     if end_token_found and token.text != self._end_of_text_token:
+            # #         print("error found ")
+            # #         print("\n\n\n\n\n\n\n\n\n\n\n\n\n",completion.full_text)
                     
         return completions
 
@@ -538,6 +513,8 @@ class HuggingFaceClient(CachingClient):
 
         completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
         unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=True)
+
+
         # for completion in unscored_examples:
             #completion.tokens=None
 
