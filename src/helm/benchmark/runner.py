@@ -63,13 +63,21 @@ class InstanceGenerations:
     completion_logprob: float
     """Completion probability"""
 
-    full_prompt: str
+    
 
-    examples: List[GeneratedOutput]
+    """Reference used"""
+    reference: str=None
+
+    full_prompt: str=None
+    beam_num: int=None
+    model: str=None
+
+    examples: List[GeneratedOutput]=None
     """List of unscored examples"""
 
-    reference: str=None
-    """Reference used"""
+    
+    
+
 
 @dataclass(frozen=False)
 class GenerationSummary:
