@@ -222,6 +222,7 @@ class HuggingFaceServer:
                             max_new_tokens=raw_request["max_new_tokens"], 
                             num_beams=raw_request["num_beams"],
                             num_beam_groups=raw_request["num_beams"],
+                            diversity_penalty=1.0,
                             num_return_sequences=num_generated,
                             do_sample=False,
                             return_dict_in_generate=True,
