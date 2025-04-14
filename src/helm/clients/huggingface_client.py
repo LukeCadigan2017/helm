@@ -221,6 +221,7 @@ class HuggingFaceServer:
                         output = self.model.generate(**encoded_input, 
                             max_new_tokens=raw_request["max_new_tokens"], 
                             num_beams=raw_request["num_beams"],
+                            num_beam_groups=raw_request["num_beams"],
                             num_return_sequences=num_generated,
                             do_sample=False,
                             return_dict_in_generate=True,
@@ -323,7 +324,7 @@ class HuggingFaceServer:
         
 
         
-        raw_completions.sort(key=lambda x:x["logprobs"],reverse=True)
+        raw_completions.sort(key=lambda x:sum(x["logprobs"]),reverse=True)
         completions = raw_completions[:raw_request["num_return_sequences"]]
 
 
