@@ -227,7 +227,8 @@ class HuggingFaceServer:
                             output_scores=True,
                             output_logits=True,
                             length_penalty=0,
-                            early_stopping=False
+                             **optional_args,
+                            early_stopping="never"
                             )
                 # with self.wrapped_tokenizer as tokenizer:
                         sequences = output.sequences
