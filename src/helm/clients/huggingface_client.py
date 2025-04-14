@@ -516,8 +516,8 @@ class HuggingFaceClient(CachingClient):
             error: str = f"HuggingFace error: {e}"
             return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
 
-        completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=False)
-        unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=False)
+        completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
+        unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=True)
 
 
         # for completion in unscored_examples:
