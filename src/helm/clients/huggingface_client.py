@@ -221,8 +221,6 @@ class HuggingFaceServer:
                         output = self.model.generate(**encoded_input, 
                             max_new_tokens=raw_request["max_new_tokens"], 
                             num_beams=raw_request["num_beams"],
-                            num_beam_groups=raw_request["num_beams"],
-                            diversity_penalty=1.0,
                             num_return_sequences=num_generated,
                             do_sample=False,
                             return_dict_in_generate=True,
@@ -231,6 +229,8 @@ class HuggingFaceServer:
                             length_penalty=0,
                              **optional_args,
                             early_stopping="never"
+                            # num_beam_groups=raw_request["num_beams"],
+                            # diversity_penalty=1.0,
                             )
                 # with self.wrapped_tokenizer as tokenizer:
                         sequences = output.sequences
@@ -324,7 +324,7 @@ class HuggingFaceServer:
             )
         
 
-        
+
         raw_completions.sort(key=lambda x:sum(x["logprobs"]),reverse=True)
         completions = raw_completions[:raw_request["num_return_sequences"]]
 
