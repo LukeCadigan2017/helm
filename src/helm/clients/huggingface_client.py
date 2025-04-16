@@ -150,6 +150,9 @@ class HuggingFaceServer:
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
         prompt=raw_request["prompt"]
+
+        prompt_tokens_logprobs = []
+        all_generated_tokens_logprobs = []
         with self.wrapped_tokenizer as tokenizer:
             encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to(
                 0 if self.device is None else self.device
@@ -217,9 +220,8 @@ class HuggingFaceServer:
                     #     top_k = 0
 
                     # )
-
                 with torch.no_grad():
-                        output = self.model.generate(**encoded_input, 
+                    output = self.model.generate(**encoded_input, 
                             max_new_tokens=raw_request["max_new_tokens"], 
                             num_beams=num_beams,
                             num_return_sequences=num_generated,
@@ -234,10 +236,19 @@ class HuggingFaceServer:
                             # diversity_penalty=1.0,
                             )
                 # with self.wrapped_tokenizer as tokenizer:
-                        sequences = output.sequences
-                        scores = output.scores
-                        logits=output.logits
-                        transition_scores = self.model.compute_transition_scores(output.sequences, output.scores, output.beam_indices, normalize_logits=True)
+                    sequences = output.sequences
+                    scores = output.scores
+                    logits=output.logits
+                    transition_scores = self.model.compute_transition_scores(output.sequences, output.scores, output.beam_indices, normalize_logits=True)
+                    # Compute logprobs of generated tokens for each completed sequence.
+                    for completion_id in range(num_generated):
+                        generated_tokens_logprobs=[]
+                        generated_sequence=sequences[completion_id, len(encoded_input.input_ids[0]):]
+                        sentence_length=min( len(generated_sequence), len(logits))
+                        for i in range(sentence_length): 
+                            token_logprob=transition_scores[completion_id][i].item()
+                            generated_tokens_logprobs.append(token_logprob)
+                        all_generated_tokens_logprobs.append(generated_tokens_logprobs)
             else:
                 # #the difference: length_penalty cannot be set if num_beams>1
                 # with torch.no_grad():
@@ -269,23 +280,18 @@ class HuggingFaceServer:
                         **optional_args,
                         stopping_criteria=stopping_criteria,
                     )
-                    sequences = output.sequences
-                    scores = output.scores
-                    logits=output.logits
-                    transition_scores = self.model.compute_transition_scores(output.sequences, output.scores, output.beam_indices, normalize_logits=True)
-        
-        
-        prompt_tokens_logprobs = []
-        # Compute logprobs of generated tokens for each completed sequence.
-        all_generated_tokens_logprobs = []
-        for completion_id in range(num_generated):
-            generated_tokens_logprobs=[]
-            generated_sequence=sequences[completion_id, len(encoded_input.input_ids[0]):]
-            sentence_length=min( len(generated_sequence), len(logits))
-            for i in range(sentence_length): 
-                token_logprob=transition_scores[completion_id][i].item()
-                generated_tokens_logprobs.append(token_logprob)
-            all_generated_tokens_logprobs.append(generated_tokens_logprobs)
+                sequences = output.sequences
+                scores = output.scores
+                for completion_id in range(raw_request["num_return_sequences"]):
+                    generated_tokens_logprobs = []
+                    for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
+                        logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
+                        # Get log probability of chosen token.
+                        j = i + len(encoded_input.input_ids[0])
+                        generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())
+                    all_generated_tokens_logprobs.append(generated_tokens_logprobs)
+                
+
 
         # for completion_id in range(num_generated):
         #     generated_sequence=sequences[completion_id, len(encoded_input.input_ids[0]):]
