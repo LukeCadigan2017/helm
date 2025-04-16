@@ -21,7 +21,7 @@ echo_space () {
 #################### SETTINGS ####################
 
 
-TASK_NAME=$1
+TASK=$1
 MODEL=$2
 NUM_BEAMS_LIST=$3
 MAX_EVAL_INSTANCES=$4
@@ -37,7 +37,10 @@ if [ "$#" -lt 5 ]; then
     exit 1
 fi
 
-. $TASK_NAME.env
+. $TASK.env
+
+echo $TASK_NAME IS TASK_NAME
+
 
 cat ./test_run_all.ksh
 SUITE=eval_$MAX_EVAL_INSTANCES

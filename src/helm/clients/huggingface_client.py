@@ -238,7 +238,6 @@ class HuggingFaceServer:
                         logits=output.logits
                         transition_scores = self.model.compute_transition_scores(output.sequences, output.scores, output.beam_indices, normalize_logits=True)
             else:
-                raise Exception("Beam search did not run")
                 # #the difference: length_penalty cannot be set if num_beams>1
                 # with torch.no_grad():
                 #     output = self.model.generate(
@@ -264,13 +263,15 @@ class HuggingFaceServer:
                         top_p=raw_request["top_p"],
                         do_sample=True,
                         return_dict_in_generate=True,
-                        # output_scores=True,
+                        output_scores=True,
                         output_logits=True,
                         **optional_args,
                         stopping_criteria=stopping_criteria,
                     )
-                sequences = output.sequences
-                scores = output.logits
+                    sequences = output.sequences
+                    scores = output.scores
+                    logits=output.logits
+                    transition_scores = self.model.compute_transition_scores(output.sequences, output.scores, output.beam_indices, normalize_logits=True)
         
         
         prompt_tokens_logprobs = []
