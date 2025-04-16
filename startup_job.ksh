@@ -11,5 +11,5 @@ echo huggingface-cli whoami
 huggingface-cli whoami
 
 echo -e "\n\n\n" 
-echo ./test_run_all.ksh $TASK $MODEL $NUM_BEAMS $EVAL_INSTANCES $NUM_THREADS
-./test_run_all.ksh $TASK $MODEL $NUM_BEAMS $EVAL_INSTANCES $NUM_THREADS
+echo ./test_run_all.ksh $TASK_NAME $MODEL $NUM_BEAMS $EVAL_INSTANCES $NUM_THREADS
+./test_run_all.ksh $TASK_NAME $MODEL $NUM_BEAMS $EVAL_INSTANCES $NUM_THREADS
