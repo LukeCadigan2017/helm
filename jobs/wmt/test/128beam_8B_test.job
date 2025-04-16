@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#SBATCH --job-name=beam128_8b
+#SBATCH --partition=gpu_h100
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=2
+#SBATCH --cpus-per-task=16
+#SBATCH --time=00:30:00
+#SBATCH --output=outputs/test_beam128_8b_%A.out
+MODEL=meta-llama/Llama-3.1-8B-Instruct
+NUM_BEAMS=128
+EVAL_INSTANCES=4
+TASK=wmt
+. ./startup_job.ksh
