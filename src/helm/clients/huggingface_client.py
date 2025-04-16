@@ -185,7 +185,8 @@ class HuggingFaceServer:
             and raw_request["echo_prompt"]
         )
 
-        num_generated=max(raw_request["num_return_sequences"], raw_request["num_beams"])
+        num_beams= raw_request["num_beams"] if ("num_beams" in raw_request.keys() ) else 1
+        num_generated=max(raw_request["num_return_sequences"], num_beams)
         assert(raw_request["top_p"]==1)
 
         # Use HuggingFace's `generate` method.
@@ -196,12 +197,12 @@ class HuggingFaceServer:
             scores = output.logits
         else:
 
-            if(raw_request["num_beams"] >1):
+            if(num_beams >1):
                 # should be this?
                 # with torch.no_grad():
                     # outputs = self.model.generate(
                     #     **encoded_input,
-                    #     num_beams = raw_request["num_beams"],
+                    #     num_beams = num_beams,
                     #     num_return_sequences=num_generated,
                     #     max_new_tokens=raw_request["max_new_tokens"],
                     #     #changed this
@@ -220,7 +221,7 @@ class HuggingFaceServer:
                 with torch.no_grad():
                         output = self.model.generate(**encoded_input, 
                             max_new_tokens=raw_request["max_new_tokens"], 
-                            num_beams=raw_request["num_beams"],
+                            num_beams=num_beams,
                             num_return_sequences=num_generated,
                             do_sample=False,
                             return_dict_in_generate=True,
@@ -229,7 +230,7 @@ class HuggingFaceServer:
                             length_penalty=0,
                              **optional_args,
                             early_stopping="never"
-                            # num_beam_groups=raw_request["num_beams"],
+                            # num_beam_groups=num_beams,
                             # diversity_penalty=1.0,
                             )
                 # with self.wrapped_tokenizer as tokenizer:
@@ -242,7 +243,7 @@ class HuggingFaceServer:
                 # with torch.no_grad():
                 #     output = self.model.generate(
                 #         **encoded_input,
-                #         num_beams = raw_request["num_beams"],
+                #         num_beams = num_beams,
                 #         num_return_sequences=num_generated,
                 #         max_new_tokens=raw_request["max_new_tokens"],
                 #         #changed this
