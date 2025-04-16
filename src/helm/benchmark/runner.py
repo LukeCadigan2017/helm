@@ -347,6 +347,7 @@ class Runner:
             instances, self.executor.execution_spec.parallelism
         )
 
+        print(f"Number instances: {len(instances)} \n\n\n\n\n\n\n\n\n")
         # Adapt (convert to requests)
         adapter: Adapter = AdapterFactory.get_adapter(run_spec.adapter_spec, self.tokenizer_service)
         request_states: List[RequestState] = adapter.adapt(instances, self.executor.execution_spec.parallelism)
