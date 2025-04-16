@@ -11,6 +11,6 @@
 
 MODEL=meta-llama/Llama-3.1-8B-Instruct
 NUM_BEAMS=2
-EVAL_INSTANCES=600
+EVAL_INSTANCES=1000
 TASK=wmt
 . ./startup_job.ksh

@@ -1,16 +1,16 @@
 #!/bin/bash
 
 #SBATCH --job-name=gsm_beam2_8b
-#SBATCH --partition=gpu_a100
+#SBATCH --partition=gpu_h100
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --time=00:09:00
+#SBATCH --time=00:20:00
 #SBATCH --output=outputs/gsm_beam2_8b_%A.out
 
 MODEL=meta-llama/Llama-3.1-8B-Instruct
 NUM_BEAMS=2
-EVAL_INSTANCES=5
+EVAL_INSTANCES=30
 TASK=gsm
 . ./startup_job.ksh
