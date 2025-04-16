@@ -33,7 +33,7 @@ echo NUM_BEAMS_LIST is $NUM_BEAMS_LIST
 echo MAX_EVAL_INSTANCES is $MAX_EVAL_INSTANCES
 
 if [ "$#" -lt 5 ]; then
-    echo "Usage: $0 <TASK_NAME> <MODEL> <NUM_BEAMS_LIST> <EVAL_INSTANCES> <NUM_THREADS>"
+    echo "Usage: $0 <TASK> <MODEL> <NUM_BEAMS_LIST> <EVAL_INSTANCES> <NUM_THREADS>"
     exit 1
 fi
 
@@ -58,7 +58,7 @@ for NUM_BEAMS in $NUM_BEAMS_LIST; do
     echo_space
 
     #get run entry and output file names
-    RUN_ENTRY=${TASK}model=${MODEL},follow_format_instructions=instruct,num_beams=$NUM_BEAMS
+    RUN_ENTRY=${TASK_NAME}model=${MODEL},follow_format_instructions=instruct,num_beams=$NUM_BEAMS
 
     OUTPUT_PATH="$(./get_output_dir.ksh $SUITE_OUTPUT_DIR $TASK_NAME $MODEL $NUM_BEAMS)"
 
