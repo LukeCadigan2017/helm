@@ -319,6 +319,19 @@ class HuggingFaceServer:
             all_decoded_text = tokenizer.batch_decode(sequences)
         raw_completions = []
 
+        if(num_beams==1):
+            line_char="----------------------------------------------------------------"
+            print("\n"+line_char)
+            print(line_char)
+            smaller_prompt=raw_request["prompt"]
+            while("\n\n\n" in smaller_prompt):
+                smaller_prompt=smaller_prompt.replace("\n\n\n","\n\n")
+            print(f'Prompt:\n {smaller_prompt}')
+            print(line_char)
+            all_decoded_text = tokenizer.batch_decode(sequences)
+            print(f"Decoded:\n {all_decoded_text[0]}")
+
+        
         for decoded_text, tokens, generated_tokens_logprobs in zip(
             all_decoded_text, all_tokens, all_generated_tokens_logprobs
         ):

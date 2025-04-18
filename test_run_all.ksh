@@ -26,11 +26,13 @@ MODEL=$2
 NUM_BEAMS_LIST=$3
 MAX_EVAL_INSTANCES=$4
 NUM_THREADS=$5
+DISABLE_CACHE="${DISABLE_CACHE:=true}"
 
 echo TASK_ENV is $TASK_ENV
 echo MODEL is $MODEL
 echo NUM_BEAMS_LIST is $NUM_BEAMS_LIST
 echo MAX_EVAL_INSTANCES is $MAX_EVAL_INSTANCES
+echo DISABLE_CACHE is $DISABLE_CACHE
 
 if [ "$#" -lt 5 ]; then
     echo "Usage: $0 <TASK> <MODEL> <NUM_BEAMS_LIST> <EVAL_INSTANCES> <NUM_THREADS>"
@@ -74,9 +76,23 @@ for NUM_BEAMS in $NUM_BEAMS_LIST; do
     STATS_FILE=$OUTPUT_PATH/runs/$SUITE/stats.json
 
     echo helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
-        -o $OUTPUT_PATH --suite $SUITE --disable-cache --num-threads $NUM_THREADS
-    helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
-        -o $OUTPUT_PATH --suite $SUITE --disable-cache --num-threads $NUM_THREADS
+        -o $OUTPUT_PATH --suite $SUITE --num-threads $NUM_THREADS
+
+    if [ "$DISABLE_CACHE" = true ] ; then
+        echo "Disable cache"
+        helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
+            -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS --disable-cache
+    else
+        echo "Do not disable cache"
+        helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
+            -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS 
+    fi
+
+
+    
+    
+    
+    
     echo STATS_FILE is $STATS_FILE
 
     #process results
