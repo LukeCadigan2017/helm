@@ -34,6 +34,16 @@ tokenizer_configs:
     prefix_token: "<|begin_of_text|>"
     end_of_text_token: "<|end_of_text|>"
 
+  ######################### Olmo ######################### 
+  - name: allenai/OLMo-2-1124-13B-Instruct
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-13B-Instruct
+    prefix_token: "<|endoftext|>"
+    end_of_text_token: "<|endoftext|>"
+
+
   ######################### T5 #########################
   - name:  distilbert/distilgpt2
     tokenizer_spec:
