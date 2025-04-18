@@ -105,6 +105,16 @@ for NUM_BEAMS in $NUM_BEAMS_LIST; do
 
 done
 
+echo -e "\n\n\n\n\n"
+echo "NOTE: USING SLOW TOKENIZER"
+echo "NOTE: USING SLOW TOKENIZER"
+echo "NOTE: USING SLOW TOKENIZER"
+echo "NOTE: USING SLOW TOKENIZER"
+echo "NOTE: USING SLOW TOKENIZER"
+echo "NOTE: USING SLOW TOKENIZER"
+echo "NOTE: USING SLOW TOKENIZER"
+echo "NOTE: USING SLOW TOKENIZER"
+
 # #     #GSM
 # #   {description: "gsm:model=text_code,follow_format_instructions=instruct", priority: 2}
 
