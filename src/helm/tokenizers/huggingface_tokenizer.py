@@ -52,8 +52,8 @@ class HuggingFaceTokenizer(CachingTokenizer):
         from_pretrained_kwargs = {**kwargs}
         # If unspecified, set `use_fast=True` by default.
         if "use_fast" not in from_pretrained_kwargs:
-            # from_pretrained_kwargs["use_fast"] = True
-            pass
+            from_pretrained_kwargs["use_fast"] = True
+            # pass
         try:
             # From the Hugging Face documentation, "local_files_only(defaults to False) —
             # Whether or not to only look at local files".
