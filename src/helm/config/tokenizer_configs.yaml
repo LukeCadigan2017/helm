@@ -52,7 +52,7 @@ tokenizer_configs:
         pretrained_model_name_or_path: distilbert/distilgpt2
 
   
-  ######################### Prometheus #########################
+  ######################### LLM as judge #########################
 
   - name: prometheus-eval/prometheus-8x7b-v2.0
     tokenizer_spec:
@@ -69,6 +69,14 @@ tokenizer_configs:
         pretrained_model_name_or_path: prometheus-eval/prometheus-7b-v2.0
     end_of_text_token: "</s>"
     prefix_token: "<s>"
+
+  - name: PKU-ONELab/Themis
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: PKU-ONELab/Themis
+    end_of_text_token: "<|end_of_text|>"
+    prefix_token: "<|begin_of_text|>"
   
   ######################### Toy #########################
 
