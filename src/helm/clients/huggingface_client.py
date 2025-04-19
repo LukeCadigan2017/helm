@@ -330,6 +330,7 @@ class HuggingFaceServer:
             print(line_char)
             all_decoded_text = tokenizer.batch_decode(sequences)
             print(f"Decoded:\n {all_decoded_text[0]}")
+            print(f"{line_char}")
 
         
         for decoded_text, tokens, generated_tokens_logprobs in zip(
