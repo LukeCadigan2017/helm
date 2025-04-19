@@ -24,7 +24,7 @@ class InstructionFollowingCritiqueMetric(Metric):
     """
 
     HELPFULNESS_NAME: str = "Helpfulness"
-    HELPFULNESS_PROMPT: str = "Does the model appear to do what it is instructed to?"
+    HELPFULNESS_PROMPT: str = "[Does the model appear to do what it is instructed to?]"
     HELPFULNESS_ANSWER_TO_SCORE: Dict[str, int] = {
         "Is not relevant at all or has significant discrepancies": 1,
         "Is only somewhat relevant": 2,
@@ -83,12 +83,28 @@ class InstructionFollowingCritiqueMetric(Metric):
             name="instruction_following_critique",
             # Note: Instructions can contain HTML.
             # Note: To render new lines in any HTML block, you must use <p></p>, <br>, or style="white-space: pre-wrap;"
-            instructions="<p>Please read the <a href=https://docs.google.com/document/d/1tWArTQiuuM44v4Db85C638i7fkHLTP_fXpGaxiS8c5M/edit?usp=sharing>tutorial and examples</a> before continuing.</p>"  # noqa: E501
-            "<p>The following is an instruction written by a human, and a response to the instruction written by an AI model. Please answer the following questions about the AI model's response.</p> "  # noqa: E501
-            "<h4>Instruction</h4>"
-            '<p style="white-space: pre-wrap;">{{instruction}}</p>'
-            "<h4>Response</h4>"
-            '<p style="white-space: pre-wrap;">{{response}}</p>',
+            # instructions="<p>Please read the <a href=https://docs.google.com/document/d/1tWArTQiuuM44v4Db85C638i7fkHLTP_fXpGaxiS8c5M/edit?usp=sharing>tutorial and examples</a> before continuing.</p>"  # noqa: E501
+            # "<p>The following is an instruction written by a human, and a response to the instruction written by an AI model. Please answer the following questions about the AI model's response.</p> "  # noqa: E501
+            # "<h4>Instruction</h4>"
+            # '<p style="white-space: pre-wrap;">{{instruction}}</p>'
+            # "<h4>Response</h4>"
+            # '<p style="white-space: pre-wrap;">{{response}}</p>',
+
+            #Note: I do not use a Reference answer, like you do in https://huggingface.co/prometheus-eval/prometheus-13b-v1.0
+            instructions="""###Task Description:
+An instruction (might include an Input inside it), a response to evaluate, a reference answer that gets a score of 5, and a score rubric representing a evaluation criteria are given.
+1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.
+2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.
+3. The output format should look as follows: "Feedback: (write a feedback for criteria) [RESULT] (an integer number between 1 and 5)"
+4. Please do not generate any other opening, closing, and explanations.
+
+###The instruction to evaluate:
+{{instruction}}
+
+###Response to evaluate:
+{{response}}
+
+###Score Rubrics:""",
             num_respondents=num_respondents,
             questions=[
                 CritiqueQuestionTemplate(
@@ -98,46 +114,47 @@ class InstructionFollowingCritiqueMetric(Metric):
                     text=self.HELPFULNESS_PROMPT,
                     # Note: Options can contain HTML.
                     options=list(self.HELPFULNESS_ANSWER_TO_SCORE.keys()),
-                ),
-                CritiqueQuestionTemplate(
-                    name=self.UNDERSTANDABILITY_NAME,
-                    question_type=QuestionType.MULTIPLE_CHOICE,
-                    # Note: Text can contain HTML.
-                    text=self.UNDERSTANDABILITY_PROMPT,
-                    # Note: Options can contain HTML.
-                    options=list(self.UNDERSTANDABILITY_ANSWER_TO_SCORE.keys()),
-                ),
-                CritiqueQuestionTemplate(
-                    name=self.COMPLETENESS_NAME,
-                    question_type=QuestionType.MULTIPLE_CHOICE,
-                    # Note: Text can contain HTML.
-                    text=self.COMPLETENESS_PROMPT,
-                    # Note: Options can contain HTML.
-                    options=list(self.COMPLETENESS_ANSWER_TO_SCORE.keys()),
-                ),
-                CritiqueQuestionTemplate(
-                    name=self.CONCISENESS_NAME,
-                    question_type=QuestionType.MULTIPLE_CHOICE,
-                    # Note: Text can contain HTML.
-                    text=self.CONCISENESS_PROMPT,
-                    # Note: Options can contain HTML.
-                    options=list(self.CONCISENESS_ANSWER_TO_SCORE.keys()),
-                ),
-                CritiqueQuestionTemplate(
-                    name=self.HARMLESSNESS_NAME,
-                    question_type=QuestionType.MULTIPLE_CHOICE,
-                    # Note: Text can contain HTML.
-                    text=self.HARMLESSNESS_PROMPT,
-                    # Note: Options can contain HTML.
-                    options=list(self.HARMLESSNESS_ANSWER_TO_SCORE.keys()),
-                ),
-                CritiqueQuestionTemplate(
-                    name=self.KEYWORD_NAME,
-                    question_type=QuestionType.FREE_RESPONSE,
-                    # Note: Text can contain HTML.
-                    text=self.KEYWORD_PROMPT,
-                    options=[],
-                ),
+                )
+                # ,
+                # CritiqueQuestionTemplate(
+                #     name=self.UNDERSTANDABILITY_NAME,
+                #     question_type=QuestionType.MULTIPLE_CHOICE,
+                #     # Note: Text can contain HTML.
+                #     text=self.UNDERSTANDABILITY_PROMPT,
+                #     # Note: Options can contain HTML.
+                #     options=list(self.UNDERSTANDABILITY_ANSWER_TO_SCORE.keys()),
+                # ),
+                # CritiqueQuestionTemplate(
+                #     name=self.COMPLETENESS_NAME,
+                #     question_type=QuestionType.MULTIPLE_CHOICE,
+                #     # Note: Text can contain HTML.
+                #     text=self.COMPLETENESS_PROMPT,
+                #     # Note: Options can contain HTML.
+                #     options=list(self.COMPLETENESS_ANSWER_TO_SCORE.keys()),
+                # ),
+                # CritiqueQuestionTemplate(
+                #     name=self.CONCISENESS_NAME,
+                #     question_type=QuestionType.MULTIPLE_CHOICE,
+                #     # Note: Text can contain HTML.
+                #     text=self.CONCISENESS_PROMPT,
+                #     # Note: Options can contain HTML.
+                #     options=list(self.CONCISENESS_ANSWER_TO_SCORE.keys()),
+                # ),
+                # CritiqueQuestionTemplate(
+                #     name=self.HARMLESSNESS_NAME,
+                #     question_type=QuestionType.MULTIPLE_CHOICE,
+                #     # Note: Text can contain HTML.
+                #     text=self.HARMLESSNESS_PROMPT,
+                #     # Note: Options can contain HTML.
+                #     options=list(self.HARMLESSNESS_ANSWER_TO_SCORE.keys()),
+                # ),
+                # CritiqueQuestionTemplate(
+                #     name=self.KEYWORD_NAME,
+                #     question_type=QuestionType.FREE_RESPONSE,
+                #     # Note: Text can contain HTML.
+                #     text=self.KEYWORD_PROMPT,
+                #     options=[],
+                # ),
             ],
         )
 

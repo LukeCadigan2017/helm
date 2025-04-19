@@ -50,13 +50,14 @@ class ModelCritiqueClient(CritiqueClient):
         if question.question_type == "free_response":
             prompt += "\nAnswer: "
         else:
-            prompt += "\nOptions: "
+            # prompt += "\nOptions: "
             if len(question.options) > 26:
                 raise CritiqueParseError("Currently, only up to 26 options are supported")
             for i, letter in enumerate(string.ascii_uppercase[: len(question.options)]):
-                prompt += f"\n{letter}. {question.options[i]}"
+                prompt += f"\n{i+1}. {question.options[i]}"
             if question.question_type == "multiple_choice":
-                prompt += "\nAnswer with a capital letter.\nAnswer: "
+                #prompt += "\nAnswer with a capital letter.\nAnswer: "
+                prompt+="\n###Feedback:"
             elif question.question_type == "checkbox":
                 prompt += "\nAnswer with capital letters separated by commas. You may select several options.\nAnswer: "
         return prompt
@@ -68,7 +69,7 @@ class ModelCritiqueClient(CritiqueClient):
         for question in task.questions:
             prompt: str
             if len(question.text) > 0:
-                prompt = base_prompt + "\n\n" + self._question_to_prompt(question, fields)
+                prompt = base_prompt + "\n" + self._question_to_prompt(question, fields)
             else:
                 # We may don't want to add extra newlines and prompts
                 # if the question text is empty (e.g., the Vibe-Eval evaluator).
@@ -128,7 +129,7 @@ class ModelCritiqueClient(CritiqueClient):
         if len(answers) < 1:
             raise CritiqueParseError(f"Invalid answer: {completion}. There are no answers once parsed: {answers}.")
         for i, answer in enumerate(answers):
-            if answer not in string.ascii_uppercase:
+            if answer not in string.ascii_uppercase and not answer.isdigit():
                 raise CritiqueParseError(
                     f"Invalid answer: {completion}. Some answers are not capital letters, once parsed: {answers}. "
                     f"Error happened at answer {i}, which is {answer}."
