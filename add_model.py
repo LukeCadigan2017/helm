@@ -38,7 +38,7 @@ print("--------")
 print("code ./src/helm/config/tokenizer_configs.yaml")
 print("--------")
 print("\n")
-print(f"""  - name: 
+print(f"""  - name: {model_name} 
     tokenizer_spec:
       class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
       args:
