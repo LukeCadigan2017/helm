@@ -177,7 +177,7 @@ def get_open_ended_generation_metric_specs() -> List[MetricSpec]:
     device=get_torch_device_name()
     
     metrics = get_basic_metric_specs(["exact_match", "quasi_exact_match", "f1_score", "rouge_l", "bleu_1", "bleu_4" ])
-    if(device != "cpu"):
-        metric_args = {"task": "generation", "device": device}
-        metrics += get_comet_metric_specs(metric_args)
+    # if(device != "cpu"):
+        # metric_args = {"task": "generation", "device": device}
+        #metrics += get_comet_metric_specs(metric_args)
     return metrics
