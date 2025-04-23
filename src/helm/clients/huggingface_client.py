@@ -266,26 +266,26 @@ class HuggingFaceServer:
                 #         # temperature=raw_request["temperature"],
                 #         # top_p=raw_request["top_p"],
                 #     )
-                with torch.no_grad():
-                    output = self.model.generate(
-                        **encoded_input,
-                        temperature=raw_request["temperature"],
-                        num_return_sequences=raw_request["num_return_sequences"],
-                        max_new_tokens=raw_request["max_new_tokens"],
-                        top_p=raw_request["top_p"],
-                        do_sample=True,
-                        return_dict_in_generate=True,
-                        output_scores=True,
-                        output_logits=True,
-                        **optional_args,
-                        stopping_criteria=stopping_criteria,
-                    )
+                output = self.model.generate(
+                    **encoded_input,
+                    temperature=raw_request["temperature"],
+                    num_return_sequences=raw_request["num_return_sequences"],
+                    max_new_tokens=raw_request["max_new_tokens"],
+                    top_p=raw_request["top_p"],
+                    do_sample=True,
+                    return_dict_in_generate=True,
+                    output_scores=True,
+                    output_logits=True,
+                    **optional_args,
+                    stopping_criteria=stopping_criteria,
+                )
                 sequences = output.sequences
-                scores = output.scores
+                logits = output.logits
+                
                 for completion_id in range(raw_request["num_return_sequences"]):
                     generated_tokens_logprobs = []
                     for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
-                        logprobs = torch.nn.functional.log_softmax(scores[i][completion_id], dim=0)
+                        logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=0)
                         # Get log probability of chosen token.
                         j = i + len(encoded_input.input_ids[0])
                         generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())
