@@ -338,13 +338,14 @@ class HuggingFaceServer:
                     print(f"{token}: {logprob}")
             print(f"{line_char}")
         
-        for decoded_text, tokens, generated_tokens_logprobs in zip(
-            all_decoded_text, all_tokens, all_generated_tokens_logprobs
+        for decoded_text, tokens, generated_tokens_logprobs, sequence in zip(
+            all_decoded_text, all_tokens, all_generated_tokens_logprobs, sequences
         ):
             raw_completions.append(
                 {
                     "text": decoded_text,
                     "tokens": tokens,
+                    "sequence":sequence,
                     "logprobs": generated_tokens_logprobs,
                     "prompt_logprobs": prompt_tokens_logprobs
                 }
@@ -459,12 +460,11 @@ class HuggingFaceClient(CachingClient):
             sequence_logprob: float = 0
             tokens: List[Token] = []
             generated_tokens = raw_completion["tokens"]
+            sequence=raw_completion["sequence"]
 
             # Compute logprob for the entire sequence.
-            for token_text, logprob in zip(generated_tokens, raw_completion["logprobs"]):
-                with self._wrapped_tokenizer as tokenizer:
-                    tokens.append(Token(text=token_text, logprob=logprob, token_id=tokenizer.encode(token_text)[0]))
-                # tokens.append(Token(text=token_text, logprob=logprob))
+            for token_text, logprob, token_id in zip(generated_tokens, raw_completion["logprobs"], sequence):
+                tokens.append(Token(text=token_text, logprob=logprob, token_id=token_id.item()))
                 sequence_logprob += logprob
 
                 if(token_text==self._end_of_text_token):
