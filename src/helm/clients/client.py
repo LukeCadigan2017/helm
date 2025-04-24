@@ -69,6 +69,7 @@ def truncate_sequence(
         return sequence
     full_text=sequence.text
     new_text = sequence.text
+    example_id=sequence.example_id
     all_stops = request.stop_sequences+[end_of_text_token]
     for stop in all_stops:
         # Find `stop` in the text
@@ -93,7 +94,7 @@ def truncate_sequence(
     # Recompute log probability
     new_logprob = sum(token.logprob for token in new_tokens)
 
-    sequence = GeneratedOutput(text=new_text, logprob=new_logprob, tokens=new_tokens, full_text=full_text)
+    sequence = GeneratedOutput(text=new_text, logprob=new_logprob, tokens=new_tokens, full_text=full_text, example_id=example_id)
     # Truncate based on the max number of tokens.
     if len(sequence.tokens) > request.max_tokens:
         # if print_warning:
@@ -109,7 +110,7 @@ def truncate_sequence(
 
         new_logprob = sum(token.logprob for token in new_tokens)
 
-        sequence = GeneratedOutput(text=new_text, logprob=new_logprob, tokens=new_tokens, full_text=full_text)
+        sequence = GeneratedOutput(text=new_text, logprob=new_logprob, tokens=new_tokens, full_text=full_text, example_id=example_id)
     # print(f"Initial token len {initial_token_len} final_token_len {final_token_len}")
     return sequence
 

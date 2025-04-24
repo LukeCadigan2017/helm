@@ -159,6 +159,8 @@ class GeneratedOutput:
     full_text: str=None
 
     stats_dict: dict[str, any]=None
+
+    example_id:int=None
     
     def __add__(self, other: "GeneratedOutput") -> "GeneratedOutput":
         return GeneratedOutput(self.text + other.text, self.logprob + other.logprob, self.tokens + other.tokens)

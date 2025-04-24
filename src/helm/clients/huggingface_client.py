@@ -459,7 +459,7 @@ class HuggingFaceClient(CachingClient):
         #token probability: calculate up until eos
         
         completions = []
-        for raw_completion in completions_to_clean:
+        for idx, raw_completion in enumerate(completions_to_clean):
             sequence_logprob: float = 0
             tokens: List[Token] = []
             generated_tokens = raw_completion["tokens"]
@@ -472,7 +472,7 @@ class HuggingFaceClient(CachingClient):
 
                 if(token_text==self._end_of_text_token):
                     break
-            completion = GeneratedOutput(text=raw_completion["text"], logprob=sequence_logprob, tokens=tokens)
+            completion = GeneratedOutput(text=raw_completion["text"], logprob=sequence_logprob, tokens=tokens, example_id=idx)
             if(should_truncate_sequence):
                 completion = truncate_sequence(completion, request, end_of_text_token=self._end_of_text_token)
             completions.append(completion)

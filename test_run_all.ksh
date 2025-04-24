@@ -33,8 +33,8 @@ SUITE=$6
 #defaults
 NUM_RETURN_SEQUENCES="${NUM_RETURN_SEQUENCES:=1}"
 DISABLE_CACHE="${DISABLE_CACHE:=true}"
-POST_INSTANCE_METRICS="${POST_INSTANCE_METRICS:=no_metrics}"
-POST_EXAMPLE_METRICS="${POST_EXAMPLE_METRICS:=no_metrics}"
+# POST_INSTANCE_METRICS="${POST_INSTANCE_METRICS:=no_metrics}"
+# POST_EXAMPLE_METRICS="${POST_EXAMPLE_METRICS:=no_metrics}"
 
 echo TASK_ENV is $TASK_ENV
 echo MODEL is $MODEL
@@ -115,11 +115,12 @@ for NUM_BEAMS in $NUM_BEAMS_LIST; do
     #add snellius metrics
   
 
-    echo python append_snellius_metrics.py --num_beams $NUM_BEAMS --model $MODEL --eval_instances $EVAL_INSTANCES --task_name $TASK_NAME \
---run_path ${RUN_PATH} --instance_metrics $POST_INSTANCE_METRICS --example_metrics $POST_EXAMPLE_METRICS
-    python append_snellius_metrics.py --num_beams $NUM_BEAMS --model $MODEL --eval_instances $EVAL_INSTANCES --task_name $TASK_NAME \
---run_path ${RUN_PATH} --instance_metrics $POST_INSTANCE_METRICS --example_metrics $POST_EXAMPLE_METRICS
-
+    for SNELLIUS_METRIC in $SNELLIUS_METRICS; do
+        echo python append_snellius_metrics.py --num_beams $NUM_BEAMS --model $MODEL --eval_instances $EVAL_INSTANCES --task_name $TASK_NAME \
+            --run_path ${RUN_PATH} --metric_name $SNELLIUS_METRIC
+        python append_snellius_metrics.py --num_beams $NUM_BEAMS --model $MODEL --eval_instances $EVAL_INSTANCES --task_name $TASK_NAME \
+            --run_path ${RUN_PATH} --metric_name $SNELLIUS_METRIC
+    done
 
 done
 
