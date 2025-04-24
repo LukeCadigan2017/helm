@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#SBATCH --job-name=beam2_1b
+#SBATCH --partition=gpu_h100
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=00:10:00
+#SBATCH --output=outputs/test_inst_2_1b_%A.out
+
+#MODEL=prometheus-eval/prometheus-13b-v1.0
+MODEL=meta-llama/Llama-3.1-1B-Instruct
+#MODEL=allenai/OLMo-2-1124-13B-Instruct
+NUM_BEAMS=1
+EVAL_INSTANCES=5
+TASK=instruct
+NUM_THREADS=4
+export DISABLE_CACHE=true
+. ./startup_job.ksh

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#SBATCH --job-name=prom_test
+#SBATCH --partition=gpu_a100
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=00:20:00
+#SBATCH --output=outputs/prom_test_%A.out
+
+#MODEL=prometheus-eval/prometheus-8x7b-v2.0
+#MODEL=PKU-ONELab/Themis
+#MODEL=prometheus-eval/prometheus-7b-v2.0
+#MODEL=meta-llama/Llama-3.1-8B-Instruct
+
+
+export DISABLE_CACHE=true
+MODEL=prometheus-eval/prometheus-13b-v1.0
+NUM_BEAMS=1
+EVAL_INSTANCES=4
+TASK=wmt
+NUM_THREADS=4
+. ./startup_job.ksh
