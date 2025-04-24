@@ -32,7 +32,7 @@ def append_comment_metric(generation_summary):
                 "src" : instance_generation.prompt.strip(),
                 "mt" : generated_output.text.strip()
             })
-    model_output = model.predict(data, batch_size=64)
+    model_output = model.predict(data, batch_size=128)
 
     counter=0
     for instance_generation in generation_summary.instance_generations:
