@@ -4,6 +4,7 @@ from typing import Any, List
 import json
 from helm.common.request import (GeneratedOutput)
 
+import torch
 from typing import Dict
 
 
@@ -15,6 +16,8 @@ from abc import abstractmethod, ABC
 
 from helm.benchmark.metrics.comet_metric import CometMetric
 
+
+from helm.common.gpu_utils import get_torch_device_name
 
 ############################ General ############################
 
@@ -68,7 +71,7 @@ class CometPostMetric(PostMetric):
     def calculate_metric(self,instance_generation:InstanceGenerations,generated_output:GeneratedOutput) -> float:
 
 
-        comet_metric = CometMetric(task="task")
+        comet_metric = CometMetric(task="task", device=get_torch_device_name())
         ref = instance_generation.reference.strip()
         src = instance_generation.prompt.strip()
         mt = generated_output.text.strip()
