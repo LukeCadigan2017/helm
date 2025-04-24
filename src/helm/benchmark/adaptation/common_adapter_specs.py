@@ -428,7 +428,7 @@ def get_summarization_adapter_spec(num_sents: Optional[int], max_train_instances
 
 
 def get_machine_translation_adapter_spec(
-    source_language, target_language, max_train_instances,generated_output_file:str ="" , num_beams: int = 1, **kwargs
+    source_language, target_language, max_train_instances,generated_output_file:str ="" , num_beams: int = 1,num_return_sequences:int=1, **kwargs
 ) -> AdapterSpec:
     """
     Used for machine translation.
@@ -441,7 +441,7 @@ def get_machine_translation_adapter_spec(
         output_prefix=f"{target_language}: ",
         output_suffix="<|helm_eot_id|>\n",
         max_train_instances=max_train_instances,
-        num_outputs=1,
+        num_outputs=num_return_sequences,
         # stop_sequences=['<|endoftext|>'],
         # stop_sequences=['\n','.','?','!'],
         temperature=0.0,

@@ -123,3 +123,12 @@ class CometMetric(Metric):
         metric_result = [Stat(MetricName(self.METRIC_NAME)).add(comet_score)]
 
         return metric_result
+
+    def evaluate_generation(self,ref, src, mt) -> float:
+        """Compute the COMET score for this instance"""
+
+        # comet requires this exact format
+        data = [dict(ref=ref, src=src, mt=mt)]
+        output = self.comet_scorer.predict(data, gpus=self.num_gpus, progress_bar=False)  # type: ignore
+        comet_score = output[0][0]  # extract the actual score
+        return comet_score

@@ -21,21 +21,29 @@ echo_space () {
 #################### SETTINGS ####################
 
 
+#SUITE=eval_$EVAL_INSTANCES
+
 TASK=$1
 MODEL=$2
 NUM_BEAMS_LIST=$3
-MAX_EVAL_INSTANCES=$4
+EVAL_INSTANCES=$4
 NUM_THREADS=$5
+SUITE=$6
+
+#defaults
+NUM_RETURN_SEQUENCES="${NUM_RETURN_SEQUENCES:=1}"
 DISABLE_CACHE="${DISABLE_CACHE:=true}"
+POST_INSTANCE_METRICS="${POST_INSTANCE_METRICS:=no_metrics}"
+POST_EXAMPLE_METRICS="${POST_EXAMPLE_METRICS:=no_metrics}"
 
 echo TASK_ENV is $TASK_ENV
 echo MODEL is $MODEL
 echo NUM_BEAMS_LIST is $NUM_BEAMS_LIST
-echo MAX_EVAL_INSTANCES is $MAX_EVAL_INSTANCES
+echo EVAL_INSTANCES is $EVAL_INSTANCES
 echo DISABLE_CACHE is $DISABLE_CACHE
 
-if [ "$#" -lt 5 ]; then
-    echo "Usage: $0 <TASK> <MODEL> <NUM_BEAMS_LIST> <EVAL_INSTANCES> <NUM_THREADS>"
+if [ "$#" -lt 6 ]; then
+    echo "Usage: $0 <TASK> <MODEL> <NUM_BEAMS_LIST> <EVAL_INSTANCES> <NUM_THREADS> <SUITE>"
     exit 1
 fi
 
@@ -45,8 +53,8 @@ echo $TASK_NAME IS TASK_NAME
 
 
 cat ./test_run_all.ksh
-SUITE=eval_$MAX_EVAL_INSTANCES
-SUITE_OUTPUT_DIR=helm_output/${SUITE}
+HELM_OUTPUT_DIR=helm_output
+SUITE_OUTPUT_DIR=${HELM_OUTPUT_DIR}/${SUITE}
 mkdir -p $SUITE_OUTPUT_DIR
 OUTPUT_CSV=$SUITE_OUTPUT_DIR/metrics_csv.txt
 
@@ -60,9 +68,10 @@ for NUM_BEAMS in $NUM_BEAMS_LIST; do
     echo_space
 
     #get run entry and output file names
-    RUN_ENTRY=${TASK_NAME}model=${MODEL},follow_format_instructions=instruct,num_beams=$NUM_BEAMS
+    RUN_ENTRY=${TASK_NAME}model=${MODEL},follow_format_instructions=instruct,num_beams=${NUM_BEAMS},num_return_sequences=${NUM_RETURN_SEQUENCES}
 
     OUTPUT_PATH="$(./get_output_dir.ksh $SUITE_OUTPUT_DIR $TASK_NAME $MODEL $NUM_BEAMS)"
+    TRUE_OUTPUT_PATH=${OUTPUT_PATH}/runs/${SUITE}
 
     # if [ -d "$OUTPUT_PATH" ]; then
     #     echo Cannot run! Directory $OUTPUT_PATH already exists
@@ -72,19 +81,19 @@ for NUM_BEAMS in $NUM_BEAMS_LIST; do
     # fi
     
     mkdir -p $OUTPUT_PATH
+    RUN_PATH=${OUTPUT_PATH}/runs/$SUITE
+    STATS_FILE=${RUN_PATH}/stats.json
 
-    STATS_FILE=$OUTPUT_PATH/runs/$SUITE/stats.json
-
-    echo helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
+    echo helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
         -o $OUTPUT_PATH --suite $SUITE --num-threads $NUM_THREADS
 
     if [ "$DISABLE_CACHE" = true ] ; then
         echo "Disable cache"
-        helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
+        helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
             -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS --disable-cache
     else
         echo "Do not disable cache"
-        helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $MAX_EVAL_INSTANCES \
+        helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
             -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS 
     fi
 
@@ -95,13 +104,22 @@ for NUM_BEAMS in $NUM_BEAMS_LIST; do
     
     echo STATS_FILE is $STATS_FILE
 
-    #process results
-    for METRIC in $METRICS; do
-        echo python process_stats.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $METRIC \
-                --stats_file $STATS_FILE --output_csv $OUTPUT_CSV
-        python process_stats.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $METRIC \
-                --stats_file $STATS_FILE --output_csv $OUTPUT_CSV
-    done
+    #process default stats
+    # for DEFAULT_METRIC in $DEFAULT_METRICS; do
+    #     echo python process_stats.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $DEFAULT_METRIC \
+    #             --stats_file $STATS_FILE --output_csv $OUTPUT_CSV
+    #     python process_stats.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $DEFAULT_METRIC \
+    #             --stats_file $STATS_FILE --output_csv $OUTPUT_CSV
+    # done    
+    
+    #add snellius metrics
+  
+
+    echo python append_snellius_metrics.py --num_beams $NUM_BEAMS --model $MODEL --eval_instances $EVAL_INSTANCES --task_name $TASK_NAME \
+--run_path ${RUN_PATH} --instance_metrics $POST_INSTANCE_METRICS --example_metrics $POST_EXAMPLE_METRICS
+    python append_snellius_metrics.py --num_beams $NUM_BEAMS --model $MODEL --eval_instances $EVAL_INSTANCES --task_name $TASK_NAME \
+--run_path ${RUN_PATH} --instance_metrics $POST_INSTANCE_METRICS --example_metrics $POST_EXAMPLE_METRICS
+
 
 done
 

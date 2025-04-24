@@ -188,8 +188,11 @@ class HuggingFaceServer:
             and raw_request["echo_prompt"]
         )
 
-        num_beams= raw_request["num_beams"] if ("num_beams" in raw_request.keys() ) else 1
-        num_generated=max(raw_request["num_return_sequences"], num_beams)
+
+        num_beams= int(raw_request["num_beams"]) if ("num_beams" in raw_request.keys() ) else 1
+        raw_num_return_sequences=int(raw_request["num_return_sequences"])
+        
+        num_generated=max(raw_num_return_sequences, num_beams)
         assert(raw_request["top_p"]==1)
 
         # Use HuggingFace's `generate` method.
@@ -319,24 +322,24 @@ class HuggingFaceServer:
             all_decoded_text = tokenizer.batch_decode(sequences)
         raw_completions = []
 
-        if(num_beams==1):
-            line_char="----------------------------------------------------------------"
-            print("Next instance")
-            print("\n"+line_char)
-            print(line_char)
-            smaller_prompt=raw_request["prompt"]
-            while("\n\n\n" in smaller_prompt):
-                smaller_prompt=smaller_prompt.replace("\n\n\n","\n\n")
-            print(f'Prompt:\n {smaller_prompt}')
-            print(line_char)
-            all_decoded_text = tokenizer.batch_decode(sequences)
-            print(f"Decoded:\n {all_decoded_text[0]}")
-            print(f"{line_char}")
-            print("tokens:")
-            for tokens,generated_tokens_logprobs  in zip(all_tokens,all_generated_tokens_logprobs):
-                for token, logprob in zip(tokens,generated_tokens_logprobs):
-                    print(f"{token}: {logprob}")
-            print(f"{line_char}")
+        # if(num_beams==1):
+        #     line_char="----------------------------------------------------------------"
+        #     print("Next instance")
+        #     print("\n"+line_char)
+        #     print(line_char)
+        #     smaller_prompt=raw_request["prompt"]
+        #     while("\n\n\n" in smaller_prompt):
+        #         smaller_prompt=smaller_prompt.replace("\n\n\n","\n\n")
+        #     print(f'Prompt:\n {smaller_prompt}')
+        #     print(line_char)
+        #     all_decoded_text = tokenizer.batch_decode(sequences)
+        #     print(f"Decoded:\n {all_decoded_text[0]}")
+        #     print(f"{line_char}")
+        #     print("tokens:")
+        #     for tokens,generated_tokens_logprobs  in zip(all_tokens,all_generated_tokens_logprobs):
+        #         for token, logprob in zip(tokens,generated_tokens_logprobs):
+        #             print(f"{token}: {logprob}")
+        #     print(f"{line_char}")
         
         for decoded_text, tokens, generated_tokens_logprobs, sequence in zip(
             all_decoded_text, all_tokens, all_generated_tokens_logprobs, sequences
@@ -518,6 +521,8 @@ class HuggingFaceClient(CachingClient):
             "stop_sequences": request.stop_sequences
         }
         
+        assert min(request.num_beams, request.num_completions)==1
+
         pretrained_model_name_or_path = (
             self._pretrained_model_name_or_path if self._pretrained_model_name_or_path else request.model
         )

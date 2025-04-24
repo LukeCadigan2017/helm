@@ -75,6 +75,7 @@ class InstanceGenerations:
     examples: List[GeneratedOutput]=None
     """List of unscored examples"""
 
+    stats_dict: dict[str, any]=None
     
     
 
@@ -275,8 +276,6 @@ class Runner:
         instance_generations=[]
         for request_state in request_states:
             assert request_state.result is not None
-            # assert len(request_state.instance.references) ==1
-            assert len(request_state.result.completions) ==1
 
             prompt=request_state.instance.input.text
             full_prompt=request_state.result.full_prompt
