@@ -23,6 +23,7 @@ from helm.common.gpu_utils import get_torch_device_name
 def append_comment_metric(generation_summary):
     model_path = download_model("Unbabel/wmt22-comet-da")
     model = load_from_checkpoint(model_path)
+    model=model.to(get_torch_device_name())
     data = []
     for instance_generation in generation_summary.instance_generations:
         for generated_output in instance_generation.examples:
@@ -31,7 +32,7 @@ def append_comment_metric(generation_summary):
                 "src" : instance_generation.prompt.strip(),
                 "mt" : generated_output.text.strip()
             })
-    model_output = model.predict(data, batch_size=64, gpus=get_torch_device_name())
+    model_output = model.predict(data, batch_size=64)
 
     counter=0
     for instance_generation in generation_summary.instance_generations:
