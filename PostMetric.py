@@ -205,7 +205,7 @@ class InstanceCompletionMetric(PostMetric):
 
 
 #note: metric must be in all metrics for this to work
-all_metrics=[InstanceCompletionMetric, ReferenceMetric, BLEU1_METRIC, BLEU4_METRIC, IsCompletionMetric, InstanceIdMetric, ModelMetric, BeamNumMetric, OutputProbMetric, SentenceLenMetric, TextMetric, CometPostMetric, TestMetric, Test2Metric]
+all_metrics=[InstanceCompletionMetric, ReferenceMetric, BLEU1_METRIC, BLEU4_METRIC, IsCompletionMetric, InstanceIdMetric, ModelMetric, BeamNumMetric, OutputProbMetric, SentenceLenMetric, TextMetric, TestMetric, Test2Metric]
 def get_post_metrics(special_metric_names):
     special_metrics=[]
     for metric in all_metrics:
