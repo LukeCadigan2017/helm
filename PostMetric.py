@@ -63,19 +63,19 @@ class Test2Metric(PostMetric):
 
 ############################ Snellius Metrics ############################
 
-class CometPostMetric(PostMetric):
-    @classmethod
-    def name(cls)->str:
-        return "comet"
-    @classmethod    
-    def calculate_metric(self,instance_generation:InstanceGenerations,generated_output:GeneratedOutput) -> float:
+# class CometPostMetric(PostMetric):
+#     @classmethod
+#     def name(cls)->str:
+#         return "comet"
+#     @classmethod    
+#     def calculate_metric(self,instance_generation:InstanceGenerations,generated_output:GeneratedOutput) -> float:
 
 
-        comet_metric = CometMetric(task="task", device=get_torch_device_name())
-        ref = instance_generation.reference.strip()
-        src = instance_generation.prompt.strip()
-        mt = generated_output.text.strip()
-        comet_metric.evaluate_generation(ref=ref,src=src,mt=mt)
+#         comet_metric = CometMetric(task="task", device=get_torch_device_name())
+#         ref = instance_generation.reference.strip()
+#         src = instance_generation.prompt.strip()
+#         mt = generated_output.text.strip()
+#         comet_metric.evaluate_generation(ref=ref,src=src,mt=mt)
 
 
         # """Compute the COMET score for this instance"""
