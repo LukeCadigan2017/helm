@@ -26,6 +26,7 @@ from helm.tokenizers.huggingface_tokenizer import HuggingFaceTokenizer, WrappedP
 from threading import Lock
 import json
 from pprint import pprint
+import sys
 
 # class StopAtSpecificTokenCriteria(StoppingCriteria):
 #     def __init__(self, stop_sequence: List[int]):
@@ -271,10 +272,11 @@ class HuggingFaceServer:
                 #     )
                 output = self.model.generate(
                     **encoded_input,
-                    temperature=raw_request["temperature"],
                     num_return_sequences=raw_request["num_return_sequences"],
                     max_new_tokens=raw_request["max_new_tokens"],
-                    top_p=raw_request["top_p"],
+                    length_penalty=1,
+                    top_p=1,
+                    top_k=sys.maxsize,
                     do_sample=True,
                     return_dict_in_generate=True,
                     output_scores=True,
