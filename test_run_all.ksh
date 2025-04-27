@@ -20,8 +20,14 @@ echo_space () {
 
 #################### SETTINGS ####################
 
-
+#for beam_nums:
 #SUITE=eval_$EVAL_INSTANCES
+
+#for return:
+#SUITE_NAME=sample_${EVAL_INSTANCES}_instances 
+
+#./snellius_copies/helm_output/sample_return_eval_20/sample_return_eval_20/wmt_14_language_pair_de_en_/meta_llama_Llama_3.1_8B_Instruct/1_beams/runs/sample_return_eval_20/generation_summary_metrics.json
+
 
 TASK=$1
 MODEL=$2
