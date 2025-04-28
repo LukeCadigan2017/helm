@@ -324,24 +324,24 @@ class HuggingFaceServer:
             all_decoded_text = tokenizer.batch_decode(sequences)
         raw_completions = []
 
-        # if(num_beams==1):
-        #     line_char="----------------------------------------------------------------"
-        #     print("Next instance")
-        #     print("\n"+line_char)
-        #     print(line_char)
-        #     smaller_prompt=raw_request["prompt"]
-        #     while("\n\n\n" in smaller_prompt):
-        #         smaller_prompt=smaller_prompt.replace("\n\n\n","\n\n")
-        #     print(f'Prompt:\n {smaller_prompt}')
-        #     print(line_char)
-        #     all_decoded_text = tokenizer.batch_decode(sequences)
-        #     print(f"Decoded:\n {all_decoded_text[0]}")
-        #     print(f"{line_char}")
-        #     print("tokens:")
-        #     for tokens,generated_tokens_logprobs  in zip(all_tokens,all_generated_tokens_logprobs):
-        #         for token, logprob in zip(tokens,generated_tokens_logprobs):
-        #             print(f"{token}: {logprob}")
-        #     print(f"{line_char}")
+        if(num_beams==1):
+            line_char="----------------------------------------------------------------"
+            print("Next instance")
+            print("\n"+line_char)
+            print(line_char)
+            smaller_prompt=raw_request["prompt"]
+            while("\n\n\n" in smaller_prompt):
+                smaller_prompt=smaller_prompt.replace("\n\n\n","\n\n")
+            print(f'Prompt:\n {smaller_prompt}')
+            print(line_char)
+            all_decoded_text = tokenizer.batch_decode(sequences)
+            print(f"Decoded:\n {all_decoded_text[0]}")
+            print(f"{line_char}")
+            print("tokens:")
+            for tokens,generated_tokens_logprobs  in zip(all_tokens,all_generated_tokens_logprobs):
+                for token, logprob in zip(tokens,generated_tokens_logprobs):
+                    print(f"{token}: {logprob}")
+            print(f"{line_char}")
         
         for decoded_text, tokens, generated_tokens_logprobs, sequence in zip(
             all_decoded_text, all_tokens, all_generated_tokens_logprobs, sequences

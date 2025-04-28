@@ -1,5 +1,5 @@
 #./test_run_all.ksh meta-llama/Llama-3.1-8B-Instruct 2 1
-#eval "$(conda shell.bash hook)"
+eval "$(conda shell.bash hook)"
 conda activate crfm-helm2
 
 # #model beam_num num_eval
@@ -10,10 +10,10 @@ export TASK=instruct
 export EVAL_INSTANCES=1
 export NUM_BEAMS=2
 export NUM_THREADS=2
-
+export SUITE=instruct_${EVAL_INSTANCES}_evals
 
 echo ./test_run_all.ksh $TASK $MODEL $NUM_BEAMS $EVAL_INSTANCES $NUM_THREADS
-. ./test_run_all.ksh $TASK $MODEL $NUM_BEAMS $EVAL_INSTANCES $NUM_THREADS
+. ./test_run_all.ksh $TASK $MODEL $NUM_BEAMS $EVAL_INSTANCES $NUM_THREADS $SUITE
 
 
 #NUM_BEAMS=15

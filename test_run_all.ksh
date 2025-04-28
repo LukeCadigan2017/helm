@@ -74,7 +74,15 @@ for NUM_BEAMS in $NUM_BEAMS_LIST; do
     echo_space
 
     #get run entry and output file names
-    RUN_ENTRY=${TASK_NAME}model=${MODEL},follow_format_instructions=instruct,num_beams=${NUM_BEAMS},num_return_sequences=${NUM_RETURN_SEQUENCES}
+    RUN_ENTRY=${TASK_NAME}model=${MODEL},follow_format_instructions=instruct
+
+    if [ ! -z "$NUM_RETURN_SEQUENCES" ] ;then
+        TASK="${TASK},num_return_sequences=${NUM_RETURN_SEQUENCES}"
+    fi
+
+    if [ ! -z "$NUM_BEAMS" ] ;then
+        TASK="${TASK},num_beams=${NUM_BEAMS}"
+    fi
 
     OUTPUT_PATH="$(./get_output_dir.ksh $SUITE_OUTPUT_DIR $TASK_NAME $MODEL $NUM_BEAMS)"
     TRUE_OUTPUT_PATH=${OUTPUT_PATH}/runs/${SUITE}
