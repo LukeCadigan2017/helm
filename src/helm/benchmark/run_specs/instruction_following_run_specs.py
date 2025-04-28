@@ -13,8 +13,7 @@ from helm.benchmark.scenarios.scenario import ScenarioSpec
 def get_instruction_following_critique_metric_specs(num_respondents: int) -> List[MetricSpec]:
     return [
         MetricSpec(
-            class_name="helm.benchmark.metrics.instruction_following_critique_metrics"
-            ".InstructionFollowingCritiqueMetric",
+            class_name="helm.benchmark.metrics.themis_instruction_following_critique_metrics.ThemisInstructionFollowingCritiqueMetric",
             # noqa E501
             args={"num_respondents": num_respondents},
         )
