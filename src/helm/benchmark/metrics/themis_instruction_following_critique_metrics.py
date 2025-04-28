@@ -58,7 +58,8 @@ Response:
                     # Note: Text can contain HTML.
                     text="",
                     options=[],
-                )]
+                )],
+        max_tokens=500
     )
 
     def __repr__(self) -> str:

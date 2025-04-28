@@ -16,8 +16,6 @@ export EVAL_INSTANCES=4
 export NUM_BEAMS_LIST=1
 export NUM_THREADS=8
 export NUM_RETURN_SEQUENCES=4
-# export SNELLIUS_METRICS="example_comet"
-
 export SUITE="sample_return_${NUM_RETURN_SEQUENCES}"
 ./test_run_all.ksh $TASK $MODEL $NUM_BEAMS_LIST $EVAL_INSTANCES $NUM_THREADS $SUITE
 
