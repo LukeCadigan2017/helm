@@ -206,7 +206,12 @@ def themis_eval(generation_summary):
     id_to_eval = {}
     for ex in outs:
         text, id = ex
-        id_to_eval[id]=text
+        print(f"id:{id}, text:{text}")
+        if isinstance(text, list):
+            id_to_eval[id]=text[0]
+        else:
+            id_to_eval[id]=text 
+        assert isinstance(id_to_eval[id], str)
 
     for instance_generation in generation_summary.instance_generations:
         for output_num, generated_output in enumerate(instance_generation.examples):
