@@ -29,7 +29,7 @@ echo_space () {
 #./snellius_copies/helm_output/sample_return_eval_20/sample_return_eval_20/wmt_14_language_pair_de_en_/meta_llama_Llama_3.1_8B_Instruct/1_beams/runs/sample_return_eval_20/generation_summary_metrics.json
 
 
-TASK=$1
+TASK_ENV=$1
 MODEL=$2
 NUM_BEAMS_LIST=$3
 EVAL_INSTANCES=$4
@@ -53,12 +53,12 @@ if [ "$#" -lt 6 ]; then
     exit 1
 fi
 
-. $TASK.env
+. $TASK_ENV.env
 
 echo $TASK_NAME IS TASK_NAME
 
 
-cat ./test_run_all.ksh
+# cat ./test_run_all.ksh
 HELM_OUTPUT_DIR=helm_output
 SUITE_OUTPUT_DIR=${HELM_OUTPUT_DIR}/${SUITE}
 mkdir -p $SUITE_OUTPUT_DIR
@@ -74,19 +74,26 @@ for NUM_BEAMS in $NUM_BEAMS_LIST; do
     echo_space
 
     #get run entry and output file names
-    RUN_ENTRY=${TASK_NAME}model=${MODEL},follow_format_instructions=instruct
 
+    RUN_ENTRY=$TASK_NAME
+
+    echo "Add stuff to test. NUM_RETURN_SEQUENCES $NUM_RETURN_SEQUENCES, NUM_BEAMS $NUM_BEAMS"
     if [ ! -z "$NUM_RETURN_SEQUENCES" ] ;then
-        TASK="${TASK},num_return_sequences=${NUM_RETURN_SEQUENCES}"
+        echo "Add num beams to task"
+        RUN_ENTRY="${RUN_ENTRY}num_return_sequences=${NUM_RETURN_SEQUENCES},"
+        echo "TASK IS ${RUN_ENTRY}"
     fi
 
     if [ ! -z "$NUM_BEAMS" ] ;then
-        TASK="${TASK},num_beams=${NUM_BEAMS}"
+        echo "Add num beams to task"
+        RUN_ENTRY="${RUN_ENTRY}num_beams=${NUM_BEAMS},"
+        echo "TASK IS ${RUN_ENTRY}"
     fi
 
     OUTPUT_PATH="$(./get_output_dir.ksh $SUITE_OUTPUT_DIR $TASK_NAME $MODEL $NUM_BEAMS)"
     TRUE_OUTPUT_PATH=${OUTPUT_PATH}/runs/${SUITE}
 
+    RUN_ENTRY=${RUN_ENTRY}model=${MODEL},follow_format_instructions=instruct
     # if [ -d "$OUTPUT_PATH" ]; then
     #     echo Cannot run! Directory $OUTPUT_PATH already exists
     #     echo $OUTPUT_PATH

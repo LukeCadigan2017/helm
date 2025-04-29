@@ -11,23 +11,23 @@ from helm.benchmark.scenarios.scenario import ScenarioSpec
 
 
 def get_instruction_following_critique_metric_specs(num_respondents: int) -> List[MetricSpec]:
-    return [
-        MetricSpec(
-            class_name="helm.benchmark.metrics.themis_instruction_following_critique_metrics.ThemisInstructionFollowingCritiqueMetric",
-            # noqa E501
-            args={"num_respondents": num_respondents},
-        )
-    ]
+    return []
+        # MetricSpec(
+        #     class_name="helm.benchmark.metrics.themis_instruction_following_critique_metrics.ThemisInstructionFollowingCritiqueMetric",
+        #     # noqa E501
+        #     args={"num_respondents": num_respondents},
+        # )
+    
 
 
 @run_spec_function("self_instruct")
-def get_self_instruct_spec(num_respondents: int, num_beams: int=1) -> RunSpec:
+def get_self_instruct_spec(num_respondents: int, num_beams: int=1, num_return_sequences:int=1) -> RunSpec:
     scenario_spec = ScenarioSpec(
         class_name="helm.benchmark.scenarios.self_instruct_scenario.SelfInstructScenario",
         args={},
     )
 
-    adapter_spec = get_instruct_adapter_spec(num_beams=num_beams)
+    adapter_spec = get_instruct_adapter_spec(num_beams=num_beams, num_outputs=num_return_sequences)
 
     return RunSpec(
         name="self_instruct",
@@ -39,13 +39,13 @@ def get_self_instruct_spec(num_respondents: int, num_beams: int=1) -> RunSpec:
 
 
 @run_spec_function("vicuna")
-def get_vicuna_spec(num_respondents: int, category: str = "all", num_beams: int=1) -> RunSpec:
+def get_vicuna_spec(num_respondents: int, category: str = "all", num_beams: int=1, num_return_sequences:int=1) -> RunSpec:
     scenario_spec = ScenarioSpec(
         class_name="helm.benchmark.scenarios.vicuna_scenario.VicunaScenario",
         args={"category": category},
     )
 
-    adapter_spec = get_instruct_adapter_spec(num_beams=num_beams)
+    adapter_spec = get_instruct_adapter_spec(num_beams=num_beams, num_outputs=num_return_sequences)
 
     return RunSpec(
         name=f"vicuna:category={category}",  # TODO: add args
@@ -57,13 +57,13 @@ def get_vicuna_spec(num_respondents: int, category: str = "all", num_beams: int=
 
 
 @run_spec_function("grammar")
-def get_grammar_spec(num_respondents: int, path: str, tags: str, num_beams: int=1) -> RunSpec:
+def get_grammar_spec(num_respondents: int, path: str, tags: str, num_beams: int=1, num_return_sequences:int=1) -> RunSpec:
     scenario_spec = ScenarioSpec(
         class_name="helm.benchmark.scenarios.grammar_scenario.GrammarScenario",
         args={"path": path, "tags": tags},
     )
 
-    adapter_spec = get_instruct_adapter_spec(num_beams=num_beams)
+    adapter_spec = get_instruct_adapter_spec(num_beams=num_beams, num_outputs=num_return_sequences)
 
     return RunSpec(
         name=f"grammar:path={path},tags={tags}",
@@ -75,13 +75,13 @@ def get_grammar_spec(num_respondents: int, path: str, tags: str, num_beams: int=
 
 
 @run_spec_function("open_assistant")
-def get_open_assistant_spec(num_respondents: int, language: str, num_beams: int=1) -> RunSpec:
+def get_open_assistant_spec(num_respondents: int, language: str, num_beams: int=1, num_return_sequences:int=1) -> RunSpec:
     scenario_spec = ScenarioSpec(
         class_name="helm.benchmark.scenarios.open_assistant_scenario.OpenAssistantScenario",
         args={"language": language},
     )
 
-    adapter_spec = get_instruct_adapter_spec(num_beams=num_beams)
+    adapter_spec = get_instruct_adapter_spec(num_beams=num_beams, num_outputs=num_return_sequences)
 
     return RunSpec(
         name=f"open_assistant:language={language}",
@@ -93,13 +93,13 @@ def get_open_assistant_spec(num_respondents: int, language: str, num_beams: int=
 
 
 @run_spec_function("koala")
-def get_koala_spec(num_respondents: int, num_beams: int=1) -> RunSpec:
+def get_koala_spec(num_respondents: int, num_beams: int=1, num_return_sequences:int=1) -> RunSpec:
     scenario_spec = ScenarioSpec(
         class_name="helm.benchmark.scenarios.koala_scenario.KoalaScenario",
         args={},
     )
 
-    adapter_spec = get_instruct_adapter_spec(num_beams=num_beams)
+    adapter_spec = get_instruct_adapter_spec(num_beams=num_beams, num_outputs=num_return_sequences)
 
     return RunSpec(
         name="koala",
@@ -111,13 +111,13 @@ def get_koala_spec(num_respondents: int, num_beams: int=1) -> RunSpec:
 
 
 @run_spec_function("anthropic_hh_rlhf")
-def get_anthropic_hh_rlhf_spec(num_respondents: int, subset: str, num_beams: int=1) -> RunSpec:
+def get_anthropic_hh_rlhf_spec(num_respondents: int, subset: str, num_beams: int=1, num_return_sequences:int=1) -> RunSpec:
     scenario_spec = ScenarioSpec(
         class_name="helm.benchmark.scenarios.anthropic_hh_rlhf_scenario.AnthropicHHRLHFScenario",
         args={"subset": subset},
     )
 
-    adapter_spec = get_instruct_adapter_spec(num_beams=num_beams)
+    adapter_spec = get_instruct_adapter_spec(num_beams=num_beams, num_outputs=num_return_sequences)
 
     return RunSpec(
         name=f"anthropic_hh_rlhf:subset={subset}",

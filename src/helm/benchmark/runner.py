@@ -61,9 +61,7 @@ class InstanceGenerations:
 
     # The sum of the log probabilities of all tokens
     completion_logprob: float
-    """Completion probability"""
-
-    
+    """Completion probability"""    
 
     """Reference used"""
     reference: str=None
@@ -77,7 +75,7 @@ class InstanceGenerations:
 
     stats_dict: dict[str, any]=None
     
-    
+    evaluation: str = None
 
 
 @dataclass(frozen=False)

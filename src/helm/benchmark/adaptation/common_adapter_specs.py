@@ -338,6 +338,7 @@ def get_instruct_adapter_spec(
     max_tokens: int = 512,
     temperature: float = 0.7,
     num_beams:int=1,
+    num_return_sequences:int=1
 ) -> AdapterSpec:
     """
     Zero-shot instruction-following.

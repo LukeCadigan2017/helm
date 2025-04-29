@@ -91,7 +91,6 @@ def get_prompt(ex, PROMPT):
 
 
 def process(inputs, args):
-
     from vllm import EngineArgs, LLMEngine, SamplingParams
     max_num_batched_tokens=max(args.max_num_seqs, args.max_new_tokens)
     engine_args = EngineArgs(model=args.model, 
@@ -198,9 +197,9 @@ def themis_eval(generation_summary):
             all_test_prompts.append((prompt, output_id))
 
 
-    print(f"Instance generation: {generation_summary.instance_generations}")
+    # print(f"Instance generation: {generation_summary.instance_generations}")
 
-    print("Attempt to process")
+    print("Attempt to process inputs with themis")
     outs = process(inputs=all_test_prompts, args=args)
 
     id_to_eval = {}
@@ -220,12 +219,12 @@ def themis_eval(generation_summary):
             parsed_dict=parse(out)
             generated_output.evaluation=out
 
-            print(f"Rating: {parsed_dict['Rating']}")
+            # print(f"Rating: {parsed_dict['Rating']}")
 
             generated_output.stats_dict = {} if generated_output.stats_dict is None else generated_output.stats_dict 
             generated_output.stats_dict["example_themis"]= parsed_dict["Rating"]
-    print(f"generated_output is {generated_output}")
-    print(f"first themis score is { generation_summary.instance_generations[0].examples[0].stats_dict['example_themis']}")
+    # print(f"generated_output is {generated_output}")
+    # print(f"first themis score is { generation_summary.instance_generations[0].examples[0].stats_dict['example_themis']}")
 
 if __name__ == "__main__":
     @dataclass(frozen=False)

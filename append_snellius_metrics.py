@@ -18,6 +18,8 @@ from helm.common.gpu_utils import get_torch_device_name
 
 
 
+from themis_eval import themis_eval
+
 ########################### Individual Metrics ###########################
 
 def append_comment_metric(generation_summary):
@@ -39,7 +41,7 @@ def append_comment_metric(generation_summary):
         for generated_output in instance_generation.examples:
             comet_score=model_output.scores[counter]
             generated_output.stats_dict = {} if generated_output.stats_dict is None else generated_output.stats_dict 
-            generated_output.stats_dict["comet_score"]=comet_score
+            generated_output.stats_dict["example_comet"]=comet_score
             counter+=1
 
     return instance_generation
@@ -75,7 +77,9 @@ if __name__=="__main__":
 
 
     if(metric_name=="example_comet"):
-        append_comment_metric(generation_summary)
+        append_comment_metric(generation_summary=generation_summary)
+    if(metric_name=="example_themis"):
+        themis_eval(generation_summary=generation_summary)
     else:
         raise Exception("Did not recognize metric name")
 
