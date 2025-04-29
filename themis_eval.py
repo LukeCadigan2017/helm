@@ -221,7 +221,8 @@ def themis_eval(generation_summary):
             generated_output.evaluation=out
 
             print(f"Rating: {parsed_dict['Rating']}")
-            # {"Analysis": out, "Rating": 0}
+
+            generated_output.stats_dict = {} if generated_output.stats_dict is None else generated_output.stats_dict 
             generated_output.stats_dict["example_themis"]= parsed_dict["Rating"]
     print(f"generated_output is {generated_output}")
     print(f"first themis score is { generation_summary.instance_generations[0].examples[0].stats_dict['example_themis']}")
