@@ -161,6 +161,8 @@ class GeneratedOutput:
     stats_dict: dict[str, any]=None
 
     example_id:int=None
+
+    evaluation:str=None
     
     def __add__(self, other: "GeneratedOutput") -> "GeneratedOutput":
         return GeneratedOutput(self.text + other.text, self.logprob + other.logprob, self.tokens + other.tokens)

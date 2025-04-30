@@ -1,4 +1,5 @@
-# from helm.benchmark.runner import InstanceGenerations,GenerationSummary
+from helm.benchmark.runner import InstanceGenerations,GenerationSummary
+from helm.common.request import (GeneratedOutput)
 # from process_gens import get_gen_summary, get_run_folder, get_gen_summary_from_path
 
 # from PostMetric import calculate_post_metric, get_post_metrics
