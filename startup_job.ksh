@@ -8,7 +8,7 @@ NUM_THREADS=$5
 SUITE=$6
 
 if [ "$#" -lt 6 ]; then
-    echo "Usage: $0 <TASK> <MODEL> <NUM_BEAMS_LIST> <EVAL_INSTANCES> <NUM_THREADS> <SUITE>"
+    echo "startup job Usage: $0 <TASK> <MODEL> <NUM_BEAMS_LIST> <EVAL_INSTANCES> <NUM_THREADS> <SUITE>"
     exit 1
 fi
 
@@ -16,5 +16,3 @@ echo -e "\n\n\n"
 echo ./test_run_all.ksh $TASK $MODEL $NUM_BEAMS_LIST $EVAL_INSTANCES $NUM_THREADS $SUITE
 ./test_run_all.ksh $TASK $MODEL $NUM_BEAMS_LIST $EVAL_INSTANCES $NUM_THREADS $SUITE
 
-13 evaluations in 3 minutes
-./outputs/test_comet_11364455.out

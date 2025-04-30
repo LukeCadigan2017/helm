@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#SBATCH --job-name=themis_test
+#SBATCH --partition=gpu_h100
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=00:20:00
+#SBATCH --output=outputs/themis_eval_%A.out
+
+
+. ./setup_env.ksh
+python themis_eval.py
+

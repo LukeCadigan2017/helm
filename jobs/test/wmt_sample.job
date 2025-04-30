@@ -11,12 +11,13 @@
 
 export MODEL=meta-llama/Llama-3.1-8B-Instruct
 
-
 export TASK=wmt
-export EVAL_INSTANCES=5
 export NUM_BEAMS_LIST=1
-export NUM_THREADS=32
-export NUM_RETURN_SEQUENCES=10
-export POST_EXAMPLE_METRICS="comet"
-export SUITE="sample_return_${NUM_RETURN_SEQUENCES}"
+export NUM_THREADS=4
+
+export EVAL_INSTANCES=50
+export NUM_RETURN_SEQUENCES=100
+
+export SNELLIUS_METRICS="example_comet"
+export SUITE="sample_return_${NUM_RETURN_SEQUENCES}_eval_${NUM_RETURN_SEQUENCES}"
 . ./startup_job.ksh $TASK $MODEL $NUM_BEAMS_LIST $EVAL_INSTANCES $NUM_THREADS $SUITE

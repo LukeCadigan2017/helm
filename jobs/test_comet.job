@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#SBATCH --job-name=beam2_8b
+#SBATCH --partition=gpu_a100
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=00:10:00
+#SBATCH --output=outputs/test_comet_%A.out
+
+. ./setup_env.ksh
+python append_snellius_metrics.py --num_beams 1 --model meta-llama/Llama-3.1-8B-Instruct --eval_instances 5 --task_name wmt_14:language_pair=de-en, --run_path helm_output/sample_return_10/wmt_14_language_pair_de_en_/meta_llama_Llama_3.1_8B_Instruct/1_beams/runs/sample_return_10 --instance_metrics no_metrics --example_metrics comet
