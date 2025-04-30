@@ -13,9 +13,8 @@ clean_str () {
 
 
 echo_space () {
-    echo "-------------------------------------------------------------------------------------------------"
     echo -e "\n\n\n\n\n\n\n\n\n\n\n\n "
-
+    echo "-------------------------------------------------------------------------------------------------"
 }
 
 #################### SETTINGS ####################
@@ -55,7 +54,7 @@ fi
 
 . $TASK_ENV.env
 
-echo $TASK_NAME IS TASK_NAME
+echo TASK_NAMES IS $TASK_NAMES
 
 
 # cat ./test_run_all.ksh
@@ -70,81 +69,80 @@ echo $OUTPUT_DIR
 
 # #do everything
 
-for NUM_BEAMS in $NUM_BEAMS_LIST; do
-    echo_space
 
-    #get run entry and output file names
+for TASK_NAME in $TASK_NAMES; do
+    for NUM_BEAMS in $NUM_BEAMS_LIST; do
+        echo_space
 
-    RUN_ENTRY=$TASK_NAME
+        echo "TASK_NAMES IS $TASK_NAMES"
+        echo "TASK_NAME  IS $TASK_NAME"
+        #get run entry and output file names
 
-    echo "Add stuff to test. NUM_RETURN_SEQUENCES $NUM_RETURN_SEQUENCES, NUM_BEAMS $NUM_BEAMS"
-    if [ ! -z "$NUM_RETURN_SEQUENCES" ] ;then
-        echo "Add num beams to task"
-        RUN_ENTRY="${RUN_ENTRY}num_return_sequences=${NUM_RETURN_SEQUENCES},"
-        echo "TASK IS ${RUN_ENTRY}"
-    fi
+        RUN_ENTRY=$TASK_NAME
 
-    if [ ! -z "$NUM_BEAMS" ] ;then
-        echo "Add num beams to task"
-        RUN_ENTRY="${RUN_ENTRY}num_beams=${NUM_BEAMS},"
-        echo "TASK IS ${RUN_ENTRY}"
-    fi
+        if [ ! -z "$NUM_RETURN_SEQUENCES" ] ;then
+            RUN_ENTRY="${RUN_ENTRY}num_return_sequences=${NUM_RETURN_SEQUENCES},"
+        fi
 
-    OUTPUT_PATH="$(./get_output_dir.ksh $SUITE_OUTPUT_DIR $TASK_NAME $MODEL $NUM_BEAMS)"
-    TRUE_OUTPUT_PATH=${OUTPUT_PATH}/runs/${SUITE}
+        if [ ! -z "$NUM_BEAMS" ] ;then
+            RUN_ENTRY="${RUN_ENTRY}num_beams=${NUM_BEAMS},"
+        fi
 
-    RUN_ENTRY=${RUN_ENTRY}model=${MODEL},follow_format_instructions=instruct
-    # if [ -d "$OUTPUT_PATH" ]; then
-    #     echo Cannot run! Directory $OUTPUT_PATH already exists
-    #     echo $OUTPUT_PATH
-    #     ls $OUTPUT_PATH
-    #     exit 1 
-    # fi
+        OUTPUT_PATH="$(./get_output_dir.ksh $SUITE_OUTPUT_DIR $TASK_NAME $MODEL $NUM_BEAMS)"
+        TRUE_OUTPUT_PATH=${OUTPUT_PATH}/runs/${SUITE}
+
+        RUN_ENTRY=${RUN_ENTRY}model=${MODEL},follow_format_instructions=instruct
+        # if [ -d "$OUTPUT_PATH" ]; then
+        #     echo Cannot run! Directory $OUTPUT_PATH already exists
+        #     echo $OUTPUT_PATH
+        #     ls $OUTPUT_PATH
+        #     exit 1 
+        # fi
+        
+        mkdir -p $OUTPUT_PATH
+        RUN_PATH=${OUTPUT_PATH}/runs/$SUITE
+        STATS_FILE=${RUN_PATH}/stats.json
+
+        echo helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
+            -o $OUTPUT_PATH --suite $SUITE --num-threads $NUM_THREADS
+
+        if [ "$DISABLE_CACHE" = true ] ; then
+            echo "Disable cache"
+            helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
+                -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS --disable-cache
+        else
+            echo "Do not disable cache"
+            helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
+                -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS 
+        fi
+
+
+        
+        
+        
+        
+        echo STATS_FILE is $STATS_FILE
+
+        #process default stats
+        # for DEFAULT_METRIC in $DEFAULT_METRICS; do
+        #     echo python process_stats.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $DEFAULT_METRIC \
+        #             --stats_file $STATS_FILE --output_csv $OUTPUT_CSV
+        #     python process_stats.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $DEFAULT_METRIC \
+        #             --stats_file $STATS_FILE --output_csv $OUTPUT_CSV
+        # done    
+        
+        #add snellius metrics
     
-    mkdir -p $OUTPUT_PATH
-    RUN_PATH=${OUTPUT_PATH}/runs/$SUITE
-    STATS_FILE=${RUN_PATH}/stats.json
 
-    echo helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
-        -o $OUTPUT_PATH --suite $SUITE --num-threads $NUM_THREADS
+        for SNELLIUS_METRIC in $SNELLIUS_METRICS; do
+            echo python append_snellius_metrics.py --num_beams $NUM_BEAMS --model $MODEL --eval_instances $EVAL_INSTANCES --task_name $TASK_NAME \
+                --run_path ${RUN_PATH} --metric_name $SNELLIUS_METRIC
+            python append_snellius_metrics.py --num_beams $NUM_BEAMS --model $MODEL --eval_instances $EVAL_INSTANCES --task_name $TASK_NAME \
+                --run_path ${RUN_PATH} --metric_name $SNELLIUS_METRIC
+        done
 
-    if [ "$DISABLE_CACHE" = true ] ; then
-        echo "Disable cache"
-        helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
-            -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS --disable-cache
-    else
-        echo "Do not disable cache"
-        helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
-            -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS 
-    fi
-
-
-    
-    
-    
-    
-    echo STATS_FILE is $STATS_FILE
-
-    #process default stats
-    # for DEFAULT_METRIC in $DEFAULT_METRICS; do
-    #     echo python process_stats.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $DEFAULT_METRIC \
-    #             --stats_file $STATS_FILE --output_csv $OUTPUT_CSV
-    #     python process_stats.py --model $MODEL --task  $TASK --num_beams $NUM_BEAMS  --metric $DEFAULT_METRIC \
-    #             --stats_file $STATS_FILE --output_csv $OUTPUT_CSV
-    # done    
-    
-    #add snellius metrics
-  
-
-    for SNELLIUS_METRIC in $SNELLIUS_METRICS; do
-        echo python append_snellius_metrics.py --num_beams $NUM_BEAMS --model $MODEL --eval_instances $EVAL_INSTANCES --task_name $TASK_NAME \
-            --run_path ${RUN_PATH} --metric_name $SNELLIUS_METRIC
-        python append_snellius_metrics.py --num_beams $NUM_BEAMS --model $MODEL --eval_instances $EVAL_INSTANCES --task_name $TASK_NAME \
-            --run_path ${RUN_PATH} --metric_name $SNELLIUS_METRIC
     done
-
 done
-
 # echo -e "\n\n\n\n\n"
 # echo "NOTE: USING SLOW TOKENIZER"
 # echo "NOTE: USING SLOW TOKENIZER"

@@ -78,8 +78,12 @@ class ProcessGens:
     beam_num_to_summary:Dict[int, GenerationSummary]
     metrics_dict:List[Dict[str,any]]
 
-    def __init__(self,root_folder:str, num_beams_list:List[int], models:List[float], custom_metrics:List[PostMetric.PostMetric],task_name:str, eval_instances:str=None, instance_metrics:Dict[int, Dict[str, Dict[str, float]]]=None, suite_name:str=""):
+    def __init__(self):
+        pass
+
+    def init(self,root_folder:str, num_beams_list:List[int], models:List[float], custom_metrics:List[PostMetric.PostMetric],task_names:List[str], eval_instances:str=None, instance_metrics:Dict[int, Dict[str, Dict[str, float]]]=None, suite_name:str=""):
         
+        task_name=task_names[0]
         self.root_folder=root_folder
 
         # #these are by themselves
@@ -87,11 +91,10 @@ class ProcessGens:
         metrics_df=self.get_metrics_df(root_folder)
         print("get_instance_info")
         instance_info=self.get_instance_info(root_folder=root_folder, num_beams_list=num_beams_list, models=models,task_name= task_name,suite_name=suite_name)
-
+        self.instance_info=instance_info
 
         beam_num_to_instance_stats=self.calculate_beam_num_to_run_instance_stats(root_folder=root_folder, num_beams_list=num_beams_list, models=models, task_name=task_name, suite_name=suite_name, instance_metrics=instance_metrics)
-        # self.metrics_df=metrics_df
-        self.instance_info=instance_info
+        
 
         #these go together
         print("calculate_beam_num_to_summary")
@@ -105,7 +108,7 @@ class ProcessGens:
         self.metrics_df=metrics_df
 
     
-    def calculate_beam_num_to_run_instance_stats(self, root_folder, num_beams_list:List[int], models:List[float], task_name:str, suite_name:str, instance_metrics:Dict[int, Dict[str, Dict[str, float]]])->Dict[int, List[PerInstanceStats]]:
+    def calculate_beam_num_to_run_instance_stats(self, root_folder, num_beams_list:List[int], models:List[float], task_name:str, suite_name:str, instance_metrics:List[str])->Dict[int, List[PerInstanceStats]]:
         def json_to_run_instance_stats(path, instance_metrics) -> List[PerInstanceStats]:
             with open(path,'r') as json_file:
                 list_instance_stats_dicts=json.load(json_file)
@@ -129,6 +132,7 @@ class ProcessGens:
                 path=get_run_folder(root_folder=root_folder, num_beams=num_beams, model=model, task_name=task_name, suite_name=suite_name)+"/per_instance_stats.json"
                 print(f"Analyzing path: {path}")
                 run_instance_stats = json_to_run_instance_stats(path=path, instance_metrics=instance_metrics)
+                
                 beam_num_to_run_instance_stats[num_beams]=run_instance_stats
         return beam_num_to_run_instance_stats
 
@@ -146,7 +150,6 @@ class ProcessGens:
         generationSummary.instance_generations=[clean_instance_generation(instanceGenerations=instance_generation) for instance_generation in generationSummary.instance_generations]
         assert len(generationSummary.instance_generations)==eval_instances
         print(f"number of instances: {len(generationSummary.instance_generations)}")
-        generationSummary.instance_generations=generationSummary.instance_generations[:eval_instances]
         return generationSummary
 
         
@@ -176,8 +179,6 @@ class ProcessGens:
             for model in models:
                 raw_generation_summary=get_gen_summary(root_folder=root_folder, num_beams=num_beams, model=model, task_name=task_name, suite_name=suite_name)
                 generation_summary:GenerationSummary=self.clean_generation_summary(raw_generation_summary, eval_instances)
-                # if(eval_instances):
-                    # assert len(generation_summary.instance_generations)==eval_instances
                 beam_num_to_summary[num_beams]=generation_summary
         return beam_num_to_summary
 
@@ -188,7 +189,9 @@ class ProcessGens:
         metrics=base_metrics+custom_metrics
         metrics_dicts=[]
         for beam_num, generation_summary in beam_num_to_summary.items():
-            print(beam_num)
+
+            all_instance_stats_for_beam= beam_num_to_instance_stats[beam_num]
+            
             for instance_generation in generation_summary.instance_generations:
                 for idx,generated_output in enumerate(instance_generation.examples):
                     pd_metrics_dict=generated_output.stats_dict if generated_output.stats_dict  is not None else {} 
@@ -197,9 +200,10 @@ class ProcessGens:
                     pd_metrics_dict["beam_num"]=beam_num
                     if(idx==0):
                         pd_metrics_dict["isCompletion"]=(idx==0)
-                        completion_metrics_dict = beam_num_to_instance_stats[beam_num][instance_generation.instance_id]
-                        for stat_name, value in completion_metrics_dict.items():
-                            pd_metrics_dict[stat_name]= value
+                        if(instance_generation.instance_id in all_instance_stats_for_beam.keys()):
+                            completion_metrics_dict = all_instance_stats_for_beam[instance_generation.instance_id]
+                            for stat_name, value in completion_metrics_dict.items():
+                                pd_metrics_dict[stat_name]= value
                     metrics_dicts.append(pd_metrics_dict)
         return metrics_dicts
 
