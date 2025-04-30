@@ -464,9 +464,9 @@ class HuggingFaceClient(CachingClient):
         for idx, raw_completion in enumerate(completions_to_clean):
             sequence_logprob: float = 0
             tokens: List[Token] = []
-            print("raw_completion is ",raw_completion)
-            print("\n\nText is ",raw_completion["text"])
-            print("raw_completion.keys is ", raw_completion.keys())
+            # print("raw_completion is ",raw_completion)
+            # print("\n\nText is ",raw_completion["text"])
+            # print("raw_completion.keys is ", raw_completion.keys())
             generated_tokens = raw_completion["tokens"]
             sequence=raw_completion["sequence"]
 
