@@ -81,7 +81,7 @@ if __name__=="__main__":
     if(metric_name=="example_themis"):
         themis_eval(generation_summary=generation_summary)
     else:
-        raise Exception("Did not recognize metric name")
+        raise Exception(f"Did not recognize metric name {metric_name}")
 
     write(
         gen_sum_metric_path,
