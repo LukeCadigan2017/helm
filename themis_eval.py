@@ -198,7 +198,6 @@ def themis_eval(generation_summary):
             all_test_prompts.append((prompt, output_id))
 
 
-    # print(f"Instance generation: {generation_summary.instance_generations}")
 
     print("Attempt to process inputs with themis")
     outs = process(inputs=all_test_prompts, args=args)
@@ -206,7 +205,6 @@ def themis_eval(generation_summary):
     id_to_eval = {}
     for ex in outs:
         text, id = ex
-        print(f"id:{id}, text:{text}")
         if isinstance(text, list):
             id_to_eval[id]=text[0]
         else:
@@ -219,13 +217,8 @@ def themis_eval(generation_summary):
             out=id_to_eval[output_id]
             parsed_dict=parse(out)
             generated_output.evaluation=out
-
-            # print(f"Rating: {parsed_dict['Rating']}")
-
             generated_output.stats_dict = {} if generated_output.stats_dict is None else generated_output.stats_dict 
             generated_output.stats_dict["example_themis"]= parsed_dict["Rating"]
-    # print(f"generated_output is {generated_output}")
-    # print(f"first themis score is { generation_summary.instance_generations[0].examples[0].stats_dict['example_themis']}")
 
 if __name__ == "__main__":
     @dataclass(frozen=False)
