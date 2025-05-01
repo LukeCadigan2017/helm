@@ -78,7 +78,7 @@ if __name__=="__main__":
 
     if(metric_name=="example_comet"):
         append_comment_metric(generation_summary=generation_summary)
-    if(metric_name=="example_themis"):
+    elif(metric_name=="example_themis"):
         themis_eval(generation_summary=generation_summary)
     else:
         raise Exception(f"Did not recognize metric name {metric_name}")
