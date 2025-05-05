@@ -70,6 +70,52 @@ import sys
     #     return False
 
 
+def exact_mode_algo(model, x:str,bos:int, eos:int, wrapped_tokenizer):
+    def get_next_log_probs(x, y, model):
+        with torch.no_grad():
+            outputs = model(input_ids=x, decoder_input_ids=y)
+            logits = outputs.logits
+        
+        next_token_logits = logits[:, -1, :]
+        return torch.nn.functional.log_softmax(next_token_logits, dim=-1)[0]
+    def DFS(  x:str,  y:str, p:float, gamma:float,model, eos=1):
+        if(y[0,-1]==eos):
+            return (y,p)
+        best_y=None
+        
+        #exclude the pad token
+        log_probs=get_next_log_probs(x, y, model)
+        for idx, log_prob in enumerate(log_probs):
+            if(idx>0):
+                newP = p + log_prob 
+                if newP >= gamma:
+                    # print("newP ",newP," p ",p," log_prob ",log_prob)
+                    appended_y=torch.concat((y, torch.tensor([[idx]], dtype=int)), axis=1)
+                    new_y, new_gamma = DFS(  x,  appended_y, newP, gamma, model, eos)
+                    if new_gamma > gamma:
+                        best_y=new_y
+                        gamma=new_gamma
+        return best_y, gamma
+    def get_decode_log_prob(x,output, model, wrapped_tokenizer):
+        score=0
+        for idx in range(1, output.size()[1]):
+            pred=output[0, idx]
+            y=output[:, :idx]
+            log_p= get_next_log_probs(x,y , model)[pred]
+            score+=log_p    
+        with wrapped_tokenizer as tokenizer:
+            print("gen_outputs ",score," : ",tokenizer.decode(y[0], skip_special_tokens=True))
+        return score
+    
+    y = bos*torch.ones((1,1), dtype=int)
+
+    ended_y=torch.concat((y, torch.tensor([[eos]], dtype=int)), axis=1)
+    start_gamma=get_next_log_probs(x, ended_y, model)[eos]
+    best_y, gamma = DFS(x, y,0, start_gamma, model, eos)
+    print(f"best_y is {best_y}")
+    print(f"Gamma is ",gamma)
+    get_decode_log_prob(x,best_y, model, wrapped_tokenizer)
+    return best_y, gamma
 
 class HuggingFaceRequest(TypedDict):
     """Data passed between make_request and serve_request. Used as the cache key."""
@@ -128,6 +174,10 @@ class HuggingFaceServer:
             self.device = "cpu"
 
         self._end_of_text_token=end_of_text_token
+
+        with wrapped_tokenizer as tokenizer:
+            self.eos=tokenizer.eos_token
+            self.bos=tokenizer.bos_token
         # Security issue: currently we trust remote code by default.
         # We retain this temporarily to maintain reverse compatibility.
         # TODO: Delete if-else and don't set trust_remote_code=True
@@ -253,6 +303,8 @@ class HuggingFaceServer:
                             token_logprob=transition_scores[completion_id][i].item()
                             generated_tokens_logprobs.append(token_logprob)
                         all_generated_tokens_logprobs.append(generated_tokens_logprobs)
+            elif num_beams<0:
+                exact_mode_algo(model=self.model, x=encoded_input,bos=self.bos, eos=self.eos, wrapped_tokenizer=self.wrapped_tokenizer)
             else:
                 # #the difference: length_penalty cannot be set if num_beams>1
                 # with torch.no_grad():
@@ -295,9 +347,7 @@ class HuggingFaceServer:
                         j = i + len(encoded_input.input_ids[0])
                         generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())
                     all_generated_tokens_logprobs.append(generated_tokens_logprobs)
-                
-
-
+        
         # for completion_id in range(num_generated):
         #     generated_sequence=sequences[completion_id, len(encoded_input.input_ids[0]):]
         #     # print("sequence is ", tokenizer.batch_decode(generated_sequence, skip_special_tokens=True))
