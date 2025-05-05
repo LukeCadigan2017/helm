@@ -197,6 +197,7 @@ class HuggingFaceServer:
         self.wrapped_tokenizer = wrapped_tokenizer
 
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
+        print("Serving request")
         eos_token_string=None
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
