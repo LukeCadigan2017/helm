@@ -4,7 +4,7 @@ import argparse
 
 parser = argparse.ArgumentParser("simple_example")
 from helm.benchmark.runner import InstanceGenerations,GenerationSummary
-from process_gens import get_gen_summary, get_run_folder, get_gen_summary_from_path
+from process_gens import  get_gen_summary_from_path
 
 from PostMetric import calculate_post_metric, get_post_metrics
 from helm.common.general import ensure_directory_exists, write, asdict_without_nones
