@@ -11,6 +11,5 @@
 
 . ./setup_env.ksh
 
-python append_snellius_metrics.py --num_beams 1 --model meta-llama/Llama-3.1-8B-Instruct --eval_instances 8 --task_name wmt_14:language_pair=de-en, --run_path helm_output/sample_return_8/wmt_14_language_pair_de_en_/meta_llama_Llama_3.1_8B_Instruct/1_beams/runs/sample_return_8 --metric_name example_comet
-
+python append_snellius_metrics.py --num_beams 1 --model meta-llama/Llama-3.1-8B-Instruct --eval_instances 2 --task_name wmt_14:language_pair=de-en, --run_path helm_output/sample_return_50_eval_50/wmt_14_language_pair_de_en_/meta_llama_Llama_3.1_8B_Instruct/1_beams/runs/sample_return_50_eval_50 --metric_name example_comet
 
