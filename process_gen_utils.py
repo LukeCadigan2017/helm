@@ -1,3 +1,10 @@
+
+import statistics
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+import process_gens
 import pandas as pd
 from helm.benchmark.runner import InstanceGenerations,GenerationSummary
 from typing import Any, List
@@ -13,10 +20,113 @@ from typing import Dict, Optional
 from helm.benchmark.augmentations.perturbation_description import (
     PerturbationDescription)
 from dataclasses import dataclass
-import os
+from process_gens import ProcessGens
 
 
-def get_dfs(processGens, num_beams_list):
+from typing import List
+
+def get_text(example):
+    return "".join([token.text for token in example.tokens])
+def get_ids(example):
+    return [token.token_id for token in example.tokens]
+
+
+
+
+
+def analyze_completion_by_beam(processGens:ProcessGens , num_beams_list:List[int], num_instances:int):
+    first_beam=next(iter(num_beams_list))
+    ids=[instance_generations.instance_id for instance_generations in processGens.beam_num_to_summary[first_beam].instance_generations]
+    for id in ids[:num_instances]:
+        print("\n")
+        for beam_num in num_beams_list:
+            for instance_generation in processGens.beam_num_to_summary[beam_num].instance_generations:
+                if(instance_generation.instance_id==id):
+                    max_logprobs=max([example.logprob for example in instance_generation.examples])
+                    # print(f"beam_num:{beam_num}\t log_prob:{instance_generation.completion_logprob}")
+                    print(f"beam_num:{beam_num}  \t max_p:{instance_generation.completion_logprob}\tcompletion:{instance_generation.completion}")
+
+
+def get_beam_probs(processGens:ProcessGens , num_beams_list:List[int]):
+    for beam_num in num_beams_list:
+        max_log_probs=[]
+        for instance_generation in processGens.beam_num_to_summary[beam_num].instance_generations:
+            example_logprobs=[example.logprob for example in instance_generation.examples]
+            max_log_probs.append(max(example_logprobs))
+        print(f"beam num: {beam_num}. \tAve:{statistics.mean(max_log_probs)}")
+    
+def get_beam_means(processGens:ProcessGens , num_beams_list:List[int]):
+    for beam_num in num_beams_list:
+        data=[]
+        for instance_generation in processGens.beam_num_to_summary[beam_num].instance_generations:
+            data.append(len(instance_generation.completion))
+        print(f"beam num: {beam_num}. \tAve:{statistics.mean(data)}")
+     
+# id24769
+def analyze_output_by_instance(processGens:ProcessGens , beam_num, num_instances, num_examples):
+    for instance_generation in processGens.beam_num_to_summary[beam_num].instance_generations[:num_instances]:
+        print(f"\n\nid: {instance_generation.instance_id}\t reference {instance_generation.reference}")
+        for example in instance_generation.examples[:num_examples]:
+            print(f"\tp:{example.logprob}\ttext:{example.text}")
+
+
+def see_overlap_per_instance_generation(processGens:ProcessGens , beam_num, num_instances):
+    for instance_generation in processGens.beam_num_to_summary[beam_num].instance_generations[:num_instances]:
+        texts=[example.text for example in instance_generation.examples]
+        probs=[example.logprob for example in instance_generation.examples]
+
+        print(f"id: {instance_generation.instance_id}\tn_unique_text: {len(set(texts))}\tn:{len(set(probs))}\tn_unique_probs")
+
+
+
+def get_instance_generations_by_id(processGens, num_beams_list:List[int]):
+    ids=[instance_generations.instance_id for instance_generations in processGens.beam_num_to_summary[2].instance_generations]
+
+    #dict id --) beam_num --) instance_generation
+    instance_generations_by_id={}
+    for id in ids[:10]:
+        instance_generations_by_id[id]={}
+        
+        for beam_num in num_beams_list:
+        
+            for instance_generation in processGens.beam_num_to_summary[beam_num].instance_generations:
+                if(instance_generation.instance_id==id):
+                    instance_generations_by_id[id][beam_num]=instance_generation
+    return instance_generations_by_id
+
+
+
+
+def check_completion_logprob(processGens, beam_num):
+    for instance_generation in processGens.beam_num_to_summary[beam_num].instance_generations:
+        completion_logprob=instance_generation.completion_logprob
+        for example in instance_generation.examples:
+            assert example.logprob<=completion_logprob
+
+def check_sentence_logprob(processGens,beam_num, num_instances=10, num_examples=10):
+    for instance_generation in processGens.beam_num_to_summary[beam_num].instance_generations[:num_instances]:
+        completion_logprob=instance_generation.completion_logprob
+        for example in instance_generation.examples[:num_examples]:
+            assert example.logprob<=completion_logprob
+
+
+
+def beam_diff_check():
+    instance_generations_by_id=get_instance_generations_by_id()
+    for instance_idx, instance_generation_by_beam_num in instance_generations_by_id.items():
+        # print(type(instance_generation_by_beam_num))
+
+        for idx2, beam2_example in enumerate(instance_generation_by_beam_num[2].examples):
+            for idx128, beam128_example in enumerate(instance_generation_by_beam_num[128].examples):
+                if(beam2_example.text==beam128_example.text):
+                    p1=beam2_example.logprob
+                    p2=beam128_example.logprob
+                    diff= abs(  (p1-p2)/ min(p1,p2) )
+                    
+                    print(f"Match! Beam2: {p1} vs {p2} is {diff}, {instance_idx} {idx2}, {idx128}")
+                    assert(diff<0.1)
+
+def get_dfs(processGens, eval_instances, num_beams_list):
     examples_df = pd.DataFrame(processGens.metrics_dicts)
     completions_df=examples_df.loc[examples_df['isCompletion'] == True]
 
@@ -24,351 +134,39 @@ def get_dfs(processGens, num_beams_list):
     print(f"Num examples: {examples_df.shape[0]}")
     print(f"Num completions: {completions_df.shape[0]}")
 
+    if(eval_instances):
+        # assert sum(num_beams_list)*eval_instances==examples_df.shape[0]
+        assert len(num_beams_list)*eval_instances==completions_df.shape[0]
     return examples_df, completions_df
 
-def assert_dir_exists(dir_name):
-    dirs=dir_name.split("/")
-    for i in range(len(dirs)):
-        prev_dir="/".join(dirs[:i])
-        cur_dir="/".join(dirs[:i+1])
-        if not os.path.isdir(cur_dir):
-            error_str="\n------------------------------------------\n"
-            error_str+="Error:\n"
-            error_str+=f"dir_name does not exist: {dir_name}\n\n"
-            error_str+=f"Directory exists: {prev_dir}\n\n"
-            error_str+=f"Extension does not exist: {dir_name[len(prev_dir)+1:]}\n"
-            error_str+=f"\n\nTo check:\n"
-            error_str+=f"ls {prev_dir}"
-            raise Exception(error_str)
-        
 
+def compare_beams_by_metric(analysis_df,compare_metric,compare_beams, compare_func= lambda a,b: b-a,plot_histogram=True):
 
-def get_process_gen_params(test_name):
+    for beam_num in compare_beams:
+        filtered_df=analysis_df.loc[analysis_df['beam_num']==beam_num]
+        print(f"Mean {compare_metric} for {beam_num}:\t {filtered_df[compare_metric].mean()}")
+    col_names=[f"{compare_metric}_{beam_num}" for beam_num in compare_beams]
+    dif_col=f'{compare_metric}_dif'
 
-    def get_metrics(mode):
-        if(mode=="wmt"):
-            task_names=["wmt_14_language_pair_de_en_"]
-            custom_metrics=[ PostMetric.BLEU1_METRIC(),PostMetric.BLEU4_METRIC()]
-            instance_metrics=["comet"]
-        if(mode=="instruct"):
-            print("\n\n----------------\n NOTE: ONLY PRINTING 4 tasks ----------------\n")
-            # task_names=["open_assistant:language=en,num_respondents=1,","self_instruct:num_respondents=1,"]
-            task_names=[
-                        # "anthropic_hh_rlhf_subset_hh_num_respondents_1_",
-                        #  "koala_num_respondents_1_", 
-                        "anthropic_hh_rlhf_subset_red_team_num_respondents_1_",
-                        "self_instruct_num_respondents_1_",
-                        "grammar_path_src_helm_benchmark_scenarios_best_chatgpt_prompts.yaml_tags_num_respondents_1_",
-                        "vicuna_num_respondents_1_"]
-            custom_metrics=[]
-            instance_metrics=[]
-        
-        assert isinstance(task_names[0],str)
-        return task_names, custom_metrics, instance_metrics
-
-    root_folder=f"snellius_copies/helm_output"
-    if(test_name=="full_sample"):
-        mode = "wmt"
-        suite_name="sample_return_20_eval_500"
-        
-        num_beams_list=[1]
-        models=["meta_llama_Llama_3.1_8B_Instruct"]
-        eval_instances=500
-
-    elif (test_name=="full_instruct"):
-        mode="instruct"
-        suite_name="full_instruct_1_samples_100_evals"
-        
-        num_beams_list=[2,4]
-        models=["allenai_OLMo_2_1124_13B_Instruct"]
-        eval_instances=100
-    else:
-        raise Exception("task name not found")
-    
-    task_names, custom_metrics, instance_metrics= get_metrics(mode)
-    return root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics
-    
-
-@dataclass(frozen=False)
-class PerInstanceStats:
-    """
-    Captures a unit of evaluation.
-    """
-
-    # Uniquely identifies the input instance
-    instance_id: str
-    train_trial_index: int
-    """Which replication"""
-
-    stats: List[Stat]
-    """Statistics computed from the predicted output"""
-    perturbation: Optional[PerturbationDescription]=None
-
-
-############ UTILS ############
-
-def clean_str_for_os(str_to_clean:str):
-    str_to_clean=str_to_clean.strip()
-    chars = ["=",",",":", "__", "-", "/"]
-    for char in chars:
-        str_to_clean=str_to_clean.replace(char,"_")
-    return str_to_clean
-
-
-def get_run_folder(root_folder:str, num_beams:int, model:str, task_name: str, suite_name:str):
-    
-    num_beams=clean_str_for_os(str(num_beams))
-    model=clean_str_for_os(model)
-    task_name=clean_str_for_os(task_name)
-    suite_name=clean_str_for_os(suite_name)
-
-    run_folder= f"{root_folder}/{suite_name}/{task_name}/{model}/{num_beams}_beams/runs/{suite_name}"
-    assert_dir_exists(run_folder)
-    return run_folder
+    result = analysis_df[analysis_df['beam_num'].isin(compare_beams)][['instanceID', 'beam_num', compare_metric]]
+    pivoted = result.pivot(index='instanceID', columns='beam_num', values=compare_metric)
+    pivoted.columns = col_names
+    pivoted = pivoted.reset_index()
+    pivoted[dif_col] = pivoted.apply(lambda row: compare_func(row[col_names[0]],row[col_names[1]]), axis=1)
+    print(f"Mean Change:{pivoted[dif_col].mean()}")
+    print(f"Median Change:{pivoted[dif_col].median()}")
+    if(plot_histogram):
+        pivoted.hist(column=dif_col,bins=40)
 
 
 
-############ Gen Summary stuff ############
-
-def clean_generation_summary(generationSummary:GenerationSummary)->GenerationSummary:
-    def clean_instance_generation(instanceGenerations:InstanceGenerations)->InstanceGenerations:
-        def clean_generated_output(generatedOutput:GeneratedOutput)-> GeneratedOutput:
-            generatedOutput.text=truncate_sequence(generatedOutput.text)
-            return generatedOutput
-        instanceGenerations.examples=[clean_generated_output(generatedOutput=example) for example in instanceGenerations.examples]
-        instanceGenerations.examples.sort(key=lambda x:float(x.logprob),reverse=True)
-        completion=instanceGenerations.examples[0]
-        instanceGenerations.completion=completion.text
-        instanceGenerations.completion_logprob=completion.logprob
-        return instanceGenerations
-    generationSummary.instance_generations=[clean_instance_generation(instanceGenerations=instance_generation) for instance_generation in generationSummary.instance_generations]
-    # assert len(generationSummary.instance_generations)==eval_instances
-    # print(f"number of instances: {len(generationSummary.instance_generations)}")
-    return generationSummary
+def plot_keys(df, xlabel, ylabel):
+    x=df[xlabel]
+    y=df[ylabel]
+    plt.scatter(x,y)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)))
+    plt.show()
 
 
-
-def get_gen_summary_from_path(path) -> GenerationSummary:
-    def json_to_instance_generation(instance_dict:dict) -> InstanceGenerations:
-        def json_to_generated_output(generated_output_dict):
-            generated_output=GeneratedOutput(**generated_output_dict)
-            tokens = [Token(**token) for token in generated_output.tokens]
-            generated_output.tokens=tokens
-            return generated_output
-        instance_generation = InstanceGenerations(**instance_dict)
-        examples = [ json_to_generated_output(generated_output_dict) for generated_output_dict in instance_generation.examples]
-        instance_generation.examples=examples
-        return instance_generation
-    # print(f"Getting gen summary from: {path}")
-    with open(path,'r') as json_file:
-        generation_summary_dict=json.load(json_file)
-    generation_summary=GenerationSummary(**generation_summary_dict)
-    instance_generations = [json_to_instance_generation(instance_dict)  for instance_dict in generation_summary.instance_generations ]
-    generation_summary.instance_generations=instance_generations
-
-    generation_summary=clean_generation_summary(generation_summary)
-    return generation_summary
-
-def instance_generation_dict_from_generation_summary(generation_summary:GenerationSummary):
-    instance_generation_dict={}
-    print(f"len(instance_generations) is {len(generation_summary.instance_generations)}")
-    for instance_generation in generation_summary.instance_generations:
-        instance_generation_dict[instance_generation.instance_id]=instance_generation
-    print(f"instance_generation_dict is {instance_generation_dict}")
-    return instance_generation_dict
-
-def get_gen_summary_from_run_folder(run_folder: str):
-    gen_sum_raw_path=f"{run_folder}/generation_summary.json"
-    gen_sum_metric_path=f"{run_folder}/generation_summary_metrics.json"
-    input_path = gen_sum_metric_path if os.path.isfile(gen_sum_metric_path) else gen_sum_raw_path
-    generation_summary=get_gen_summary_from_path(input_path)
-    return generation_summary
-
-
-def truncate_sequence(text:str, all_stops=["<|end_of_text|>"]) -> str:
-    for stop in all_stops:
-        try:
-            text = text[: text.index(stop)]
-        except ValueError:
-            pass
-    return text.strip()
-
-
-
-
-
-
-
-def calculate_dict(root_folder, num_beams_list:List[int], models:List[float], task_names:List[str], suite_name:str, dict_function)->Dict[int, GenerationSummary]:
-    per_model={}
-    for model_idx, model in enumerate(models):        
-        per_task={}
-        for task_idx, task_name in enumerate(task_names):
-            print(f"Calculate_dict task_name is {task_name}, task_names is {task_names}")
-            per_beam={}
-            for num_beams in num_beams_list:
-                run_folder=get_run_folder(root_folder=root_folder, num_beams=num_beams, model=model, task_name=task_name, suite_name=suite_name)
-                print(f"run_folder is {run_folder}")
-                obj=dict_function(run_folder)
-                per_beam[num_beams]=obj
-            per_task[task_idx]=per_beam
-        per_model[model_idx] = per_task
-    return per_model
-
-
-
-def calculate_instance_stats_dict(root_folder, num_beams_list:List[int], models:List[float], task_names:List[str], suite_name:str, instance_metrics:List[str])->Dict[int, List[PerInstanceStats]]:
-    def json_to_run_instance_stats(run_folder, instance_metrics) -> List[PerInstanceStats]:
-        path=run_folder+"/per_instance_stats.json"
-        # print(f"Analyzing path: {path}")
-        if not os.path.isfile(path):
-            return None
-        with open(path,'r') as json_file:
-            list_instance_stats_dicts=json.load(json_file)
-        
-        instance_id_to_stats_dict={}
-        for list_instance_stats_dict in list_instance_stats_dicts:
-            per_instance_stats = PerInstanceStats(**list_instance_stats_dict)
-            stats = [Stat(**stat_dict) for stat_dict in per_instance_stats.stats]
-            per_instance_stats.stats=stats
-            stats_dict={}
-            for stat in per_instance_stats.stats:
-                name = stat.name
-                if name["name"] in instance_metrics and name["split"]=="test" and "perturbation" not in name.keys():
-                    stats_dict[name["name"]]= stat.mean
-            instance_id_to_stats_dict[per_instance_stats.instance_id]=stats_dict
-        return instance_id_to_stats_dict
-    dict_function = lambda run_folder: json_to_run_instance_stats(run_folder=run_folder, instance_metrics=instance_metrics)
-    return calculate_dict(root_folder, num_beams_list, models, task_names, suite_name, dict_function)
-
-
-
-def calculate_instances_dict(root_folder, num_beams_list:List[int], models:List[float], task_names:List[str], suite_name:str):
-    def calculate_instance_dict_from_run_folder(run_folder):
-        gen_summary= get_gen_summary_from_run_folder(run_folder)
-        return instance_generation_dict_from_generation_summary(gen_summary)
-    return calculate_dict(root_folder, num_beams_list, models, task_names, suite_name, calculate_instance_dict_from_run_folder)
-
-
-
-# @classmethod  
-# def get_instance_info(self, root_folder, num_beams_list:List[int], models:List[str], task_name: str, suite_name:str)->Dict[int, GenerationSummary]:
-#     num_beams=num_beams_list[0]
-#     model=models[0]
-#     instance_infos= {}
-#     instance_metrics=[PostMetric.ReferenceMetric()]
-
-#     generation_summary=get_gen_summary(root_folder=root_folder, num_beams=num_beams, model=model, task_name=task_name, suite_name=suite_name)
-#     for instance_generation in generation_summary.instance_generations:
-#         instance_id=instance_generation.instance_id
-#         if instance_id not in instance_infos.keys():
-#             instance_dict={}
-#             for metric in instance_metrics:
-#                 instance_dict=PostMetric.calculate_post_metric(metrics_dict=instance_dict,metric=metric,instance_generation=instance_generation,generated_output=None)
-#             instance_infos[instance_id]=instance_dict
-#     return instance_infos
-
-
-# @classmethod  
-# def get_metrics_df(self, root_folder):
-
-#     try:
-#         metrics_file=f"{root_folder}/metrics_csv.txt"
-#         raw_metric_df = pd.read_csv(metrics_file, header=None)
-#         raw_metric_df.columns=[ "model", "task", "beam_num", "metric", "value"]
-#         raw_metric_df.drop(["task"],axis=1)
-#         metric_df = raw_metric_df.pivot(
-#             index=["model", "beam_num"],
-#             columns="metric",
-#             values="value"
-#         ).reset_index()
-#         metric_df.sort_values("beam_num")
-#         self.metric_df=metric_df
-#         return metric_df
-#     except:
-#         return None
-
-def get_metrics_dict(instance_gen_dict:Dict[int, GenerationSummary], custom_metrics:List[PostMetric.PostMetric], instance_stats_dict):
-    base_metrics=[PostMetric.TextMetric,PostMetric.SentenceLenMetric(),PostMetric.OutputProbMetric(),
-                PostMetric.InstanceIdMetric(), PostMetric.IsCompletionMetric()]
-    metrics=base_metrics+custom_metrics
-    metrics_dicts=[]   
-
-    for model in instance_gen_dict.keys():        
-        for task_name in instance_gen_dict[model].keys():
-            for beam_num in instance_gen_dict[model][task_name].keys():
-
-                instance_stats_per_run = instance_stats_dict[model][task_name][beam_num]
-                
-                for instance_id, instance_generation in instance_gen_dict[model][task_name][beam_num].items():
-                    for idx,generated_output in enumerate(instance_generation.examples):
-                        pd_metrics_dict=generated_output.stats_dict if generated_output.stats_dict  is not None else {} 
-                        
-                        pd_metrics_dict["beam_num"]=beam_num
-                        pd_metrics_dict["task_name"]=task_name
-                        pd_metrics_dict["model"]=model
-                        
-                        #fill out the metrics dict
-                        for metric in metrics:
-                            pd_metrics_dict=PostMetric.calculate_post_metric(pd_metrics_dict,metric,instance_generation,generated_output)
-                        
-
-                        if(idx==0):
-                            pd_metrics_dict["isCompletion"]=(idx==0)
-                            if(instance_generation.instance_id in instance_stats_per_run.keys()):
-                                completion_metrics_dict = instance_stats_per_run[instance_generation.instance_id]
-                                for stat_name, value in completion_metrics_dict.items():
-                                    pd_metrics_dict[stat_name]= value
-                        metrics_dicts.append(pd_metrics_dict)
-    return metrics_dicts
-
-
-class ProcessGens:
-    root_folder:str
-    task_and_beam_num_to_summary:Dict[int, GenerationSummary]
-    metrics_dict:List[Dict[str,any]]
-
-    def __init__(self):
-        pass
-
-    def init(self,root_folder:str, num_beams_list:List[int], models:List[float], custom_metrics:List[PostMetric.PostMetric],task_names:List[str], instance_metrics:Dict[int, Dict[str, Dict[str, float]]]=None, suite_name:str=""):
-        
-        self.root_folder=root_folder
-
-        # #this is the pre-computed metrics
-        # print("get_metrics_df")
-        # self.metrics_df=self.get_metrics_df(root_folder)
-        # print("get_instance_info")
-
-        # #this is th
-        # instance_info=self.get_instance_info(root_folder=root_folder, num_beams_list=num_beams_list, models=models,task_name= task_name,suite_name=suite_name)
-        # self.instance_info=instance_info
-
-        #get the generation summary for each task beam
-        print("calculate_gen_summary_dict")
-        self.instance_gen_dict=calculate_instances_dict(root_folder=root_folder, num_beams_list=num_beams_list, models=models,task_names=task_names, suite_name=suite_name)
-        
-        
-        #get the run instance stats for each task and beam
-        self.instance_stats_dict=calculate_instance_stats_dict(root_folder=root_folder, num_beams_list=num_beams_list, models=models, task_names=task_names, suite_name=suite_name, instance_metrics=instance_metrics)
-        
-        print("get_metrics_dict")
-        self.metrics_dicts=get_metrics_dict(instance_gen_dict=self.instance_gen_dict, custom_metrics=custom_metrics, instance_stats_dict=self.instance_stats_dict)
-
-    def iterate_through_instances(processGens, instance_func, n_instances=10):
-
-        instance_generation_dict=processGens.instance_stats_dict
-        instance_stats_dict=processGens.instance_stats_dict
-        for model in instance_generation_dict.keys():        
-            for task_name in instance_generation_dict[model].keys():
-                for beam_num in instance_generation_dict[model][task_name].keys():
-                    for instance_id, instance_generation in instance_generation_dict[model][task_name][beam_num]:
-                        print("instance_id is ",instance_id)
-                        instance_stats = instance_stats_dict[model][task_name][beam_num]
-                        instance_func(generation_summary=instance_generation, instance_stats=instance_stats, model=model, task_name=task_name, beam_num=beam_num)
-
-    def iterate_through_examples(self, example_func):
-        def instance_func(instance_generation, instance_stats, model, task_name, beam_num):
-            [example_func(example) for example in instance_generation.examples]
-        self.iterate_through_instances(instance_func)
-    
