@@ -173,7 +173,7 @@ def themis_eval(generation_summary):
     args = Namespace(
         test_dir="",
         output_dir="",
-        max_num_seqs=1024,
+        max_num_seqs=1024*4,
         max_new_tokens=2048,
         model="PKU-ONELab/Themis",
         temperature=0,

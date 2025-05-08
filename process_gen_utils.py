@@ -126,7 +126,7 @@ def beam_diff_check():
                     print(f"Match! Beam2: {p1} vs {p2} is {diff}, {instance_idx} {idx2}, {idx128}")
                     assert(diff<0.1)
 
-def get_dfs(processGens, eval_instances, num_beams_list):
+def get_dfs(processGens, num_beams_list):
     examples_df = pd.DataFrame(processGens.metrics_dicts)
     completions_df=examples_df.loc[examples_df['isCompletion'] == True]
 
@@ -134,9 +134,6 @@ def get_dfs(processGens, eval_instances, num_beams_list):
     print(f"Num examples: {examples_df.shape[0]}")
     print(f"Num completions: {completions_df.shape[0]}")
 
-    if(eval_instances):
-        # assert sum(num_beams_list)*eval_instances==examples_df.shape[0]
-        assert len(num_beams_list)*eval_instances==completions_df.shape[0]
     return examples_df, completions_df
 
 
@@ -169,4 +166,85 @@ def plot_keys(df, xlabel, ylabel):
     plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)))
     plt.show()
 
+
+
+
+
+def iterate_through_instances(processGens, instance_func, n_instances=10):
+
+    instances_dict=processGens.instances_dict
+    instance_stats_dict=processGens.instance_stats_dict
+    return_list=[]
+    for model in instances_dict.keys():        
+        for task_name in instances_dict[model].keys():
+            for beam_num in instances_dict[model][task_name].keys():
+                for instance_id, instance_generation in instances_dict[model][task_name][beam_num].items():
+                    instance_stats = instance_stats_dict[model][task_name][beam_num]
+                    obj=instance_func(instance_generation=instance_generation, instance_stats=instance_stats, model=model, task_name=task_name, beam_num=beam_num)
+                    return_list.append(obj)
+
+
+import math
+
+
+
+
+
+
+#------------------------------------ Analyze Completion Instruction------------------------------------
+
+@dataclass(frozen=False)
+class SimplifiedCompletion:
+    rating:str
+    completion:str
+    evaluation:str
+
+@dataclass(frozen=False)
+class BeamOutputsPerInstance:
+    instance_id:int
+    reference:str
+    prompt:str
+    simplifiedCompletions:Dict[str,SimplifiedCompletion]
+
+
+
+from helm.common.general import ensure_directory_exists, write, asdict_without_nones
+
+
+def analyze_completion_by_beam(processGens:ProcessGens, num_instances:int=20):
+    instances_dict=processGens.instances_dict
+    
+
+    # model, task, beam_num
+    indexed_by_model={}
+    counter=0
+    for model_num,model in enumerate(models):
+        indexed_by_task={}
+        for task_num, task_name in enumerate(task_names):
+            
+            task_ids = list(instances_dict[0][task_num][num_beams_list[0]].keys())
+            indexed_by_id={}
+            for id in task_ids:
+                simplifiedCompletions={}
+                instance_id=None
+                reference=None
+                prompt=None
+                for beam_num in num_beams_list:
+                    instance_generation=instances_dict[model_num][task_num][beam_num][id]
+                    if(counter<1):
+                        # print(instance_generation.stats_dict)
+                        counter+=1
+                    rating = instance_generation.stats_dict["example_themis"] if instance_generation.stats_dict else -1
+                    simplifiedCompletion= SimplifiedCompletion(completion=instance_generation.completion, evaluation=instance_generation.evaluation, rating=rating)
+                    simplifiedCompletions[beam_num]=simplifiedCompletion
+                    instance_id=instance_generation.instance_id
+                    reference=instance_generation.reference
+                    prompt=instance_generation.prompt
+                beamOutputsPerInstance = BeamOutputsPerInstance(instance_id=instance_id, prompt=prompt, reference=reference, simplifiedCompletions=simplifiedCompletions)
+                beamOutputsPerInstanceDict= asdict_without_nones(beamOutputsPerInstance)
+                indexed_by_id[id]=beamOutputsPerInstanceDict
+            indexed_by_task[task_name]=indexed_by_id
+        indexed_by_model[model]=indexed_by_task
+    return indexed_by_model
+# data=analyze_completion_by_beam(processGens=processGens, num_instances=1)
 
