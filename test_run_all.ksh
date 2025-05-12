@@ -49,7 +49,9 @@ echo NUM_BEAMS_LIST is $NUM_BEAMS_LIST
 echo EVAL_INSTANCES is $EVAL_INSTANCES
 echo DISABLE_CACHE is $DISABLE_CACHE
 
-if [ "$#" -lt 5 ]; then
+
+if [ "$#" -ne 6 ]; then
+    echo params is "$#"
     echo "Usage: $0 <TASK> <MODEL> <NUM_BEAMS_LIST> <EVAL_INSTANCES> <NUM_THREADS>"
     exit 1
 fi

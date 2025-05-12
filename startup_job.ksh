@@ -6,7 +6,8 @@ NUM_BEAMS_LIST=$3
 EVAL_INSTANCES=$4
 NUM_THREADS=$5
 
-if [ "$#" -lt 6 ]; then
+
+if [ "$#" -ne 6 ]; then
     echo "startup job Usage: $0 <TASK> <MODEL> <NUM_BEAMS_LIST> <EVAL_INSTANCES> <NUM_THREADS>"
     exit 1
 fi
