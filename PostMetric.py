@@ -155,6 +155,8 @@ class IsCompletionMetric(PostMetric):
         # return generated_output.text == instance_generation.completion 
     
 ############################ Special Example Metrics ############################
+
+            ######  WMT ######
 from helm.benchmark.metrics.evaluate_reference_metrics import bleu_4, bleu_1
 
 class BLEU4_METRIC(PostMetric):
@@ -173,6 +175,21 @@ class BLEU1_METRIC(PostMetric):
     @classmethod
     def calculate_metric(self,instance_generation:InstanceGenerations,generated_output:GeneratedOutput) -> float:
         return bleu_1(generated_output.text, instance_generation.reference)     
+
+# ./helm/benchmark/metrics/evaluate_reference_metrics.py
+from helm.benchmark.metrics.evaluate_reference_metrics import exact_match_indicator, final_number_exact_match
+
+# final_number_exact_match(gold: str, pred: str)
+# exact_match_indicator(gold: str, pred: str, indicator: str = " ")
+            ######  GSM ######
+class EXAMPLE_FINAL_NUM_EXACT_MATCH_METRIC(PostMetric):
+    @classmethod
+    def name(cls)->str:
+        return "final_num_exact_match"
+    @classmethod
+    def calculate_metric(self,instance_generation:InstanceGenerations,generated_output:GeneratedOutput) -> float:
+        return bleu_1(generated_output.text, instance_generation.reference)  
+        return final_number_exact_match(gold=instance_generation.reference,pred=generated_output.text )   
 
 
 ############################ INSTANCE METRICS ############################

@@ -163,7 +163,11 @@ def plot_keys(df, xlabel, ylabel):
     plt.scatter(x,y)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)))
+    try:
+        plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)))
+    except:
+        pass
+    
     plt.show()
 
 

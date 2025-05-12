@@ -14,6 +14,25 @@ from helm.benchmark.augmentations.perturbation_description import (
     PerturbationDescription)
 from dataclasses import dataclass
 import os
+import re
+
+def fix_example_themis(completionExample):
+    
+    if(completionExample.stats_dict and "example_themis" in completionExample.stats_dict.keys()):
+        def parse(evaluation):
+         
+            match = re.search(r'\brating\s*:\s*([1-5])\b', evaluation, re.IGNORECASE)
+
+            if match:
+                rating = int(match.group(1))
+                return rating
+            else:
+                return -1
+        rating = parse(completionExample.evaluation)
+        rating = rating if rating is not None else -1
+        completionExample.stats_dict["example_themis"]=rating
+    return completionExample
+
 
 
 def get_process_gen_params(test_name):
@@ -25,8 +44,9 @@ def get_process_gen_params(test_name):
             instance_metrics=["comet"]
         elif(mode=="gsm"):
             task_names=["gsm_"]
-            instance_metrics=["exact_match_indicator","final_number_exact_match"]
-            custom_metrics=[]
+            custom_metrics=[PostMetric.EXAMPLE_FINAL_NUM_EXACT_MATCH_METRIC()]
+            instance_metrics=[]
+            # instance_metrics=["exact_match_indicator","final_number_exact_match"]
         elif(mode=="instruct"):
             print("\n\n----------------\n NOTE: ONLY PRINTING 4 tasks ----------------\n")
             # task_names=["open_assistant:language=en,num_respondents=1,","self_instruct:num_respondents=1,"]
@@ -50,6 +70,12 @@ def get_process_gen_params(test_name):
         mode = "wmt"
         # suite_name="sample_return_20_eval_500"
         suite_name="sample_return_100_eval_100"
+        num_beams_list=[1]
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    elif(test_name=="llama_gsm_sample"):
+        mode = "gsm"
+        suite_name="sample_100_eval_100"
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
         
@@ -144,7 +170,9 @@ def clean_generation_summary(generationSummary:GenerationSummary)->GenerationSum
     def clean_instance_generation(instanceGenerations:InstanceGenerations)->InstanceGenerations:
         def clean_generated_output(generatedOutput:GeneratedOutput)-> GeneratedOutput:
             generatedOutput.text=truncate_sequence(generatedOutput.text)
+            generatedOutput=fix_example_themis(generatedOutput)
             return generatedOutput
+        print(f"examples len is {len(instanceGenerations.examples)}")
         instanceGenerations.examples=[clean_generated_output(generatedOutput=example) for example in instanceGenerations.examples]
         instanceGenerations.examples.sort(key=lambda x:float(x.logprob),reverse=True)
         completion=instanceGenerations.examples[0]
@@ -159,6 +187,7 @@ def clean_generation_summary(generationSummary:GenerationSummary)->GenerationSum
 
 
 def get_gen_summary_from_path(path) -> GenerationSummary:
+    print(f"path is {path}")
     def json_to_instance_generation(instance_dict:dict) -> InstanceGenerations:
         def json_to_generated_output(generated_output_dict):
             generated_output=GeneratedOutput(**generated_output_dict)
@@ -248,6 +277,7 @@ def calculate_instances_dict(init_dict, root_folder, num_beams_list:List[int], m
         return instance_dict
     return calculate_dict(init_dict,root_folder, num_beams_list, models, task_names, suite_name,get_instance_dict_from_run_folder )
 
+
 def get_metrics_dict(instances_dict:Dict[int, GenerationSummary], custom_metrics:List[PostMetric.PostMetric], instance_stats_dict):
 
     base_metrics=[PostMetric.TextMetric,PostMetric.SentenceLenMetric(),PostMetric.OutputProbMetric(),
@@ -329,7 +359,9 @@ class ProcessGens:
     # task_and_beam_num_to_summary:Dict[int, GenerationSummary]
     instances_dict={}
     instance_stats_dict={}
-    metrics_dict:List[Dict[str,any]]
+    metrics_dict:List[Dict[str,any]]=[]
+    first_run_instances={}
+
 
     def __init__(self):
         self.instances_dict={}
