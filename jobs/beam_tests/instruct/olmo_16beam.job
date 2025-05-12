@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#SBATCH --job-name=beam16_instruct
+#SBATCH --partition=gpu_h100
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=02:59:00
+#SBATCH --output=outputs/instruction_16beam_13B_%A.out
+
+#MODEL=meta-llama/Llama-3.1-8B-Instruct
+export MODEL=allenai/OLMo-2-1124-13B-Instruct
+export NUM_BEAMS_LIST=16
+export NUM_THREADS=1
+export NUM_RETURN_SEQUENCES=1
+
+
+export EVAL_INSTANCES=100
+export TASK=instruct
+export DISABLE_CACHE=false
+
+#export SUITE=full_instruct_${NUM_BEAMS_LIST}_beams_${EVAL_INSTANCES}_evals
+export SUITE=full_instruct_${NUM_RETURN_SEQUENCES}_samples_${EVAL_INSTANCES}_evals
+./startup_job.ksh $TASK $MODEL $NUM_BEAMS_LIST $EVAL_INSTANCES $NUM_THREADS $SUITE

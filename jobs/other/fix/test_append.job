@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#SBATCH --job-name=fix_append
+#SBATCH --partition=gpu_h100
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=03:00:00
+#SBATCH --output=outputs/fix_append_%A.out
+
+. ./setup_env.ksh
+
+
+python append_snellius_metrics.py --num_beams 2 --model allenai/OLMo-2-1124-13B-Instruct --eval_instances 100 --task_name koala:num_respondents=1, --run_path helm_output/full_instruct_1_samples_100_evals/koala_num_respondents_1_/allenai_OLMo_2_1124_13B_Instruct/2_beams/runs/full_instruct_1_samples_100_evals --metric_name example_themis
+
+#python append_snellius_metrics.py --num_beams 4 --model allenai/OLMo-2-1124-13B-Instruct --eval_instances 100 --task_name koala:num_respondents=1, --run_path helm_output/full_instruct_1_samples_100_evals/koala_num_respondents_1_/allenai_OLMo_2_1124_13B_Instruct/4_beams/runs/full_instruct_1_samples_100_evals --metric_name example_themis
+
+
+#python append_snellius_metrics.py --num_beams 4 --model allenai/OLMo-2-1124-13B-Instruct --eval_instances 100 --task_name anthropic_hh_rlhf:subset=hh,num_respondents=1, --run_path helm_output/full_instruct_1_samples_100_evals/anthropic_hh_rlhf_subset_hh_num_respondents_1_/allenai_OLMo_2_1124_13B_Instruct/4_beams/runs/full_instruct_1_samples_100_evals --metric_name example_themis
+
+
+
+#python append_snellius_metrics.py --num_beams 8 --model allenai/OLMo-2-1124-13B-Instruct --eval_instances 100 --task_name koala:num_respondents=1, --run_path helm_output/full_instruct_1_samples_100_evals/koala_num_respondents_1_/allenai_OLMo_2_1124_13B_Instruct/8_beams/runs/full_instruct_1_samples_100_evals --metric_name example_themis
+
+
+
+#python append_snellius_metrics.py --num_beams 8 --model allenai/OLMo-2-1124-13B-Instruct --eval_instances 100 --task_name anthropic_hh_rlhf:subset=red_team,num_respondents=1, --run_path helm_output/full_instruct_1_samples_100_evals/anthropic_hh_rlhf_subset_red_team_num_respondents_1_/allenai_OLMo_2_1124_13B_Instruct/8_beams/runs/full_instruct_1_samples_100_evals --metric_name example_themis
+
+#------------------------------------------------------------------------------
+#python append_snellius_metrics.py --num_beams 8 --model allenai/OLMo-2-1124-13B-Instruct --eval_instances 100 --task_name vicuna:num_respondents=1, --run_path helm_output/full_instruct_1_samples_100_evals/vicuna_num_respondents_1_/allenai_OLMo_2_1124_13B_Instruct/8_beams/runs/full_instruct_1_samples_100_evals --metric_name example_themis
+#python append_snellius_metrics.py --num_beams 8 --model allenai/OLMo-2-1124-13B-Instruct --eval_instances 100 --task_name self_instruct:num_respondents=1, --run_path helm_output/full_instruct_1_samples_100_evals/self_instruct_num_respondents_1_/allenai_OLMo_2_1124_13B_Instruct/8_beams/runs/full_instruct_1_samples_100_evals --metric_name example_themis
+
+
+
+#python append_snellius_metrics.py --num_beams 8 --model allenai/OLMo-2-1124-13B-Instruct --eval_instances 100 --task_name grammar:path=src/helm/benchmark/scenarios/best_chatgpt_prompts.yaml,tags=,num_respondents=1, --run_path helm_output/full_instruct_1_samples_100_evals/grammar_path_src_helm_benchmark_scenarios_best_chatgpt_prompts.yaml_tags_num_respondents_1_/allenai_OLMo_2_1124_13B_Instruct/8_beams/runs/full_instruct_1_samples_100_evals --metric_name example_themis
+

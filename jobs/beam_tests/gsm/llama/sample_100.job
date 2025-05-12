@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#SBATCH --job-name=gsm_sample_test
+#SBATCH --partition=gpu_h100
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=03:00:00
+#SBATCH --output=outputs/gsm_sampletest_%A.out
+
+MODEL=meta-llama/Llama-3.1-8B-Instruct
+NUM_BEAMS_LIST=1
+NUM_RETURN_SEQUENCES=100
+EVAL_INSTANCES=100
+NUM_THREADS=4
+TASK=gsm
+SUITE=sample_${NUM_RETURN_SEQUENCES}_eval_${EVAL_INSTANCES}
+./startup_job.ksh $TASK $MODEL $NUM_BEAMS_LIST $EVAL_INSTANCES $NUM_THREADS $SUITE

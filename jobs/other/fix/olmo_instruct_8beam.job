@@ -1,0 +1,29 @@
+#!/bin/bash
+
+#SBATCH --job-name=beam8_instruct
+#SBATCH --partition=gpu_h100
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=4
+#SBATCH --cpus-per-task=32
+#SBATCH --time=01:00:00
+#SBATCH --output=outputs/instruction_8beam_13B_%A.out
+
+#MODEL=meta-llama/Llama-3.1-8B-Instruct
+export MODEL=allenai/OLMo-2-1124-13B-Instruct
+export NUM_BEAMS_LIST=8
+export NUM_THREADS=1
+export NUM_RETURN_SEQUENCES=1
+
+
+export EVAL_INSTANCES=100
+export TASK=8beam_fix_instruct
+export DISABLE_CACHE=false
+
+
+
+export TASK_NAMES=""
+export TASK_NAMES="${TASK_NAMES} koala:num_respondents=1,"
+
+export SUITE=full_instruct_${NUM_RETURN_SEQUENCES}_samples_${EVAL_INSTANCES}_evals
+./startup_job.ksh $TASK $MODEL $NUM_BEAMS_LIST $EVAL_INSTANCES $NUM_THREADS $SUITE
