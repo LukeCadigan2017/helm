@@ -4,6 +4,7 @@ source ~/miniconda3/bin/activate
 conda activate crfm-helm2 
 
 source hf.env
+export HF_HOME=/scratch-local/lcadigan/cache/huggingface
 huggingface-cli login --token $HF_TOKEN --add-to-git-credential
 
 
