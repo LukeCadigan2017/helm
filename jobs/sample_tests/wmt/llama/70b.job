@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#SBATCH --job-name=wmt_sample_test
+#SBATCH --partition=gpu_h100
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=03:00:00
+#SBATCH --output=outputs/wmt_sample_%A.out
+
+MODEL=meta-llama/Meta-Llama-3-70B-Instruct
+EVAL_INSTANCES=1000
+
+NUM_BEAMS_LIST=1
+NUM_RETURN_SEQUENCES=10
+NUM_THREADS=4
+TASK=wmt
+export DISABLE_CACHE=true
+export SNELLIUS_METRICS=example_comet
+
+echo ./startup_job.ksh $TASK $MODEL $NUM_BEAMS_LIST $EVAL_INSTANCES $NUM_THREADS $NUM_RETURN_SEQUENCES
+./startup_job.ksh $TASK $MODEL $NUM_BEAMS_LIST $EVAL_INSTANCES $NUM_THREADS $NUM_RETURN_SEQUENCES

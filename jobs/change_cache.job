@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#SBATCH --job-name=move_cache
+#SBATCH --partition=gpu_h100
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=00:05:00
+#SBATCH --output=outputs/move_cache_%A.out
+
+
+mv /home/lcadigan/.cache/huggingface /scratch-local/lcadigan/cache/huggingface/
