@@ -78,3 +78,5 @@ test2.py
 test.ksh
 local.env
 setup_env.ksh
+local_test.ksh
+local_test.ksh

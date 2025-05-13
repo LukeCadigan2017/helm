@@ -65,6 +65,33 @@ model_deployments:
       args: 
         pretrained_model_name_or_path: allenai/OLMo-2-1124-13B-Instruct
 
+  - name: allenai/OLMo-2-0425-1B-Instruct
+    model_name: allenai/OLMo-2-0425-1B-Instruct
+    tokenizer_name: allenai/OLMo-2-0425-1B-Instruct
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: allenai/OLMo-2-0425-1B-Instruct
+
+  - name: allenai/OLMo-2-0325-32B-Instruct
+    model_name: allenai/OLMo-2-0325-32B-Instruct
+    tokenizer_name: allenai/OLMo-2-0325-32B-Instruct
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: allenai/OLMo-2-0325-32B-Instruct
+
+  - name: allenai/OLMo-2-1124-7B-Instruct
+    model_name: allenai/OLMo-2-1124-7B-Instruct
+    tokenizer_name: allenai/OLMo-2-1124-7B-Instruct
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-7B-Instruct
+
   ######################### T5 #########################
   - name:  distilbert/distilgpt2
     model_name:  distilbert/distilgpt2

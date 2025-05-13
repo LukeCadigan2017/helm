@@ -47,7 +47,15 @@ echo TASK_ENV is $TASK_ENV
 echo MODEL is $MODEL
 echo NUM_BEAMS_LIST is $NUM_BEAMS_LIST
 echo EVAL_INSTANCES is $EVAL_INSTANCES
+echo NUM_RETURN_SEQUENCES is $NUM_RETURN_SEQUENCES
 echo DISABLE_CACHE is $DISABLE_CACHE
+echo "$# is $#"
+
+
+if ! ([ $NUM_RETURN_SEQUENCES -ge 0 ] || [ $NUM_RETURN_SEQUENCES -lt 0 ]); then
+    echo "Please pass an integer but not a string for evaluation."
+    exit 1
+fi 2>/dev/null
 
 
 if [ "$#" -ne 6 ]; then

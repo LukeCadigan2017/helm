@@ -75,7 +75,7 @@ def get_process_gen_params(test_name):
 
     elif(test_name=="llama_gsm_sample"):
         mode = "gsm"
-        suite_name="sample_100_eval_100"
+        suite_name="sample_10_eval_1000"
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
         
@@ -172,7 +172,7 @@ def clean_generation_summary(generationSummary:GenerationSummary)->GenerationSum
             generatedOutput.text=truncate_sequence(generatedOutput.text)
             generatedOutput=fix_example_themis(generatedOutput)
             return generatedOutput
-        print(f"examples len is {len(instanceGenerations.examples)}")
+        # print(f"examples len is {len(instanceGenerations.examples)}")
         instanceGenerations.examples=[clean_generated_output(generatedOutput=example) for example in instanceGenerations.examples]
         instanceGenerations.examples.sort(key=lambda x:float(x.logprob),reverse=True)
         completion=instanceGenerations.examples[0]

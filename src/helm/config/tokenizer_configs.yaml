@@ -43,6 +43,30 @@ tokenizer_configs:
     prefix_token: "<|endoftext|>"
     end_of_text_token: "<|endoftext|>"
 
+  - name: allenai/OLMo-2-0425-1B-Instruct 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: allenai/OLMo-2-0425-1B-Instruct
+    end_of_text_token: "<|endoftext|>"
+    prefix_token: "<|endoftext|>" 
+
+  - name: allenai/OLMo-2-0325-32B-Instruct 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: allenai/OLMo-2-0325-32B-Instruct
+    end_of_text_token: "<|endoftext|>"
+    prefix_token: "<|endoftext|>" 
+
+  - name: allenai/OLMo-2-1124-7B-Instruct 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-7B-Instruct
+    end_of_text_token: "<|endoftext|>"
+    prefix_token: "<|endoftext|>"
+
 
   ######################### T5 #########################
   - name:  distilbert/distilgpt2

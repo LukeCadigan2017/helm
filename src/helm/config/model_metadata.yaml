@@ -67,6 +67,14 @@ models:
     access: open
     release_date: 2024-05-13
     tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG, INSTRUCTION_FOLLOWING_MODEL_TAG]
+  
+  - name: PKU-ONELab/Themis
+    display_name: PKU-ONELab/Themis
+    description: PKU-ONELab/Themis
+    creator_organization_name: PKU-ONELab/Themis
+    access: open
+    release_date: 2019-05-14
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG,INSTRUCTION_FOLLOWING_MODEL_TAG]
 
 
   ######################### Olmo ######################### 
@@ -78,13 +86,36 @@ models:
     release_date: 2019-05-14
     tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG,INSTRUCTION_FOLLOWING_MODEL_TAG]
 
-  - name: PKU-ONELab/Themis
-    display_name: PKU-ONELab/Themis
-    description: PKU-ONELab/Themis
-    creator_organization_name: PKU-ONELab/Themis
+  - name: allenai/OLMo-2-0425-1B-Instruct
+    display_name: OLMo-2-0425-1B-Instruct
+    description: OLMo-2-0425-1B-Instruct
+    creator_organization_name: allenai
     access: open
-    release_date: 2019-05-14
-    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG,INSTRUCTION_FOLLOWING_MODEL_TAG]
+    release_date: 2024-05-13
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG, INSTRUCTION_FOLLOWING_MODEL_TAG]
+
+  - name: allenai/OLMo-2-0325-32B-Instruct
+    display_name: OLMo-2-0325-32B-Instruct
+    description: OLMo-2-0325-32B-Instruct
+    creator_organization_name: allenai
+    access: open
+    release_date: 2024-05-13
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG, INSTRUCTION_FOLLOWING_MODEL_TAG]
+
+  - name: allenai/OLMo-2-1124-7B-Instruct
+    display_name: OLMo-2-1124-7B-Instruct
+    description: OLMo-2-1124-7B-Instruct
+    creator_organization_name: allenai
+    access: open
+    release_date: 2024-05-13
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG, INSTRUCTION_FOLLOWING_MODEL_TAG]
+
+
+
+
+
+
+
 
 
   ######################### T5 #########################

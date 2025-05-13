@@ -2,6 +2,7 @@ import argparse
 from dataclasses import replace
 import os
 import re
+import torch
 from typing import List, Optional
 
 
@@ -333,6 +334,8 @@ def main():
     auth: Authentication = (
         Authentication("") if args.skip_instances or not args.server_url else create_authentication(args)
     )
+
+    torch.set_float32_matmul_precision('medium')
 
     run_benchmarking(
         run_specs=run_specs,
