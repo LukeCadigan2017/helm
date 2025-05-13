@@ -47,8 +47,13 @@ model_tuples=[]
 
 # for model_ext in ["OLMo-2-0425-1B-Instruct","OLMo-2-0325-32B-Instruct", "OLMo-2-1124-7B-Instruct"]:
 #   model_tuples.append( ( "allenai", model_ext) )
-for model_ext in ["Meta-Llama-3-70B-Instruct"]:
-  model_tuples.append(("meta-llama", model_ext))
+
+
+for model_ext in ["OLMo-2-1124-7B-RM", "OLMo-2-1124-13B-RM"]:
+  model_tuples.append( ( "allenai", model_ext) )
+
+# for model_ext in ["Meta-Llama-3-70B-Instruct"]:
+#   model_tuples.append(("meta-llama", model_ext))
 
 
 deploy_strs = []

@@ -86,14 +86,6 @@ models:
 
 
   ######################### Olmo ######################### 
-  - name: allenai/OLMo-2-1124-13B-Instruct
-    display_name: OLMo 13B
-    description: Olmo
-    creator_organization_name: allenai
-    access: open
-    release_date: 2019-05-14
-    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG,INSTRUCTION_FOLLOWING_MODEL_TAG]
-
   - name: allenai/OLMo-2-0425-1B-Instruct
     display_name: OLMo-2-0425-1B-Instruct
     description: OLMo-2-0425-1B-Instruct
@@ -101,6 +93,25 @@ models:
     access: open
     release_date: 2024-05-13
     tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG, INSTRUCTION_FOLLOWING_MODEL_TAG]
+
+
+
+  - name: allenai/OLMo-2-1124-7B-Instruct
+    display_name: OLMo-2-1124-7B-Instruct
+    description: OLMo-2-1124-7B-Instruct
+    creator_organization_name: allenai
+    access: open
+    release_date: 2024-05-13
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG, INSTRUCTION_FOLLOWING_MODEL_TAG]
+
+
+  - name: allenai/OLMo-2-1124-13B-Instruct
+    display_name: OLMo 13B
+    description: Olmo
+    creator_organization_name: allenai
+    access: open
+    release_date: 2019-05-14
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG,INSTRUCTION_FOLLOWING_MODEL_TAG]
 
   - name: allenai/OLMo-2-0325-32B-Instruct
     display_name: OLMo-2-0325-32B-Instruct
@@ -110,9 +121,20 @@ models:
     release_date: 2024-05-13
     tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG, INSTRUCTION_FOLLOWING_MODEL_TAG]
 
-  - name: allenai/OLMo-2-1124-7B-Instruct
-    display_name: OLMo-2-1124-7B-Instruct
-    description: OLMo-2-1124-7B-Instruct
+
+        ### OLMO RM ###
+
+  - name: allenai/OLMo-2-1124-7B-RM
+    display_name: OLMo-2-1124-7B-RM
+    description: OLMo-2-1124-7B-RM
+    creator_organization_name: allenai
+    access: open
+    release_date: 2024-05-13
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG, INSTRUCTION_FOLLOWING_MODEL_TAG]
+
+  - name: allenai/OLMo-2-1124-13B-RM
+    display_name: OLMo-2-1124-13B-RM
+    description: OLMo-2-1124-13B-RM
     creator_organization_name: allenai
     access: open
     release_date: 2024-05-13
