@@ -22,9 +22,9 @@ for file in files:
     new_path=new_path.replace('/gsm/', '/gsm_/')
 
     if not os.path.isfile(new_path):
-        print(new_path)
-        # new_dir=os.path.dirname(new_path)
-        # Path(new_dir).mkdir(parents=True, exist_ok=True)
-        # shutil.copyfile(src, new_path)
+        # print(new_path)
+        new_dir=os.path.dirname(new_path)
+        Path(new_dir).mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, new_path)
 
 
