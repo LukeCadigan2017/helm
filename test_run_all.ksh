@@ -37,12 +37,15 @@ NUM_RETURN_SEQUENCES=$6
 #defaults
 #NUM_RETURN_SEQUENCES="${NUM_RETURN_SEQUENCES:=1}"
 DISABLE_CACHE="${DISABLE_CACHE:=true}"
+RUN_MODEL="${RUN_MODEL:=true}"
 # POST_INSTANCE_METRICS="${POST_INSTANCE_METRICS:=no_metrics}"
 # POST_EXAMPLE_METRICS="${POST_EXAMPLE_METRICS:=no_metrics}"
 
 #<TASK> <MODEL> <NUM_BEAMS_LIST> <EVAL_INSTANCES> <NUM_THREADS> <SUITE>
-SUITE=sample_${NUM_RETURN_SEQUENCES}_eval_${EVAL_INSTANCES}
+DEFAULT_SUITE=sample_${NUM_RETURN_SEQUENCES}_eval_${EVAL_INSTANCES}
+SUITE="${SUITE:=$DEFAULT_SUITE}"
 
+echo SUITE IS $SUITE
 echo TASK_ENV is $TASK_ENV
 echo MODEL is $MODEL
 echo NUM_BEAMS_LIST is $NUM_BEAMS_LIST
@@ -50,6 +53,7 @@ echo EVAL_INSTANCES is $EVAL_INSTANCES
 echo NUM_RETURN_SEQUENCES is $NUM_RETURN_SEQUENCES
 echo DISABLE_CACHE is $DISABLE_CACHE
 echo SNELLIUS_METRICS is $SNELLIUS_METRICS
+echo RUN_MODEL is $RUN_MODEL
 echo "$# is $#"
 
 
@@ -71,7 +75,8 @@ echo TASK_NAMES IS $TASK_NAMES
 
 
 # cat ./test_run_all.ksh
-HELM_OUTPUT_DIR=helm_output
+
+HELM_OUTPUT_DIR="${HELM_OUTPUT_DIR:=helm_output}"
 SUITE_OUTPUT_DIR=${HELM_OUTPUT_DIR}/${SUITE}
 mkdir -p $SUITE_OUTPUT_DIR
 OUTPUT_CSV=$SUITE_OUTPUT_DIR/metrics_csv.txt
@@ -115,25 +120,22 @@ for TASK_NAME in $TASK_NAMES; do
         mkdir -p $OUTPUT_PATH
         RUN_PATH=${OUTPUT_PATH}/runs/$SUITE
         STATS_FILE=${RUN_PATH}/stats.json
+        
+        if [ "$RUN_MODEL" = true ] ; then
+            echo helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
+                -o $OUTPUT_PATH --suite $SUITE --num-threads $NUM_THREADS
 
-        echo helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
-            -o $OUTPUT_PATH --suite $SUITE --num-threads $NUM_THREADS
-
-        if [ "$DISABLE_CACHE" = true ] ; then
-            echo "Disable cache"
-            helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
-                -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS --disable-cache
-        else
-            echo "Do not disable cache"
-            helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
-                -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS 
+            if [ "$DISABLE_CACHE" = true ] ; then
+                echo "Disable cache"
+                helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
+                    -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS --disable-cache
+            else
+                echo "Do not disable cache"
+                helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
+                    -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS 
+            fi
         fi
 
-
-        
-        
-        
-        
         echo STATS_FILE is $STATS_FILE
 
         #process default stats

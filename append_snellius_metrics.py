@@ -4,7 +4,7 @@ import argparse
 
 parser = argparse.ArgumentParser("simple_example")
 from helm.benchmark.runner import InstanceGenerations,GenerationSummary
-from process_gens import  get_gen_summary_from_path
+from process_gens import  get_gen_summary_from_path, assert_dir_exists
 
 from PostMetric import calculate_post_metric, get_post_metrics
 from helm.common.general import ensure_directory_exists, write, asdict_without_nones
@@ -70,6 +70,7 @@ if __name__=="__main__":
     metric_name = args.metric_name
 
     #set up
+    assert_dir_exists(run_path)
     gen_sum_raw_path=f"{run_path}/generation_summary.json"
     gen_sum_metric_path=f"{run_path}/generation_summary_metrics.json"
     input_path = gen_sum_metric_path if os.path.isfile(gen_sum_metric_path) else gen_sum_raw_path
