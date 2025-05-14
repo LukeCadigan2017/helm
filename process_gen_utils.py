@@ -23,6 +23,9 @@ from dataclasses import dataclass
 from process_gens import ProcessGens
 
 
+import warnings
+
+
 from typing import List
 
 def get_text(example):
@@ -157,12 +160,15 @@ def compare_beams_by_metric(analysis_df,compare_metric,compare_beams, compare_fu
 
 
 
-def plot_keys(df, xlabel, ylabel):
+def plot_keys(df, xlabel, ylabel, title=None):
     x=df[xlabel]
     y=df[ylabel]
     plt.scatter(x,y)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
+    if(title):
+        plt.title(title)
+
     try:
         plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)))
     except:
@@ -250,5 +256,61 @@ def analyze_completion_by_beam(processGens:ProcessGens, num_instances:int=20):
             indexed_by_task[task_name]=indexed_by_id
         indexed_by_model[model]=indexed_by_task
     return indexed_by_model
-# data=analyze_completion_by_beam(processGens=processGens, num_instances=1)
 
+
+def plot_grouped(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None"):
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+    if(groupby=="bins"):
+        
+        df["bins"]=pd.qcut(df[xlabel],20)
+    
+    grouped = df.groupby(groupby)[[xlabel, ylabel]].agg(['mean', 'count', 'std'])
+    
+
+
+    x = grouped[(xlabel, 'mean')]
+    y = grouped[(ylabel, 'mean')]
+    yerr = grouped[(ylabel, 'std')]
+
+    yerr=[]
+    for i in grouped.index:
+        # print(grouped.loc[i][ylabel])
+        _, c, s = grouped.loc[i][ylabel]
+        yerr.append(1.96*s/math.sqrt(c))
+
+    # Plot with error bars (standard deviation)
+    plt.errorbar(x, y, yerr=yerr, fmt='o', ecolor='gray', capsize=3, label='Data with std dev')
+
+    # plt.scatter(x,y)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+
+    if(title):
+        plt.title(title)
+
+    if(trend_line=="None"):
+        pass
+    elif(trend_line=="linear"):
+        try:
+            plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)))
+        except:
+            pass
+    else: 
+        raise Exception("Plot_keys errors: did not recognize trend_line type")
+    
+    plt.show()
+
+def plot_all(dfs_by_model, compare_metric):
+    for model_name, filtered_dfs in dfs_by_model.items():
+        # plot by rank within sentence
+        plot_grouped(df=filtered_df, xlabel="output_logprob", ylabel=compare_metric, title=f"{model_name} by rank within sentence")
+
+        # plot 
+        plot_keys(df=examples_df, xlabel='output_logprob', ylabel=compare_metric, title=f"{model_name}")
+
+        # just plot metric / probability (normalized) 
+        plot_keys(df=filtered_df, xlabel='output_logprob_norm', ylabel=compare_metric+'_norm', title=model_name)
+
+        # plot: group into equally-sized bins (ignores examples example_id)
+        plot_grouped(df=filtered_dfs, xlabel="output_logprob", groupby="bins", ylabel=compare_metric, title=f"{model_name} with equal-bins")
+        plot_grouped(df=filtered_df, xlabel='output_logprob_norm',  groupby="bins", ylabel=compare_metric+'_norm', title=f"{model_name} with equal-bins")

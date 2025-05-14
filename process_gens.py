@@ -66,13 +66,37 @@ def get_process_gen_params(test_name):
         return task_names, custom_metrics, instance_metrics
 
     root_folder=f"snellius_copies/helm_output"
-    if(test_name=="full_sample"):
+    if(test_name=="wmt_samples"):
         mode = "wmt"
         # suite_name="sample_return_20_eval_500"
-        suite_name="sample_return_100_eval_100"
+        # suite_name="sample_return_100_eval_100"
+        suite_name="sample_10_eval_1000"
         num_beams_list=[1]
+        # models=["meta_llama_Llama_3.1_8B_Instruct"]
+        models=["allenai_OLMo_2_1124_7B_Instruct","allenai_OLMo_2_0425_1B_Instruct","meta_llama_Llama_3.2_1B_Instruct","allenai_OLMo_2_1124_13B_Instruct","meta_llama_Llama_3.1_8B_Instruct"]
+
+    elif(test_name=="wmt_beam8"):
+        mode = "wmt"
+        suite_name="full_wmt_1_samples_1000_evals"
+        num_beams_list=[8]
+        models=["meta_llama_Llama_3.1_8B_Instruct", "allenai_OLMo_2_1124_13B_Instruct"]
+
+    elif(test_name=="wmt_beam8_new"):
+        mode = "wmt"
+        suite_name="full_wmt_1_samples_1000_evals"
+        num_beams_list=[16]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
 
+    elif (test_name=="full_instruct"):
+        mode="instruct"
+        suite_name="full_instruct_1_samples_100_evals"
+        num_beams_list=[2,4,8]
+        models=["allenai_OLMo_2_1124_13B_Instruct"]
+        
+
+
+
+    ###### INDIVIDUAL TESTS  ######
     elif(test_name=="llama_gsm_sample"):
         mode = "gsm"
         suite_name="sample_10_eval_1000"
@@ -91,13 +115,7 @@ def get_process_gen_params(test_name):
         suite_name="full_wmt_1_samples_1000_evals"
         num_beams_list=[2,4,8]
         models=["allenai_OLMo_2_1124_13B_Instruct"]
-        
-    elif (test_name=="full_instruct"):
-        mode="instruct"
-        suite_name="full_instruct_1_samples_100_evals"
-        num_beams_list=[2,4,8]
-        models=["allenai_OLMo_2_1124_13B_Instruct"]
-        
+
     else:
         except_str=f"task name {test_name} not found"
         print(except_str)
@@ -187,7 +205,7 @@ def clean_generation_summary(generationSummary:GenerationSummary)->GenerationSum
 
 
 def get_gen_summary_from_path(path) -> GenerationSummary:
-    print(f"path is {path}")
+    # print(f"path is {path}")
     def json_to_instance_generation(instance_dict:dict) -> InstanceGenerations:
         def json_to_generated_output(generated_output_dict):
             generated_output=GeneratedOutput(**generated_output_dict)
@@ -307,7 +325,7 @@ def get_metrics_dict(instances_dict:Dict[int, GenerationSummary], custom_metrics
 
                         if(example_idx==0):
                             pd_metrics_dict["isCompletion"]=(example_idx==0)
-                            if(instance_generation.instance_id in instance_stats_per_run.keys()):
+                            if(instance_stats_per_run and instance_generation.instance_id in instance_stats_per_run.keys()):
                                 completion_metrics_dict = instance_stats_per_run[instance_generation.instance_id]
                                 for stat_name, value in completion_metrics_dict.items():
                                     pd_metrics_dict[stat_name]= value
