@@ -73,24 +73,37 @@ def get_process_gen_params(test_name):
         suite_name="sample_10_eval_1000"
         num_beams_list=[1]
         # models=["meta_llama_Llama_3.1_8B_Instruct"]
-        models=["allenai_OLMo_2_1124_7B_Instruct","allenai_OLMo_2_0425_1B_Instruct","meta_llama_Llama_3.2_1B_Instruct","allenai_OLMo_2_1124_13B_Instruct","meta_llama_Llama_3.1_8B_Instruct"]
+        models=["allenai_OLMo_2_0425_1B_Instruct","allenai_OLMo_2_1124_7B_Instruct","allenai_OLMo_2_1124_13B_Instruct","meta_llama_Llama_3.2_1B_Instruct","meta_llama_Llama_3.1_8B_Instruct"]
 
     elif(test_name=="wmt_beam8"):
         mode = "wmt"
-        suite_name="full_wmt_1_samples_1000_evals"
+        suite_name="sample_1_eval_1000"
         num_beams_list=[8]
         models=["meta_llama_Llama_3.1_8B_Instruct", "allenai_OLMo_2_1124_13B_Instruct"]
 
-    elif(test_name=="wmt_beam8_new"):
+    
+    elif(test_name=="wmt_beam128"):
         mode = "wmt"
-        suite_name="full_wmt_1_samples_1000_evals"
-        num_beams_list=[16]
+        suite_name="sample_1_eval_1000"
+        num_beams_list=[128]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    # elif(test_name=="wmt_beam8_new"):
+    #     mode = "wmt"
+    #     suite_name="full_wmt_1_samples_1000_evals"
+    #     num_beams_list=[16]
+    #     models=["meta_llama_Llama_3.1_8B_Instruct"]
 
     elif (test_name=="full_instruct"):
         mode="instruct"
         suite_name="full_instruct_1_samples_100_evals"
         num_beams_list=[2,4,8]
+        models=["allenai_OLMo_2_1124_13B_Instruct"]
+
+    elif (test_name=="instruct8"):
+        mode="instruct"
+        suite_name="full_instruct_1_samples_100_evals"
+        num_beams_list=[8]
         models=["allenai_OLMo_2_1124_13B_Instruct"]
         
 

@@ -160,21 +160,23 @@ def compare_beams_by_metric(analysis_df,compare_metric,compare_beams, compare_fu
 
 
 
-def plot_keys(df, xlabel, ylabel, title=None):
+def plot_keys(df, xlabel, ylabel, title=None, ax=None):
+    if(ax is None):
+        _, ax = plt.subplots()
     x=df[xlabel]
     y=df[ylabel]
-    plt.scatter(x,y)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
+    ax.scatter(x,y)
+    ax.set_xlabel(xlabel)
+    ax.set_xlabel(ylabel)
     if(title):
-        plt.title(title)
+        ax.set_title(title)
 
     try:
-        plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)))
+        ax.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)))
     except:
         pass
     
-    plt.show()
+    # ax.show()
 
 
 
@@ -258,11 +260,13 @@ def analyze_completion_by_beam(processGens:ProcessGens, num_instances:int=20):
     return indexed_by_model
 
 
-def plot_grouped(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None"):
+def plot_grouped(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20):
+    if(ax is None):
+        _, ax = plt.subplots()
     warnings.simplefilter(action='ignore', category=FutureWarning)
     if(groupby=="bins"):
         
-        df["bins"]=pd.qcut(df[xlabel],20)
+        df["bins"]=pd.qcut(df[xlabel],nbins)
     
     grouped = df.groupby(groupby)[[xlabel, ylabel]].agg(['mean', 'count', 'std'])
     
@@ -279,26 +283,26 @@ def plot_grouped(df, xlabel, ylabel, groupby='example_idx', title=None, trend_li
         yerr.append(1.96*s/math.sqrt(c))
 
     # Plot with error bars (standard deviation)
-    plt.errorbar(x, y, yerr=yerr, fmt='o', ecolor='gray', capsize=3, label='Data with std dev')
+    ax.errorbar(x, y, yerr=yerr, fmt='o', ecolor='gray', capsize=3, label='Data with std dev')
 
     # plt.scatter(x,y)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
 
     if(title):
-        plt.title(title)
+        ax.set_title(title)
 
     if(trend_line=="None"):
         pass
     elif(trend_line=="linear"):
         try:
-            plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)))
+            ax.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)))
         except:
             pass
     else: 
         raise Exception("Plot_keys errors: did not recognize trend_line type")
     
-    plt.show()
+    # plt.show()
 
 def plot_all(dfs_by_model, compare_metric):
     for model_name, filtered_dfs in dfs_by_model.items():

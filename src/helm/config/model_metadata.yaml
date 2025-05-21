@@ -122,7 +122,7 @@ models:
     tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG, INSTRUCTION_FOLLOWING_MODEL_TAG]
 
 
-        ### OLMO RM ###
+        ### OLMO Other types ###
 
   - name: allenai/OLMo-2-1124-7B-RM
     display_name: OLMo-2-1124-7B-RM
@@ -142,6 +142,53 @@ models:
 
 
 
+  - name: allenai/OLMo-2-1124-7B
+    display_name: OLMo-2-1124-7B
+    description: OLMo-2-1124-7B
+    creator_organization_name: allenai
+    access: open
+    release_date: 2024-05-13
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG]
+
+  - name: allenai/OLMo-2-1124-13B
+    display_name: OLMo-2-1124-13B
+    description: OLMo-2-1124-13B
+    creator_organization_name: allenai
+    access: open
+    release_date: 2024-05-13
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG]
+
+  - name: allenai/OLMo-2-1124-7B-SFT
+    display_name: OLMo-2-1124-7B-SFT
+    description: OLMo-2-1124-7B-SFT
+    creator_organization_name: allenai
+    access: open
+    release_date: 2024-05-13
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG]
+
+  - name: allenai/OLMo-2-1124-13B-SFT
+    display_name: OLMo-2-1124-13B-SFT
+    description: OLMo-2-1124-13B-SFT
+    creator_organization_name: allenai
+    access: open
+    release_date: 2024-05-13
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG]
+
+  - name: allenai/OLMo-2-1124-7B-DPO
+    display_name: OLMo-2-1124-7B-DPO
+    description: OLMo-2-1124-7B-DPO
+    creator_organization_name: allenai
+    access: open
+    release_date: 2024-05-13
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG]
+
+  - name: allenai/OLMo-2-1124-13B-DPO
+    display_name: OLMo-2-1124-13B-DPO
+    description: OLMo-2-1124-13B-DPO
+    creator_organization_name: allenai
+    access: open
+    release_date: 2024-05-13
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG]
 
 
 

@@ -123,6 +123,60 @@ model_deployments:
       args: 
         pretrained_model_name_or_path: allenai/OLMo-2-1124-13B-RM
 
+  - name: allenai/OLMo-2-1124-7B
+    model_name: allenai/OLMo-2-1124-7B
+    tokenizer_name: allenai/OLMo-2-1124-7B
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-7B
+
+  - name: allenai/OLMo-2-1124-13B
+    model_name: allenai/OLMo-2-1124-13B
+    tokenizer_name: allenai/OLMo-2-1124-13B
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-13B
+
+  - name: allenai/OLMo-2-1124-7B-SFT
+    model_name: allenai/OLMo-2-1124-7B-SFT
+    tokenizer_name: allenai/OLMo-2-1124-7B-SFT
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-7B-SFT
+
+  - name: allenai/OLMo-2-1124-13B-SFT
+    model_name: allenai/OLMo-2-1124-13B-SFT
+    tokenizer_name: allenai/OLMo-2-1124-13B-SFT
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-13B-SFT
+
+  - name: allenai/OLMo-2-1124-7B-DPO
+    model_name: allenai/OLMo-2-1124-7B-DPO
+    tokenizer_name: allenai/OLMo-2-1124-7B-DPO
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-7B-DPO
+
+  - name: allenai/OLMo-2-1124-13B-DPO
+    model_name: allenai/OLMo-2-1124-13B-DPO
+    tokenizer_name: allenai/OLMo-2-1124-13B-DPO
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-13B-DPO
+
   ######################### T5 #########################
   - name:  distilbert/distilgpt2
     model_name:  distilbert/distilgpt2

@@ -49,12 +49,19 @@ model_tuples=[]
 #   model_tuples.append( ( "allenai", model_ext) )
 
 
-for model_ext in ["OLMo-2-1124-7B-RM", "OLMo-2-1124-13B-RM"]:
-  model_tuples.append( ( "allenai", model_ext) )
+# for model_ext in ["OLMo-2-1124-7B-RM", "OLMo-2-1124-13B-RM"]:
+#   model_tuples.append( ( "allenai", model_ext) )
 
 # for model_ext in ["Meta-Llama-3-70B-Instruct"]:
 #   model_tuples.append(("meta-llama", model_ext))
 
+
+for model_name in ["allenai/OLMo-2-1124-7B", "allenai/OLMo-2-1124-13B", "allenai/OLMo-2-1124-7B-SFT ", "allenai/OLMo-2-1124-13B-SFT", "allenai/OLMo-2-1124-7B-DPO", "allenai/OLMo-2-1124-13B-DPO"]:
+  split_name = model_name.strip().split("/")
+  
+  # model_base, model_ext 
+  model_tuples.append( (split_name[0], split_name[1]))
+  print(f"split is ({split_name[0]},{split_name[1]})")
 
 deploy_strs = []
 token_strs=[]

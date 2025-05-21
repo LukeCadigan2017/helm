@@ -93,6 +93,54 @@ tokenizer_configs:
     end_of_text_token: "<|endoftext|>"
     prefix_token: "<|endoftext|>"
 
+  - name: allenai/OLMo-2-1124-7B 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-7B
+    end_of_text_token: "<|endoftext|>"
+    prefix_token: "<|endoftext|>" 
+
+  - name: allenai/OLMo-2-1124-13B 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-13B
+    end_of_text_token: "<|endoftext|>"
+    prefix_token: "<|endoftext|>" 
+
+  - name: allenai/OLMo-2-1124-7B-SFT 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-7B-SFT
+    end_of_text_token: "<|endoftext|>"
+    prefix_token: "<|endoftext|>" 
+
+  - name: allenai/OLMo-2-1124-13B-SFT 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-13B-SFT
+    end_of_text_token: "<|endoftext|>"
+    prefix_token: "<|endoftext|>" 
+
+  - name: allenai/OLMo-2-1124-7B-DPO 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-7B-DPO
+    end_of_text_token: "<|endoftext|>"
+    prefix_token: "<|endoftext|>" 
+
+  - name: allenai/OLMo-2-1124-13B-DPO 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: allenai/OLMo-2-1124-13B-DPO
+    end_of_text_token: "<|endoftext|>"
+    prefix_token: "<|endoftext|>" 
+
 
 
   ######################### T5 #########################
