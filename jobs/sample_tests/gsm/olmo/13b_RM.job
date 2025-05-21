@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#SBATCH --job-name=wmt_sample_test
+#SBATCH --job-name=gsm_sample_test
 #SBATCH --partition=gpu_h100
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=8
 #SBATCH --time=03:00:00
-#SBATCH --output=outputs/wmt_sample_%A.out
+#SBATCH --output=outputs/gsm_sample_%A.out
 
 MODEL=allenai/OLMo-2-1124-13B-RM 
 EVAL_INSTANCES=1000
@@ -15,9 +15,9 @@ EVAL_INSTANCES=1000
 NUM_BEAMS_LIST=1
 NUM_RETURN_SEQUENCES=10
 NUM_THREADS=4
-TASK=wmt
+TASK=gsm
 export DISABLE_CACHE=true
-export SNELLIUS_METRICS=example_comet
+
 
 echo ./startup_job.ksh $TASK $MODEL $NUM_BEAMS_LIST $EVAL_INSTANCES $NUM_THREADS $NUM_RETURN_SEQUENCES
 ./startup_job.ksh $TASK $MODEL $NUM_BEAMS_LIST $EVAL_INSTANCES $NUM_THREADS $NUM_RETURN_SEQUENCES
