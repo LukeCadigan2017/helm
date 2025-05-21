@@ -105,6 +105,15 @@ model_deployments:
 
         ### OLMO RM ####
 
+  - name: allenai/OLMo-2-0425-1B
+    model_name: allenai/OLMo-2-0425-1B
+    tokenizer_name: allenai/OLMo-2-0425-1B
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: allenai/OLMo-2-0425-1B
+
   - name: allenai/OLMo-2-1124-7B-RM
     model_name: allenai/OLMo-2-1124-7B-RM
     tokenizer_name: allenai/OLMo-2-1124-7B-RM

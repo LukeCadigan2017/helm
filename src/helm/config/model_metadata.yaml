@@ -124,6 +124,15 @@ models:
 
         ### OLMO Other types ###
 
+
+  - name: allenai/OLMo-2-0425-1B
+    display_name: OLMo-2-0425-1B
+    description: OLMo-2-0425-1B
+    creator_organization_name: allenai
+    access: open
+    release_date: 2024-05-13
+    tags: [TEXT_MODEL_TAG, FULL_FUNCTIONALITY_TEXT_MODEL_TAG]
+
   - name: allenai/OLMo-2-1124-7B-RM
     display_name: OLMo-2-1124-7B-RM
     description: OLMo-2-1124-7B-RM

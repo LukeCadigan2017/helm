@@ -77,6 +77,15 @@ tokenizer_configs:
 
 
           ### OLMO RM ###
+
+  - name: allenai/OLMo-2-0425-1B 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: allenai/OLMo-2-0425-1B
+    end_of_text_token: "<|endoftext|>"
+    prefix_token: "<|endoftext|>"
+    
   - name: allenai/OLMo-2-1124-7B-RM 
     tokenizer_spec:
       class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
