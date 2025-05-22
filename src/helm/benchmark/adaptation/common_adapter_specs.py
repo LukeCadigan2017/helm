@@ -428,28 +428,52 @@ def get_summarization_adapter_spec(num_sents: Optional[int], max_train_instances
     )
 
 
+
+
+
+
+
+
 def get_machine_translation_adapter_spec(
-    source_language, target_language, max_train_instances,generated_output_file:str ="" , num_beams: int = 1,num_return_sequences:int=1, **kwargs
+    source_language, target_language, max_train_instances,generated_output_file:str ="" , num_beams: int = 1,num_return_sequences:int=1,eos_type="default", **kwargs
 ) -> AdapterSpec:
     """
     Used for machine translation.
     """
-    return AdapterSpec(
-        method=ADAPT_GENERATION,
-        instructions=f"Translate the following sentences from {source_language} to {target_language}.\n",
-        input_prefix=f"{source_language}: ",
-        input_suffix="<|helm_eot_id|>\n",
-        output_prefix=f"{target_language}: ",
-        output_suffix="<|helm_eot_id|>\n",
-        max_train_instances=max_train_instances,
-        num_outputs=num_return_sequences,
-        # stop_sequences=['<|endoftext|>'],
-        # stop_sequences=['\n','.','?','!'],
-        temperature=0.0,
-        num_beams=num_beams,
-        generated_output_file=generated_output_file,
-        **kwargs,
-    )
+    if eos_type == "default":
+        padding="<|helm_eot_id|>\n" 
+        return AdapterSpec(
+            method=ADAPT_GENERATION,
+            instructions=f"Translate the following sentences from {source_language} to {target_language}.\n",
+            input_prefix=f"{source_language}: ",
+            input_suffix=padding,
+            output_prefix=f"{target_language}: ",
+            output_suffix=padding,
+            max_train_instances=max_train_instances,
+            num_outputs=num_return_sequences,
+            temperature=0.0,
+            num_beams=num_beams,
+            generated_output_file=generated_output_file,
+            **kwargs,
+        )
+    elif eos_type == "task":    
+        padding = "\n"    
+        return AdapterSpec(
+            method=ADAPT_GENERATION,
+            instructions=f"Translate the following sentences from {source_language} to {target_language}.\n",
+            input_prefix=f"{source_language}: ",
+            input_suffix=padding,
+            output_prefix=f"{target_language}: ",
+            output_suffix=padding,
+            max_train_instances=max_train_instances,
+            num_outputs=num_return_sequences,
+            stop_sequences=['\n','.','?','!'],
+            # stop_sequences=["\n\n"],
+            temperature=0.0,
+            num_beams=num_beams,
+            generated_output_file=generated_output_file,
+            **kwargs,
+        )
 
 # def get_machine_translation_adapter_spec(
 #     source_language, target_language, max_train_instances,generated_output_file:str ="" , num_beams: int = 1, **kwargs

@@ -38,6 +38,7 @@ NUM_RETURN_SEQUENCES=$6
 #NUM_RETURN_SEQUENCES="${NUM_RETURN_SEQUENCES:=1}"
 DISABLE_CACHE="${DISABLE_CACHE:=true}"
 RUN_MODEL="${RUN_MODEL:=true}"
+# RUN_MODEL="${RUN_MODEL:=true}"
 # POST_INSTANCE_METRICS="${POST_INSTANCE_METRICS:=no_metrics}"
 # POST_EXAMPLE_METRICS="${POST_EXAMPLE_METRICS:=no_metrics}"
 
@@ -104,6 +105,10 @@ for TASK_NAME in $TASK_NAMES; do
 
         if [ ! -z "$NUM_BEAMS" ] ;then
             RUN_ENTRY="${RUN_ENTRY}num_beams=${NUM_BEAMS},"
+        fi
+        
+        if [ ! -z "$EOS_TYPE" ] ;then
+            RUN_ENTRY="${RUN_ENTRY}eos_type=${EOS_TYPE},"
         fi
 
         OUTPUT_PATH="$(./get_output_dir.ksh $SUITE_OUTPUT_DIR $TASK_NAME $MODEL $NUM_BEAMS)"

@@ -41,33 +41,34 @@ import sys
 #         current_sequence = input_ids[:, -len(self.stop_sequence) :]
 #         return bool(torch.all(current_sequence == stop_sequence_tensor).item())
 
-# class StopOnStrings(StoppingCriteria):
-#     def __init__(self, stop_strings, tokenizer):
-#         self.stop_strings = stop_strings
-#         self.tokenizer = tokenizer
-#         self.stream = ""
-#         self.prev_generated= ""
+class StopOnStrings(StoppingCriteria):
+    def __init__(self, stop_strings, tokenizer):
+        self.stop_strings = stop_strings
+        self.tokenizer = tokenizer
+        self.stream = ""
+        self.prev_generated= ""
 
-#     def reset(self):
-#         self.stream = ""
+    def reset(self):
+        self.stream = ""
 
-#     def __call__(self, input_ids, scores, **kwargs):
+    def __call__(self, input_ids, scores, **kwargs):
 
-#         print("input_ids is ",input_ids.shape)
-#         generated = self.tokenizer.decode(input_ids[0][-1], skip_special_tokens=True)
-#         for stop_string in self.stop_strings:
-#             if stop_string in generated:
-#                 return True
-#         return False
-    # def __call__(self, input_ids, scores, **kwargs):
-    #     generated = self.tokenizer.decode(input_ids[0][-1], skip_special_tokens=True)
-    #     self.stream += generated
-    #     for stop_string in self.stop_strings:
-    #         if stop_string in self.stream[:-1]:
-    #             # print(f"stop_string is {stop_string}, stream is{self.stream}")
-    #             # print("hello")
-    #             return True
-    #     return False
+        # print("input_ids is ",input_ids.shape)
+        generated = self.tokenizer.decode(input_ids[0][-1], skip_special_tokens=True)
+        for stop_string in self.stop_strings:
+            if stop_string in generated:
+                return True
+        return False
+    
+    def __call__(self, input_ids, scores, **kwargs):
+        generated = self.tokenizer.decode(input_ids[0][-1], skip_special_tokens=True)
+        self.stream += generated
+        for stop_string in self.stop_strings:
+            if stop_string in self.stream[:-1]:
+                # print(f"stop_string is {stop_string}, stream is{self.stream}")
+                # print("hello")
+                return True
+        return False
 
 
 def exact_mode_algo(model, x:str,bos:int, eos:int, wrapped_tokenizer):
@@ -204,20 +205,23 @@ class HuggingFaceServer:
         prompt=raw_request["prompt"]
 
         prompt_tokens_logprobs = []
+        stop_strings=[self.eos]
         all_generated_tokens_logprobs = []
         with self.wrapped_tokenizer as tokenizer:
             encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to(
                 0 if self.device is None else self.device
             )
             if len(raw_request["stop_sequences"]) > 0:
-                raise Exception("Haven't implemented stop_sequences")
-                # stopping_criteria = StoppingCriteriaList()
-                # stop_strings=[eos_token_string]+["."]#raw_request["stop_sequences"]
+                stopping_criteria = StoppingCriteriaList()
+                stop_strings=stop_strings+raw_request["stop_sequences"]
+                # breakpoint()
+                stopping_criteria.append(StopOnStrings(stop_strings=stop_strings,tokenizer=tokenizer))
+
+
                 # stopping_criteria.append(StopStringCriteria(tokenizer, [",","<|endoftext|>"]))
                 
                 # stopping_criteria.append(EosTokenCriteria(eos_token_id=13))
                 
-                # stopping_criteria.append(StopOnStrings(stop_strings=stop_strings,tokenizer=tokenizer))
 
         # if len(raw_request["stop_sequences"]) > 0:
             # with self.wrapped_tokenizer as tokenizer:
@@ -241,10 +245,11 @@ class HuggingFaceServer:
         )
 
 
-        num_beams= int(raw_request["num_beams"]) if ("num_beams" in raw_request.keys() ) else 1
+        num_beams= int(raw_request["num_beams"]) if ("num_beams" in raw_request.keys() ) else None
+        
         raw_num_return_sequences=int(raw_request["num_return_sequences"])
         
-        num_generated=max(raw_num_return_sequences, num_beams)
+        num_generated= raw_num_return_sequences if num_beams is None else max(raw_num_return_sequences, num_beams)
         assert(raw_request["top_p"]==1)
 
         # Use HuggingFace's `generate` method.
@@ -255,6 +260,7 @@ class HuggingFaceServer:
             scores = output.logits
         else:
 
+            #beam search
             if(num_beams >1):
                 # should be this?
                 # with torch.no_grad():
@@ -286,7 +292,8 @@ class HuggingFaceServer:
                             output_logits=True,
                             length_penalty=0,
                              **optional_args,
-                            early_stopping="never"
+                            early_stopping="never", 
+                            stopping_criteria=stopping_criteria, 
                             # num_beam_groups=num_beams,
                             # diversity_penalty=1.0,
                             )
@@ -304,25 +311,44 @@ class HuggingFaceServer:
                             token_logprob=transition_scores[completion_id][i].item()
                             generated_tokens_logprobs.append(token_logprob)
                         all_generated_tokens_logprobs.append(generated_tokens_logprobs)
-            elif num_beams<0:
+            
+            #exact mode
+            elif num_beams==-1:
                 exact_mode_algo(model=self.model, x=encoded_input,bos=self.bos, eos=self.eos, wrapped_tokenizer=self.wrapped_tokenizer)
-            else:
-                # #the difference: length_penalty cannot be set if num_beams>1
-                # with torch.no_grad():
-                #     output = self.model.generate(
-                #         **encoded_input,
-                #         num_beams = num_beams,
-                #         num_return_sequences=num_generated,
-                #         max_new_tokens=raw_request["max_new_tokens"],
-                #         #changed this
-                #         do_sample=False,
-                #         return_dict_in_generate=True,
-                #         output_scores=True,
-                #         **optional_args,
-                #         stopping_criteria=stopping_criteria, 
-                #         # temperature=raw_request["temperature"],
-                #         # top_p=raw_request["top_p"],
-                #     )
+            
+            #helm default
+            elif num_beams is None or num_beams==0: 
+                with torch.no_grad():
+                    output = self.model.generate(
+                        **encoded_input,
+                        temperature=raw_request["temperature"],
+                        num_return_sequences=raw_request["num_return_sequences"],
+                        max_new_tokens=raw_request["max_new_tokens"],
+                        top_p=raw_request["top_p"],
+                        do_sample=True,
+                        return_dict_in_generate=True,
+                        output_scores=True,
+                        output_logits=True,
+                        **optional_args,
+                        stopping_criteria=stopping_criteria,
+                    )
+
+                sequences = output.sequences
+                logits = output.logits
+                
+                for completion_id in range(raw_request["num_return_sequences"]):
+                    generated_tokens_logprobs = []
+                    for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
+                        logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=0)
+                        # Get log probability of chosen token.
+                        j = i + len(encoded_input.input_ids[0])
+                        generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())
+                    all_generated_tokens_logprobs.append(generated_tokens_logprobs)
+            
+            #unbiased sampling
+            #default for test_run_all.ksh
+            elif num_beams==1:
+                #unbiased sampling
                 output = self.model.generate(
                     **encoded_input,
                     num_return_sequences=raw_request["num_return_sequences"],
@@ -348,6 +374,8 @@ class HuggingFaceServer:
                         j = i + len(encoded_input.input_ids[0])
                         generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())
                     all_generated_tokens_logprobs.append(generated_tokens_logprobs)
+            else:
+                raise Exception(f"Weird number of num_beams {num_beams}")
         
         # for completion_id in range(num_generated):
         #     generated_sequence=sequences[completion_id, len(encoded_input.input_ids[0]):]
@@ -521,16 +549,18 @@ class HuggingFaceClient(CachingClient):
             generated_tokens = raw_completion["tokens"]
             sequence=raw_completion["sequence"]
 
+            end_of_text_token=raw_completion["end_of_text_token"] if "end_of_text_token" in raw_completion.keys() else self._end_of_text_token
+
             # Compute logprob for the entire sequence.
             for token_text, logprob, token_id in zip(generated_tokens, raw_completion["logprobs"], sequence):
                 tokens.append(Token(text=token_text, logprob=logprob, token_id=token_id.item()))
                 sequence_logprob += logprob
 
-                if(token_text==self._end_of_text_token):
+                if(token_text==end_of_text_token):
                     break
             completion = GeneratedOutput(text=raw_completion["text"], logprob=sequence_logprob, tokens=tokens, example_id=idx)
             if(should_truncate_sequence):
-                completion = truncate_sequence(completion, request, end_of_text_token=self._end_of_text_token)
+                completion = truncate_sequence(completion, request, end_of_text_token=end_of_text_token)
             completions.append(completion)
 
 
@@ -576,8 +606,9 @@ class HuggingFaceClient(CachingClient):
             "top_k_per_token": request.top_k_per_token,
             "stop_sequences": request.stop_sequences
         }
-        
-        assert min(request.num_beams, request.num_completions)==1
+
+        if request.num_beams > 1:
+            assert request.num_completions == 1
 
         pretrained_model_name_or_path = (
             self._pretrained_model_name_or_path if self._pretrained_model_name_or_path else request.model
@@ -590,19 +621,21 @@ class HuggingFaceClient(CachingClient):
             **self._kwargs,
         )
 
-        # def do_it() -> Dict[str, Any]:
-        #     return huggingface_model.serve_request(raw_request)
-        # cache_key = CachingClient.make_cache_key(raw_request, request)
-        # response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
-
-        try:
+        expose_error=False
+        if(expose_error):
             def do_it() -> Dict[str, Any]:
                 return huggingface_model.serve_request(raw_request)
             cache_key = CachingClient.make_cache_key(raw_request, request)
             response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
-        except Exception as e:  # Do something if error is encountered.
-            error: str = f"HuggingFace error: {e}"
-            return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
+        else:
+            try:
+                def do_it() -> Dict[str, Any]:
+                    return huggingface_model.serve_request(raw_request)
+                cache_key = CachingClient.make_cache_key(raw_request, request)
+                response, cached = self.cache.get(cache_key, wrap_request_time(do_it))
+            except Exception as e:  # Do something if error is encountered.
+                error: str = f"HuggingFace error: {e}"
+                return RequestResult(success=False, cached=False, error=error, completions=[], embedding=[])
 
         completions = self.clean_completions(response, request,response["completions"],should_truncate_sequence=True)
         unscored_examples = self.clean_completions(response, request, response["unscored_examples"],should_truncate_sequence=True)
