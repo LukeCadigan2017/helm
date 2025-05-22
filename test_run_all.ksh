@@ -128,16 +128,16 @@ for TASK_NAME in $TASK_NAMES; do
         
         if [ "$RUN_MODEL" = true ] ; then
             echo helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
-                -o $OUTPUT_PATH --suite $SUITE --num-threads $NUM_THREADS
+                -o $OUTPUT_PATH --suite $SUITE --num-threads $NUM_THREADS --cache-instances
 
             if [ "$DISABLE_CACHE" = true ] ; then
                 echo "Disable cache"
                 helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
-                    -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS --disable-cache
+                    -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS --disable-cache --cache-instances
             else
                 echo "Do not disable cache"
                 helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
-                    -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS 
+                    -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS --cache-instances
             fi
         fi
 

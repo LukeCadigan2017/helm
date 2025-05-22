@@ -12,7 +12,7 @@ from helm.benchmark.scenarios.scenario import (
     Input,
     Output,
 )
-
+from tqdm import tqdm
 
 MAX_TRAIN_INSTANCES = 20_000  # This is arbitrary, but 20,000 training examples should be enough.
 
@@ -79,23 +79,28 @@ class WMT14Scenario(Scenario):
         instances: List[Instance] = []
         with htrack_block("Generating instances"):
             # Some training sets are too large, so we will only take a random subset of it.
+            print("Start dataset shuffle")
             hf_dataset["train"] = hf_dataset["train"].shuffle(seed=42)[:MAX_TRAIN_INSTANCES]
+            print("Start deduplicate")
             hf_dataset["train"]["translation"] = self._deduplicate(hf_dataset["train"]["translation"])
-            for example in hf_dataset["train"]["translation"]:
-                source_sentence: str = example[self.source_language]
-                target_sentence: str = example[self.target_language]
-                instances.append(
-                    Instance(
-                        input=Input(text=source_sentence),
-                        references=[Reference(Output(text=target_sentence), tags=[CORRECT_TAG])],
-                        split="train",
-                    )
-                )
+            # print("start adding instances")
+            # for example in tqdm(hf_dataset["train"]["translation"]):
+                
+            #     source_sentence: str = example[self.source_language]
+            #     target_sentence: str = example[self.target_language]
+            #     instances.append(
+            #         Instance(
+            #             input=Input(text=source_sentence),
+            #             references=[Reference(Output(text=target_sentence), tags=[CORRECT_TAG])],
+            #             split="train",
+            #         )
+            #     )
 
         # No special handling needed for validation or test.
         for split_name in ["validation", "test"]:
             split = splits[split_name]
-            for example in hf_dataset[split_name]:
+            print(f"Processing split {split_name}")
+            for example in tqdm(hf_dataset[split_name]):
                 source_sentence = example["translation"][self.source_language]
                 target_sentence = example["translation"][self.target_language]
                 instances.append(
