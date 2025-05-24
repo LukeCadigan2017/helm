@@ -211,11 +211,11 @@ class HuggingFaceServer:
             encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to(
                 0 if self.device is None else self.device
             )
-            if len(raw_request["stop_sequences"]) > 0:
-                stopping_criteria = StoppingCriteriaList()
-                stop_strings=stop_strings+raw_request["stop_sequences"]
-                # breakpoint()
-                stopping_criteria.append(StopOnStrings(stop_strings=stop_strings,tokenizer=tokenizer))
+            # if len(raw_request["stop_sequences"]) > 0:
+            #     stopping_criteria = StoppingCriteriaList()
+            #     stop_strings=stop_strings+raw_request["stop_sequences"]
+            #     # breakpoint()
+            #     stopping_criteria.append(StopOnStrings(stop_strings=stop_strings,tokenizer=tokenizer))
 
 
                 # stopping_criteria.append(StopStringCriteria(tokenizer, [",","<|endoftext|>"]))
