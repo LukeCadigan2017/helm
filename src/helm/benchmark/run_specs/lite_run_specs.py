@@ -278,7 +278,7 @@ def get_med_qa_spec() -> RunSpec:
 
 
 @run_spec_function("wmt_14")
-def get_wmt_14_spec(language_pair: str, max_train_instances: int = 1, num_beams: int=1,num_return_sequences=1, generated_output_file:str="",eos_type="default") -> RunSpec:
+def get_wmt_14_spec(language_pair: str, max_train_instances: int = 1, num_beams: int=1,num_return_sequences=1, generated_output_file:str="",eos_type="task") -> RunSpec:
     FULL_LANGUAGE_NAMES = {
         "cs": "Czech",
         "de": "German",
