@@ -78,11 +78,12 @@ class WMT14Scenario(Scenario):
 
         instances: List[Instance] = []
         with htrack_block("Generating instances"):
+            pass
             # Some training sets are too large, so we will only take a random subset of it.
-            print("Start dataset shuffle",flush=True)
-            hf_dataset["train"] = hf_dataset["train"].shuffle(seed=42)[:MAX_TRAIN_INSTANCES]
-            print("Start deduplicate", flush=True)
-            hf_dataset["train"]["translation"] = self._deduplicate(hf_dataset["train"]["translation"])
+            # print("Start dataset shuffle",flush=True)
+            # hf_dataset["train"] = hf_dataset["train"].shuffle(seed=42)[:MAX_TRAIN_INSTANCES]
+            # print("Start deduplicate", flush=True)
+            # hf_dataset["train"]["translation"] = self._deduplicate(hf_dataset["train"]["translation"])
             # print("start adding instances")
             # for example in tqdm(hf_dataset["train"]["translation"]):
                 
