@@ -8,6 +8,11 @@ from helm.common.general import indent_lines, format_text
 
 
 @dataclass(frozen=True)
+class BeamParams:
+    num_beams:int=1
+    num_return_sequences:int=1
+
+@dataclass(frozen=True)
 class Request:
     """
     A `Request` specifies how to query a language model (given a prompt,
@@ -33,11 +38,12 @@ class Request:
     prompt: str = ""
     """What prompt do condition the language model on"""
 
+    beam_params: BeamParams= BeamParams(num_beams=1, num_return_sequences=1)
     temperature: float = 1.0
     """Temperature parameter that governs diversity"""
 
-    num_beams: int=1
-    """Number of beams used for beam search"""
+    # num_beams: int=1
+    # """Number of beams used for beam search"""
 
 
     num_completions: int = 1

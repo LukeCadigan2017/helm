@@ -19,6 +19,7 @@ from helm.common.request import (
     RequestResult,
     GeneratedOutput,
     Token,
+    BeamParams
 )
 from helm.tokenizers.tokenizer import Tokenizer
 from helm.clients.client import CachingClient, truncate_sequence
@@ -124,7 +125,8 @@ class HuggingFaceRequest(TypedDict):
     engine: str
     prompt: str
     temperature: float
-    num_beams:int
+    # num_beams:int
+    beam_params:dict
     generated_output_file: str
     num_return_sequences: int
     max_new_tokens: int
@@ -245,9 +247,10 @@ class HuggingFaceServer:
         )
 
 
-        num_beams= int(raw_request["num_beams"]) if ("num_beams" in raw_request.keys() ) else None
-        
-        raw_num_return_sequences=int(raw_request["num_return_sequences"])
+        # num_beams= int(raw_request["num_beams"]) if ("num_beams" in raw_request.keys() ) else None
+        num_beams=raw_request["beam_params"].num_beams
+        raw_num_return_sequences=raw_request["beam_params"].num_return_sequences
+        # raw_num_return_sequences=int(raw_request["num_return_sequences"])
         
         num_generated= raw_num_return_sequences if num_beams is None else max(raw_num_return_sequences, num_beams)
         assert(raw_request["top_p"]==1)
@@ -322,7 +325,7 @@ class HuggingFaceServer:
                     output = self.model.generate(
                         **encoded_input,
                         temperature=raw_request["temperature"],
-                        num_return_sequences=raw_request["num_return_sequences"],
+                        num_return_sequences=num_generated,
                         max_new_tokens=raw_request["max_new_tokens"],
                         top_p=raw_request["top_p"],
                         do_sample=True,
@@ -336,7 +339,7 @@ class HuggingFaceServer:
                 sequences = output.sequences
                 logits = output.logits
                 
-                for completion_id in range(raw_request["num_return_sequences"]):
+                for completion_id in range(num_generated):
                     generated_tokens_logprobs = []
                     for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
                         logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=0)
@@ -351,7 +354,7 @@ class HuggingFaceServer:
                 #unbiased sampling
                 output = self.model.generate(
                     **encoded_input,
-                    num_return_sequences=raw_request["num_return_sequences"],
+                    num_return_sequences=num_generated,
                     max_new_tokens=raw_request["max_new_tokens"],
                     length_penalty=1,
                     top_p=1,
@@ -366,7 +369,7 @@ class HuggingFaceServer:
                 sequences = output.sequences
                 logits = output.logits
                 
-                for completion_id in range(raw_request["num_return_sequences"]):
+                for completion_id in range(num_generated):
                     generated_tokens_logprobs = []
                     for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
                         logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=0)
@@ -438,7 +441,7 @@ class HuggingFaceServer:
 
 
         raw_completions.sort(key=lambda x:sum(x["logprobs"]),reverse=True)
-        completions = raw_completions[:raw_request["num_return_sequences"]]
+        completions = raw_completions[:num_generated]
 
 
         # with open('debug.txt', 'w') as f:
@@ -592,12 +595,14 @@ class HuggingFaceClient(CachingClient):
 
         prompt=request.prompt.replace("<|helm_eot_id|>", self._end_of_text_token)
         # print("-------------\n\n\n\n prompt is ",prompt )
+        # beam_params = 
         
         raw_request: HuggingFaceRequest = {
             "engine": request.model_engine,
             "prompt": prompt,
             "temperature": 1e-7 if request.temperature == 0 else request.temperature,
-            "num_beams": request.num_beams,
+            # "num_beams": request.num_beams,
+            "beam_params": request.beam_params,
             "generated_output_file": request.generated_output_file,
             "num_return_sequences": request.num_completions,
             "max_new_tokens": request.max_tokens,
@@ -607,7 +612,7 @@ class HuggingFaceClient(CachingClient):
             "stop_sequences": request.stop_sequences
         }
 
-        if request.num_beams > 1:
+        if request.beam_params.num_beams > 1:
             assert request.num_completions == 1
 
         pretrained_model_name_or_path = (
@@ -621,7 +626,7 @@ class HuggingFaceClient(CachingClient):
             **self._kwargs,
         )
 
-        expose_error=False
+        expose_error=True
         if(expose_error):
             def do_it() -> Dict[str, Any]:
                 return huggingface_model.serve_request(raw_request)

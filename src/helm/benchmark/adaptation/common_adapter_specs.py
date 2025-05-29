@@ -435,11 +435,14 @@ def get_summarization_adapter_spec(num_sents: Optional[int], max_train_instances
 
 
 def get_machine_translation_adapter_spec(
-    source_language, target_language, max_train_instances,generated_output_file:str ="" , num_beams: int = 1,num_return_sequences:int=1,eos_type="default", **kwargs
+    source_language, target_language, max_train_instances,generated_output_file:str ="" ,beam_params=None,num_return_sequences:int=1,eos_type="default", **kwargs
 ) -> AdapterSpec:
     """
     Used for machine translation.
     """
+
+    if beam_params is None:
+        raise Exception("Must put in beam_params")
     if eos_type == "default":
         padding="<|helm_eot_id|>\n" 
         return AdapterSpec(
@@ -452,7 +455,7 @@ def get_machine_translation_adapter_spec(
             max_train_instances=max_train_instances,
             num_outputs=num_return_sequences,
             temperature=0.0,
-            num_beams=num_beams,
+            beam_params=beam_params,
             generated_output_file=generated_output_file,
             **kwargs,
         )
@@ -470,7 +473,8 @@ def get_machine_translation_adapter_spec(
             stop_sequences=['\n','.','?','!'],
             # stop_sequences=["\n\n"],
             temperature=0.0,
-            num_beams=num_beams,
+            beam_params=beam_params,
+            # num_beams=num_beams,
             generated_output_file=generated_output_file,
             **kwargs,
         )

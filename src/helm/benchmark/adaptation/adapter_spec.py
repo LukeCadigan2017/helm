@@ -4,6 +4,8 @@ from typing import List, Optional
 from helm.common.image_generation_parameters import ImageGenerationParameters
 
 
+from helm.common.request import BeamParams
+
 # Adaptation methods
 ADAPT_GENERATION: str = "generation"
 ADAPT_CHAT: str = "chat"
@@ -132,7 +134,7 @@ class AdapterSpec:
     image_generation_parameters: Optional[ImageGenerationParameters] = None
     """Parameters for image generation."""
 
-    num_beams: int = 1
+    beam_params: BeamParams = BeamParams(num_beams=1)
     """Number of beams used for beam search. 1=No beam search, -1=exact mode"""
 
     generated_output_file: str=""

@@ -12,6 +12,8 @@ from helm.benchmark.adaptation.common_adapter_specs import (
     get_machine_translation_adapter_spec,
     get_multiple_choice_adapter_spec,
 )
+
+from helm.common.request import (BeamParams)
 from helm.benchmark.metrics.common_metric_specs import (
     get_basic_generation_metric_specs,
     get_basic_metric_specs,
@@ -278,7 +280,7 @@ def get_med_qa_spec() -> RunSpec:
 
 
 @run_spec_function("wmt_14")
-def get_wmt_14_spec(language_pair: str, max_train_instances: int = 1, num_beams: int=1,num_return_sequences=1, generated_output_file:str="",eos_type="task") -> RunSpec:
+def get_wmt_14_spec(language_pair: str, max_train_instances: int = 1, num_beams: int=1,num_return_sequences=1,eos_type="task") -> RunSpec:
     FULL_LANGUAGE_NAMES = {
         "cs": "Czech",
         "de": "German",
@@ -298,8 +300,8 @@ def get_wmt_14_spec(language_pair: str, max_train_instances: int = 1, num_beams:
         source_language=FULL_LANGUAGE_NAMES[source_language],
         target_language=FULL_LANGUAGE_NAMES[target_language],
         max_train_instances=max_train_instances,
-        num_beams=num_beams,
-        generated_output_file=generated_output_file,
+        beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences),
+        # generated_output_file=generated_output_file,
         num_return_sequences=num_return_sequences,
         eos_type=eos_type
     )
