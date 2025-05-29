@@ -35,6 +35,22 @@ def fix_example_themis(completionExample):
 
 
 
+def get_model_details(model_name):
+
+
+    info_dict={
+        "allenai_OLMo_2_0425_1B_Instruct":{"size": 1, "suite":  "olmo","model_type":"instruct"},
+        "allenai_OLMo_2_1124_7B_Instruct":{"size": 7, "suite":  "olmo","model_type":"instruct"},
+        "allenai_OLMo_2_1124_13B_Instruct":{"size": 13, "suite":  "olmo","model_type":"instruct"},
+        "meta_llama_Llama_3.2_1B_Instruct":{"size": 1, "suite": "llama","model_type":"instruct"},
+        "meta_llama_Llama_3.1_8B_Instruct":{"size": 8, "suite": "llama","model_type":"instruct"},
+    }
+    
+    return info_dict[model_name]
+
+
+
+
 def get_process_gen_params(test_name):
 
     def get_metrics(mode):
@@ -74,6 +90,34 @@ def get_process_gen_params(test_name):
         num_beams_list=[1]
         # models=["meta_llama_Llama_3.1_8B_Instruct"]
         models=["allenai_OLMo_2_0425_1B_Instruct","allenai_OLMo_2_1124_7B_Instruct","allenai_OLMo_2_1124_13B_Instruct","meta_llama_Llama_3.2_1B_Instruct","meta_llama_Llama_3.1_8B_Instruct"]
+
+    elif(test_name=="wmt_single"):
+        mode = "wmt"
+        # suite_name="sample_return_20_eval_500"
+        # suite_name="sample_return_100_eval_100"
+        suite_name="sample_10_eval_1000"
+        num_beams_list=[1]
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+
+
+    elif(test_name=="wmt_sample_50"):
+
+        root_folder="snellius_copies/helm_output/notable_samples"
+        mode = "wmt"
+        # suite_name="sample_return_20_eval_500"
+        suite_name="sample_return_100_eval_100"
+        num_beams_list=[1]
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    elif(test_name=="wmt_sample_100"):
+
+        root_folder="snellius_copies/helm_output/notable_samples"
+        mode = "wmt"
+        # suite_name="sample_return_20_eval_500"
+        suite_name="sample_return_100_eval_100"
+        num_beams_list=[1]
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
 
     elif(test_name=="wmt_beam8"):
         mode = "wmt"

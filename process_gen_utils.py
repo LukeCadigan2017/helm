@@ -23,6 +23,9 @@ from dataclasses import dataclass
 from process_gens import ProcessGens
 
 
+
+from scipy import stats
+import cvxpy as cp
 import warnings
 
 
@@ -265,13 +268,10 @@ def plot_grouped(df, xlabel, ylabel, groupby='example_idx', title=None, trend_li
         _, ax = plt.subplots()
     warnings.simplefilter(action='ignore', category=FutureWarning)
     if(groupby=="bins"):
-        
         df["bins"]=pd.qcut(df[xlabel],nbins)
     
     grouped = df.groupby(groupby)[[xlabel, ylabel]].agg(['mean', 'count', 'std'])
     
-
-
     x = grouped[(xlabel, 'mean')]
     y = grouped[(ylabel, 'mean')]
     yerr = grouped[(ylabel, 'std')]
@@ -318,3 +318,77 @@ def plot_all(dfs_by_model, compare_metric):
         # plot: group into equally-sized bins (ignores examples example_id)
         plot_grouped(df=filtered_dfs, xlabel="output_logprob", groupby="bins", ylabel=compare_metric, title=f"{model_name} with equal-bins")
         plot_grouped(df=filtered_df, xlabel='output_logprob_norm',  groupby="bins", ylabel=compare_metric+'_norm', title=f"{model_name} with equal-bins")
+
+def plot_spline(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20):
+    if(ax is None):
+        _, ax = plt.subplots()
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+    if(groupby=="bins"):
+        
+        df["bins"]=pd.qcut(df[xlabel],nbins)
+    
+    grouped = df.groupby(groupby)[[xlabel, ylabel]].agg(['mean', 'count', 'std'])
+    x = grouped[(xlabel, 'mean')]
+    y = grouped[(ylabel, 'mean')]
+    yerr = grouped[(ylabel, 'std')]
+
+    yerr=[]
+    for i in grouped.index:
+        # print(grouped.loc[i][ylabel])
+        _, c, s = grouped.loc[i][ylabel]
+        yerr.append(1.96*s/math.sqrt(c))
+
+    # Plot with error bars (standard deviation)
+    ax.errorbar(x, y, yerr=yerr, fmt='o', ecolor='gray', capsize=3, label='Data with std dev')
+    y_fit = cp.Variable(len(x))
+
+    second_diffs = y_fit[:-2] - 2 * y_fit[1:-1] + y_fit[2:]
+    objective = cp.Minimize(cp.sum_squares(y_fit - y))
+    constraints = [second_diffs <= 0]  
+    prob = cp.Problem(objective, constraints)
+    prob.solve()
+
+
+    ax.plot(x, y_fit.value, '-r', label='Concave fit (spline)')
+    ax.set_title("Concave Spline Fit (Second Derivative ≤ 0)")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.legend()
+    ax.grid(True)
+
+#returns rate that col1 is higher than col1
+#if they're equal, return 0.5
+def get_win_rate(row, col1:str, col2:str) -> float:
+    if row[col1]==row[col2]:
+        return 0.5
+    return float((row[col1] - row[col2])>0)
+
+
+
+def get_winrate_by_rank(df,compare_metric,ax=None):
+    # plot_grouped(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20):
+    # grouped = df.groupby("example_idx")[[xlabel, ylabel]].agg(['mean', 'count', 'std'])
+    pivoted = df.pivot(columns='example_idx', index="instanceID", values=compare_metric )
+    
+    
+
+    max_example_idx = examples_df["example_idx"].max()
+    col1=max_example_idx
+    
+    x=[]
+    y=[]
+    for col2 in range(max_example_idx):
+        x.append(col2)
+        
+        pivoted[f"win_rate"] = pivoted.apply( lambda row: get_win_rate(row,col2, col1) , axis=1)
+        win_rate=pivoted["win_rate"].mean()
+        y.append(win_rate)
+
+        stat_rel=stats.ttest_rel(pivoted[col1], pivoted[col2]).pvalue<0.05
+
+        print(stat_rel)
+    if(ax is None):
+        _, ax = plt.subplots()
+    ax.scatter(x,y)
+    ax.set_xlabel('example_idx')
+    ax.set_ylabel(f'win rate vs idx {max_example_idx}')
