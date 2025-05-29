@@ -11,6 +11,8 @@ from helm.common.general import indent_lines, format_text
 class BeamParams:
     num_beams:int=1
     num_return_sequences:int=1
+    top_p:float=1.0
+    top_k:int=-1
 
 @dataclass(frozen=True)
 class Request:

@@ -44,7 +44,18 @@ RUN_MODEL="${RUN_MODEL:=true}"
 
 #<TASK> <MODEL> <NUM_BEAMS_LIST> <EVAL_INSTANCES> <NUM_THREADS> <SUITE>
 DEFAULT_SUITE=sample_${NUM_RETURN_SEQUENCES}_eval_${EVAL_INSTANCES}
+if [ ! -z "$TOP_P" ] ;then
+    DEFAULT_SUITE="${DEFAULT_SUITE}_top_p_${TOP_P}"
+fi        
+
+if [ ! -z "$TOP_K" ] ;then
+    DEFAULT_SUITE="${DEFAULT_SUITE}_top_k_${TOP_K}"
+fi
+
+
+
 SUITE="${SUITE:=$DEFAULT_SUITE}"
+
 
 echo SUITE IS $SUITE
 echo TASK_ENV is $TASK_ENV
@@ -55,6 +66,8 @@ echo NUM_RETURN_SEQUENCES is $NUM_RETURN_SEQUENCES
 echo DISABLE_CACHE is $DISABLE_CACHE
 echo SNELLIUS_METRICS is $SNELLIUS_METRICS
 echo RUN_MODEL is $RUN_MODEL
+echo TOP_P is $TOP_P
+echo TOP_K is $TOP_K
 echo "$# is $#"
 
 
@@ -109,6 +122,14 @@ for TASK_NAME in $TASK_NAMES; do
         
         if [ ! -z "$EOS_TYPE" ] ;then
             RUN_ENTRY="${RUN_ENTRY}eos_type=${EOS_TYPE},"
+        fi
+
+        if [ ! -z "$TOP_P" ] ;then
+            RUN_ENTRY="${RUN_ENTRY}top_p=${TOP_P},"
+        fi        
+        
+        if [ ! -z "$TOP_K" ] ;then
+            RUN_ENTRY="${RUN_ENTRY}top_k=${TOP_K},"
         fi
 
         OUTPUT_PATH="$(./get_output_dir.ksh $SUITE_OUTPUT_DIR $TASK_NAME $MODEL $NUM_BEAMS)"

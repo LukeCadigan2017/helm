@@ -250,6 +250,10 @@ class HuggingFaceServer:
         # num_beams= int(raw_request["num_beams"]) if ("num_beams" in raw_request.keys() ) else None
         num_beams=raw_request["beam_params"].num_beams
         raw_num_return_sequences=raw_request["beam_params"].num_return_sequences
+        top_p=raw_request["beam_params"].top_p
+        top_k=raw_request["beam_params"].top_k
+        if top_k<1:
+            top_k=sys.maxsize
         # raw_num_return_sequences=int(raw_request["num_return_sequences"])
         
         num_generated= raw_num_return_sequences if num_beams is None else max(raw_num_return_sequences, num_beams)
@@ -321,6 +325,8 @@ class HuggingFaceServer:
             
             #helm default
             elif num_beams is None or num_beams==0: 
+
+                #Defaults
                 with torch.no_grad():
                     output = self.model.generate(
                         **encoded_input,
@@ -348,7 +354,7 @@ class HuggingFaceServer:
                         generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())
                     all_generated_tokens_logprobs.append(generated_tokens_logprobs)
             
-            #unbiased sampling
+            #non-beam search tests
             #default for test_run_all.ksh
             elif num_beams==1:
                 #unbiased sampling
@@ -357,8 +363,9 @@ class HuggingFaceServer:
                     num_return_sequences=num_generated,
                     max_new_tokens=raw_request["max_new_tokens"],
                     length_penalty=1,
-                    top_p=1,
-                    top_k=sys.maxsize,
+                    top_p=top_p,
+                    top_k=top_k,
+                    # top_k=sys.maxsize,
                     do_sample=True,
                     return_dict_in_generate=True,
                     output_scores=True,
