@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-import process_gens
+
 import pandas as pd
 from helm.benchmark.runner import InstanceGenerations,GenerationSummary
 from typing import Any, List
@@ -37,7 +37,18 @@ def get_ids(example):
     return [token.token_id for token in example.tokens]
 
 
+def get_model_details(model_name):
 
+
+    info_dict={
+        "allenai_OLMo_2_0425_1B_Instruct":{"size": 1, "suite":  "olmo","model_type":"instruct"},
+        "allenai_OLMo_2_1124_7B_Instruct":{"size": 7, "suite":  "olmo","model_type":"instruct"},
+        "allenai_OLMo_2_1124_13B_Instruct":{"size": 13, "suite":  "olmo","model_type":"instruct"},
+        "meta_llama_Llama_3.2_1B_Instruct":{"size": 1, "suite": "llama","model_type":"instruct"},
+        "meta_llama_Llama_3.1_8B_Instruct":{"size": 8, "suite": "llama","model_type":"instruct"},
+    }
+    
+    return info_dict[model_name]
 
 
 def analyze_completion_by_beam(processGens:ProcessGens , num_beams_list:List[int], num_instances:int):
@@ -132,7 +143,7 @@ def beam_diff_check():
                     print(f"Match! Beam2: {p1} vs {p2} is {diff}, {instance_idx} {idx2}, {idx128}")
                     assert(diff<0.1)
 
-def get_dfs(processGens, num_beams_list):
+def get_dfs(processGens):
     examples_df = pd.DataFrame(processGens.metrics_dicts)
     completions_df=examples_df.loc[examples_df['isCompletion'] == True]
 

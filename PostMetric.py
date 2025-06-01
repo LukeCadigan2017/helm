@@ -132,13 +132,13 @@ class ModelMetric(PostMetric):
     def calculate_metric(self,instance_generation:InstanceGenerations,generated_output:GeneratedOutput) -> float:
         return instance_generation.model
     
-class InstanceIdMetric(PostMetric):
-    @classmethod
-    def name(cls)->str:
-        return "instanceID"
-    @classmethod
-    def calculate_metric(self, instance_generation:InstanceGenerations,generated_output:GeneratedOutput) -> str:
-        return instance_generation.instance_id
+# class InstanceIdMetric(PostMetric):
+#     @classmethod
+#     def name(cls)->str:
+#         return "instanceID"
+#     @classmethod
+#     def calculate_metric(self, instance_generation:InstanceGenerations,generated_output:GeneratedOutput) -> str:
+#         return instance_generation.instance_id
 
 
 
@@ -222,7 +222,7 @@ class InstanceCompletionMetric(PostMetric):
 
 
 #note: metric must be in all metrics for this to work
-all_metrics=[InstanceCompletionMetric, ReferenceMetric, BLEU1_METRIC, BLEU4_METRIC, IsCompletionMetric, InstanceIdMetric, ModelMetric, BeamNumMetric, OutputProbMetric, SentenceLenMetric, TextMetric, TestMetric, Test2Metric]
+all_metrics=[InstanceCompletionMetric, ReferenceMetric, BLEU1_METRIC, BLEU4_METRIC, IsCompletionMetric, ModelMetric, BeamNumMetric, OutputProbMetric, SentenceLenMetric, TextMetric, TestMetric, Test2Metric]
 def get_post_metrics(special_metric_names):
     special_metrics=[]
     for metric in all_metrics:

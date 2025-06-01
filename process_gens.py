@@ -16,6 +16,19 @@ from dataclasses import dataclass
 import os
 import re
 
+
+def print_keys(element, depth=0):
+
+    # print(f"element: {type(element)}")
+    
+    if isinstance(element, dict) and element:
+        first_key=next(iter(element.keys()))
+        print(f"key {depth} example: {first_key}")
+        print_keys(element[first_key], depth+1)
+    else:
+        print(f"value is {element}")
+
+
 def fix_example_themis(completionExample):
     
     if(completionExample.stats_dict and "example_themis" in completionExample.stats_dict.keys()):
@@ -35,18 +48,7 @@ def fix_example_themis(completionExample):
 
 
 
-def get_model_details(model_name):
 
-
-    info_dict={
-        "allenai_OLMo_2_0425_1B_Instruct":{"size": 1, "suite":  "olmo","model_type":"instruct"},
-        "allenai_OLMo_2_1124_7B_Instruct":{"size": 7, "suite":  "olmo","model_type":"instruct"},
-        "allenai_OLMo_2_1124_13B_Instruct":{"size": 13, "suite":  "olmo","model_type":"instruct"},
-        "meta_llama_Llama_3.2_1B_Instruct":{"size": 1, "suite": "llama","model_type":"instruct"},
-        "meta_llama_Llama_3.1_8B_Instruct":{"size": 8, "suite": "llama","model_type":"instruct"},
-    }
-    
-    return info_dict[model_name]
 
 
 
@@ -95,11 +97,29 @@ def get_process_gen_params(test_name):
         mode = "wmt"
         # suite_name="sample_return_20_eval_500"
         # suite_name="sample_return_100_eval_100"
+        suite_name="sample_100_eval_1000"
+        num_beams_list=[1]
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    elif(test_name=="wmt_single_10"):
+        mode = "wmt"
+        # suite_name="sample_return_20_eval_500"
+        # suite_name="sample_return_100_eval_100"
         suite_name="sample_10_eval_1000"
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
 
+    elif(test_name=="wmt_single_top_k_2"):
+        mode = "wmt"
+        suite_name="sample_10_eval_20_top_k_2"
+        num_beams_list=[1]
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
 
+    elif(test_name=="wmt_top_k"):
+        mode = "wmt"
+        suite_name="sample_10_eval_1000_top_k_30"
+        num_beams_list=[1]
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
 
     elif(test_name=="wmt_sample_50"):
 
@@ -302,21 +322,29 @@ def truncate_sequence(text:str, all_stops=["<|end_of_text|>"]) -> str:
 
 
 
+def append_to_dict(dict, key_list, value):
+    cur_key=key_list[0]
+    
+    #make sure it exists
+    if cur_key not in dict.keys():
+        dict[cur_key]={}
 
+    #append recursively if not
+    if(len(key_list)>1):
+        append_to_dict(dict[cur_key], key_list[1:], value)
+    else:
+        dict[cur_key]=value
 
-def calculate_dict(init_dict, root_folder, num_beams_list:List[int], models:List[float], task_names:List[str], suite_name:str, dict_function)->Dict[int, GenerationSummary]:
-    per_model=init_dict
-    for model_idx, model in enumerate(models):        
-        per_task={}
-        for task_idx, task_name in enumerate(task_names):
-            per_beam={}
+def calculate_dict(init_dict, root_folder, num_beams_list:List[int], models:List[float], task_names:List[str], suite_name:str, dict_function, print_files=False)->Dict[int, GenerationSummary]:
+    for model in models:        
+        for task_name in task_names:
             for num_beams in num_beams_list:
                 run_folder=get_run_folder(root_folder=root_folder, num_beams=num_beams, model=model, task_name=task_name, suite_name=suite_name)
+                if(print_files):
+                    print(run_folder)
                 obj=dict_function(run_folder)
-                per_beam[num_beams]=obj
-            per_task[task_idx]=per_beam
-        per_model[model_idx] = per_task
-    return per_model
+                append_to_dict(init_dict, [suite_name, model, task_name, num_beams], obj)
+    return init_dict
 
 
 def calculate_instance_stats_dict(init_dict, root_folder, num_beams_list:List[int], models:List[float], task_names:List[str], suite_name:str, instance_metrics:List[str])->Dict[int, List[PerInstanceStats]]:
@@ -343,51 +371,14 @@ def calculate_instance_stats_dict(init_dict, root_folder, num_beams_list:List[in
     dict_function = lambda run_folder: json_to_run_instance_stats(run_folder=run_folder, instance_metrics=instance_metrics)
     return calculate_dict(init_dict, root_folder, num_beams_list, models, task_names, suite_name, dict_function)
 
-def calculate_instances_dict(init_dict, root_folder, num_beams_list:List[int], models:List[float], task_names:List[str], suite_name:str):
+def calculate_instances_dict(init_dict, root_folder, num_beams_list:List[int], models:List[float], task_names:List[str], suite_name:str, print_files:bool):
     def get_instance_dict_from_run_folder(run_folder):
         gen_summary= get_gen_summary_from_run_folder(run_folder)
         instance_dict={}
         for instance_generation in gen_summary.instance_generations:
             instance_dict[instance_generation.instance_id] = instance_generation
         return instance_dict
-    return calculate_dict(init_dict,root_folder, num_beams_list, models, task_names, suite_name,get_instance_dict_from_run_folder )
-
-
-def get_metrics_dict(instances_dict:Dict[int, GenerationSummary], custom_metrics:List[PostMetric.PostMetric], instance_stats_dict):
-
-    base_metrics=[PostMetric.TextMetric,PostMetric.SentenceLenMetric(),PostMetric.OutputProbMetric(),
-                   PostMetric.InstanceIdMetric(), PostMetric.IsCompletionMetric()]
-    metrics=base_metrics+custom_metrics
-    metrics_dicts=[]   
-
-    for model in instances_dict.keys():        
-        for task_name in instances_dict[model].keys():
-            for beam_num in instances_dict[model][task_name].keys():
-
-                instance_stats_per_run = instance_stats_dict[model][task_name][beam_num]
-
-                for instance_id, instance_generation in instances_dict[model][task_name][beam_num].items():
-                    for example_idx,generated_output in enumerate(instance_generation.examples):
-                        pd_metrics_dict=generated_output.stats_dict if generated_output.stats_dict  is not None else {} 
-                        
-                        pd_metrics_dict["beam_num"]=beam_num
-                        pd_metrics_dict["task_name"]=task_name
-                        pd_metrics_dict["model"]=model
-                        pd_metrics_dict["example_idx"]=example_idx
-                        
-                        #fill out the metrics dict
-                        for metric in metrics:
-                            pd_metrics_dict=PostMetric.calculate_post_metric(pd_metrics_dict,metric,instance_generation,generated_output)
-                        
-
-                        if(example_idx==0):
-                            pd_metrics_dict["isCompletion"]=(example_idx==0)
-                            if(instance_stats_per_run and instance_generation.instance_id in instance_stats_per_run.keys()):
-                                completion_metrics_dict = instance_stats_per_run[instance_generation.instance_id]
-                                for stat_name, value in completion_metrics_dict.items():
-                                    pd_metrics_dict[stat_name]= value
-                        metrics_dicts.append(pd_metrics_dict)
-    return metrics_dicts
+    return calculate_dict(init_dict,root_folder, num_beams_list, models, task_names, suite_name,get_instance_dict_from_run_folder, print_files)
 
 get_first = lambda x: next(iter(x.values()))
 # @classmethod  
@@ -434,6 +425,7 @@ class ProcessGens:
     # task_and_beam_num_to_summary:Dict[int, GenerationSummary]
     instances_dict={}
     instance_stats_dict={}
+    prompt_to_instanceID={}
     metrics_dict:List[Dict[str,any]]=[]
     first_run_instances={}
 
@@ -441,16 +433,16 @@ class ProcessGens:
     def __init__(self):
         self.instances_dict={}
         self.instance_stats_dict={}
+        self.prompt_to_instanceID={}
         pass
 
-    def init_with_mode(self, process_gens_modes:List[str]):
+    def init_with_mode(self, process_gens_modes:List[str], print_files=False):
         print(f"Init: process_gens_mode {process_gens_modes}")
         if isinstance(process_gens_modes, str):
             process_gens_modes = [process_gens_modes]
         for process_gens_mode in process_gens_modes:
-            
             root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics= get_process_gen_params(process_gens_mode)
-            self.init(root_folder=root_folder,num_beams_list=num_beams_list,models=models,custom_metrics=custom_metrics,task_names=task_names,  suite_name=suite_name,instance_metrics=instance_metrics)
+            self.init(root_folder=root_folder,num_beams_list=num_beams_list,models=models,custom_metrics=custom_metrics,task_names=task_names,  suite_name=suite_name,instance_metrics=instance_metrics, print_files=print_files)
             
     def get_params(self):
         root_folder     =self.process_gen_params["root_folder"]
@@ -462,22 +454,53 @@ class ProcessGens:
         instance_metrics=self.process_gen_params["instance_metrics"]
         return root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics
 
-    # def print_keys():
-    #     firstkey=next(iter(processGens.instances_dict.keys()))
-    #     print(firstkey)
-    #     secondKey=next(iter(processGens.instances_dict[firstkey].keys()))
-    #     print(secondKey)
-    #     thirdKey=next(iter(processGens.instances_dict[firstkey][secondKey].keys()))
-    #     print(thirdKey)
-    #     fourthKey=next(iter(processGens.instances_dict[firstkey][secondKey][thirdKey].keys()))
-    #     print(fourthKey)
-    #     print("First prompt")
-    #     print(processGens.instances_dict[firstkey][secondKey][thirdKey][fourthKey].prompt)
+    def calculate_instance_id(self, instance_generation):
+        key=instance_generation.prompt
+        if key not in self.prompt_to_instanceID:
+            self.prompt_to_instanceID[key]= len(self.prompt_to_instanceID)
+        return self.prompt_to_instanceID[key]
 
-    #     print(processGens.instances_dict[0][0][2]["id10944"].prompt)
+            
 
+    def get_metrics_dict(self, instances_dict:Dict[int, GenerationSummary], custom_metrics:List[PostMetric.PostMetric], instance_stats_dict):
 
-    def init(self,root_folder:str, num_beams_list:List[int], models:List[float], custom_metrics:List[PostMetric.PostMetric],task_names:List[str], instance_metrics:Dict[int, Dict[str, Dict[str, float]]]=None, suite_name:str=""):
+        base_metrics=[PostMetric.TextMetric,PostMetric.SentenceLenMetric(),PostMetric.OutputProbMetric(),PostMetric.IsCompletionMetric()]
+        metrics=base_metrics+custom_metrics
+        metrics_dicts=[]   
+
+        for suite_name in instances_dict.keys():
+            for model in instances_dict[suite_name].keys():        
+                for task_name in instances_dict[suite_name][model].keys():
+                    for beam_num in instances_dict[suite_name][model][task_name].keys():
+
+                        instance_stats_per_run = instance_stats_dict[suite_name][model][task_name][beam_num]
+
+                        for instance_id, instance_generation in instances_dict[suite_name][model][task_name][beam_num].items():
+                            for example_idx,generated_output in enumerate(instance_generation.examples):
+                                pd_metrics_dict=generated_output.stats_dict if generated_output.stats_dict  is not None else {} 
+                                
+                                pd_metrics_dict["beam_num"]=beam_num
+                                pd_metrics_dict["task_name"]=task_name
+                                pd_metrics_dict["model"]=model
+                                pd_metrics_dict["example_idx"]=example_idx
+                                pd_metrics_dict["suite"]=suite_name
+                                
+                                pd_metrics_dict["instanceID"]=self.calculate_instance_id(instance_generation)
+
+                                #fill out the metrics dict
+                                for metric in metrics:
+                                    pd_metrics_dict=PostMetric.calculate_post_metric(pd_metrics_dict,metric,instance_generation,generated_output)
+                                
+                                if(example_idx==0):
+                                    pd_metrics_dict["isCompletion"]=(example_idx==0)
+                                    if(instance_stats_per_run and instance_generation.instance_id in instance_stats_per_run.keys()):
+                                        completion_metrics_dict = instance_stats_per_run[instance_generation.instance_id]
+                                        for stat_name, value in completion_metrics_dict.items():
+                                            pd_metrics_dict[stat_name]= value
+                                metrics_dicts.append(pd_metrics_dict)
+        return metrics_dicts
+
+    def init(self,root_folder:str, num_beams_list:List[int], models:List[float], custom_metrics:List[PostMetric.PostMetric],task_names:List[str], instance_metrics:Dict[int, Dict[str, Dict[str, float]]]=None, suite_name:str="", print_files:bool=False):
         
         # #this is the pre-computed metrics
         # print("get_metrics_df")
@@ -492,7 +515,7 @@ class ProcessGens:
         print("calculate_gen_summary_dict")
         
         
-        self.instances_dict=calculate_instances_dict(init_dict=self.instances_dict, root_folder=root_folder, num_beams_list=num_beams_list, models=models,task_names=task_names, suite_name=suite_name)
+        self.instances_dict=calculate_instances_dict(init_dict=self.instances_dict, root_folder=root_folder, num_beams_list=num_beams_list, models=models,task_names=task_names, suite_name=suite_name, print_files=print_files)
         
 
         #get the run instance stats for each task and beam
@@ -500,14 +523,14 @@ class ProcessGens:
         
 
         print("get_metrics_dict")
-        self.metrics_dicts=get_metrics_dict(instances_dict=self.instances_dict, custom_metrics=custom_metrics, instance_stats_dict=self.instance_stats_dict)
+        self.metrics_dicts=self.get_metrics_dict(instances_dict=self.instances_dict, custom_metrics=custom_metrics, instance_stats_dict=self.instance_stats_dict)
 
 
         self.first_run_instances=get_first(get_first(get_first(self.instances_dict)))
         self.ids= list(self.first_run_instances.keys())
 
 
-        self.process_gen_params = {"root_folder":root_folder ,
+        self.process_gen_params = {"root_folder":root_folder,
             "num_beams_list":num_beams_list,
             "models":models,
             "custom_metrics":custom_metrics,

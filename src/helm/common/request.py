@@ -12,7 +12,9 @@ class BeamParams:
     num_beams:int=1
     num_return_sequences:int=1
     top_p:float=1.0
-    top_k:int=-1
+    top_k:int=0
+    temperature:float=1.0
+    length_penalty:float=0
 
 @dataclass(frozen=True)
 class Request:

@@ -252,8 +252,8 @@ class HuggingFaceServer:
         raw_num_return_sequences=raw_request["beam_params"].num_return_sequences
         top_p=raw_request["beam_params"].top_p
         top_k=raw_request["beam_params"].top_k
-        if top_k<1:
-            top_k=sys.maxsize
+        temperature=raw_request["beam_params"].temperature
+        length_penalty=raw_request["beam_params"].length_penalty
         # raw_num_return_sequences=int(raw_request["num_return_sequences"])
         
         num_generated= raw_num_return_sequences if num_beams is None else max(raw_num_return_sequences, num_beams)
@@ -362,11 +362,13 @@ class HuggingFaceServer:
                     **encoded_input,
                     num_return_sequences=num_generated,
                     max_new_tokens=raw_request["max_new_tokens"],
-                    length_penalty=1,
+
+                    length_penalty=length_penalty,
+                    temperature=temperature,
                     top_p=top_p,
                     top_k=top_k,
-                    # top_k=sys.maxsize,
                     do_sample=True,
+
                     return_dict_in_generate=True,
                     output_scores=True,
                     output_logits=True,
