@@ -15,6 +15,7 @@ class BeamParams:
     top_k:int=0
     temperature:float=1.0
     length_penalty:float=0
+    batch_size:int=0
 
 @dataclass(frozen=True)
 class Request:

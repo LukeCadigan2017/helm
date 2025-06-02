@@ -109,6 +109,14 @@ def get_process_gen_params(test_name):
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
 
+    elif(test_name=="wmt_test"):
+        mode = "wmt"
+        # suite_name="sample_return_20_eval_500"
+        # suite_name="sample_return_100_eval_100"
+        suite_name="sample_10_eval_1000"
+        num_beams_list=[1]
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
+
     elif(test_name=="wmt_single_top_k_2"):
         mode = "wmt"
         suite_name="sample_10_eval_20_top_k_2"
@@ -117,7 +125,7 @@ def get_process_gen_params(test_name):
 
     elif(test_name=="wmt_top_k"):
         mode = "wmt"
-        suite_name="sample_10_eval_1000_top_k_30"
+        suite_name="sample_100_eval_100_top_k_30"
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
 

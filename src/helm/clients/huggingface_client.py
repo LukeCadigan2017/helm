@@ -28,6 +28,7 @@ from threading import Lock
 import json
 from pprint import pprint
 import sys
+import numpy as np
 
 # class StopAtSpecificTokenCriteria(StoppingCriteria):
 #     def __init__(self, stop_sequence: List[int]):
@@ -254,6 +255,9 @@ class HuggingFaceServer:
         top_k=raw_request["beam_params"].top_k
         temperature=raw_request["beam_params"].temperature
         length_penalty=raw_request["beam_params"].length_penalty
+        
+        batch_size=raw_request["beam_params"].batch_size
+        
         # raw_num_return_sequences=int(raw_request["num_return_sequences"])
         
         num_generated= raw_num_return_sequences if num_beams is None else max(raw_num_return_sequences, num_beams)
@@ -357,27 +361,63 @@ class HuggingFaceServer:
             #non-beam search tests
             #default for test_run_all.ksh
             elif num_beams==1:
+                #we care about this for unbiased samples
                 #unbiased sampling
-                output = self.model.generate(
-                    **encoded_input,
-                    num_return_sequences=num_generated,
-                    max_new_tokens=raw_request["max_new_tokens"],
+                # output = self.model.generate(
+                #     **encoded_input,
+                #     num_return_sequences=num_generated,
+                #     max_new_tokens=raw_request["max_new_tokens"],
 
-                    length_penalty=length_penalty,
-                    temperature=temperature,
-                    top_p=top_p,
-                    top_k=top_k,
-                    do_sample=True,
+                #     length_penalty=length_penalty,
+                #     temperature=temperature,
+                #     top_p=top_p,
+                #     top_k=top_k,
+                #     do_sample=True,
 
-                    return_dict_in_generate=True,
-                    output_scores=True,
-                    output_logits=True,
-                    **optional_args,
-                    stopping_criteria=stopping_criteria,
-                )
-                sequences = output.sequences
-                logits = output.logits
-                
+                #     return_dict_in_generate=True,
+                #     output_scores=True,
+                #     output_logits=True,
+                #     **optional_args,
+                #     stopping_criteria=stopping_criteria,
+                # )
+                # sequences = output.sequences
+                # logits =output.logits
+                # logits= torch.stack(list(logits), dim=0)
+
+                batch_size = num_generated if batch_size is 0 else batch_size
+                assert (num_generated % batch_size)==0
+                logits=None
+                sequences=None
+                for i in range(int(num_generated / batch_size)):
+                    batch_output = self.model.generate(
+                        **encoded_input,
+                        num_return_sequences=batch_size,
+                        max_new_tokens=raw_request["max_new_tokens"],
+
+                        # length_penalty=length_penalty,
+                        temperature=temperature,
+                        top_p=top_p,
+                        top_k=top_k,
+                        do_sample=True,
+
+                        return_dict_in_generate=True,
+                        output_scores=True,
+                        output_logits=True,
+                        **optional_args,
+                        stopping_criteria=stopping_criteria,
+                    )
+                    #generate
+                    batch_sequences = batch_output.sequences
+                    batch_logits = torch.stack(list(batch_output.logits), dim=0)
+                    def safe_append_tensor(tensor_agg, batch_tensor, axis):
+                        if tensor_agg is None:
+                            return batch_tensor
+                        return  torch.cat((tensor_agg,batch_tensor), axis=axis)
+
+                    sequences = safe_append_tensor(sequences, batch_sequences, 0)
+                    logits = safe_append_tensor(logits, batch_logits, 1)
+                #sequences is n_samples by 197
+                #logits is 100 by n_samples  by vocab size
                 for completion_id in range(num_generated):
                     generated_tokens_logprobs = []
                     for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):

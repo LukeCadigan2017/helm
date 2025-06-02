@@ -132,6 +132,12 @@ for TASK_NAME in $TASK_NAMES; do
             RUN_ENTRY="${RUN_ENTRY}top_k=${TOP_K},"
         fi
 
+        if [ ! -z "$BATCH_SIZE" ] ;then
+            RUN_ENTRY="${RUN_ENTRY}batch_size=${BATCH_SIZE},"
+        fi
+        if [ ! -z "$TEMPERATURE" ] ;then
+            RUN_ENTRY="${RUN_ENTRY}temperature=${TEMPERATURE},"
+        fi
         OUTPUT_PATH="$(./get_output_dir.ksh $SUITE_OUTPUT_DIR $TASK_NAME $MODEL $NUM_BEAMS)"
         TRUE_OUTPUT_PATH=${OUTPUT_PATH}/runs/${SUITE}
 
