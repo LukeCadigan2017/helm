@@ -458,7 +458,7 @@ class HuggingFaceServer:
                     sequences = safe_append_tensor(sequences, batch_sequences, 0, pad_value=self.eos_id)
                     logits = safe_append_tensor(logits, batch_logits, 1, pad_value=-1)
                     # print(f"logits size {logits.size()}")
-                    print(f"sequences size {sequences.size()}")
+                    print(f"sequences size {sequences.size()}", flush=True)
                 #sequences is n_samples by max_length
                 #logits is 100 by n_samples  by vocab size
                 for completion_id in range(num_generated):
