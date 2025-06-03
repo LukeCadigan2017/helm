@@ -220,6 +220,8 @@ class HuggingFaceServer:
         with wrapped_tokenizer as tokenizer:
             self.eos=tokenizer.eos_token
             self.bos=tokenizer.bos_token
+            self.eos_id = tokenizer(self.eos, return_tensors="pt", return_token_type_ids=False).input_ids[0].item()
+            
         # Security issue: currently we trust remote code by default.
         # We retain this temporarily to maintain reverse compatibility.
         # TODO: Delete if-else and don't set trust_remote_code=True
@@ -453,9 +455,9 @@ class HuggingFaceServer:
                     #     return  torch.cat((tensor_agg,batch_tensor), axis=axis)
 
 
-                    sequences = safe_append_tensor(sequences, batch_sequences, 0, pad_value=self.eos)
+                    sequences = safe_append_tensor(sequences, batch_sequences, 0, pad_value=self.eos_id)
                     logits = safe_append_tensor(logits, batch_logits, 1, pad_value=-1)
-                    print(f"logits size {logits.size()}")
+                    # print(f"logits size {logits.size()}")
                     print(f"sequences size {sequences.size()}")
                 #sequences is n_samples by max_length
                 #logits is 100 by n_samples  by vocab size
