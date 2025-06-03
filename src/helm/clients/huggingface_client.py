@@ -220,7 +220,7 @@ class HuggingFaceServer:
         with wrapped_tokenizer as tokenizer:
             self.eos=tokenizer.eos_token
             self.bos=tokenizer.bos_token
-            self.eos_id = tokenizer(self.eos, return_tensors="pt", return_token_type_ids=False).input_ids[0].item()
+            self.eos_id = tokenizer(self.eos, return_tensors="pt", return_token_type_ids=False).input_ids.flatten()[0].item()
             
         # Security issue: currently we trust remote code by default.
         # We retain this temporarily to maintain reverse compatibility.
