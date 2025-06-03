@@ -134,8 +134,11 @@ class AdapterSpec:
     image_generation_parameters: Optional[ImageGenerationParameters] = None
     """Parameters for image generation."""
 
-    beam_params: BeamParams = BeamParams(num_beams=1)
+    beam_params: BeamParams = BeamParams()
     """Number of beams used for beam search. 1=No beam search, -1=exact mode"""
+    
+    first_run_instance: Optional[int] = None
+    """What is the first instance we evaluate on"""
 
     generated_output_file: str=""
     """Where to save the generated outputs"""

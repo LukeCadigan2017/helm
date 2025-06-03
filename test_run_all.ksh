@@ -38,6 +38,7 @@ NUM_RETURN_SEQUENCES=$6
 #NUM_RETURN_SEQUENCES="${NUM_RETURN_SEQUENCES:=1}"
 DISABLE_CACHE="${DISABLE_CACHE:=true}"
 RUN_MODEL="${RUN_MODEL:=true}"
+FIRST_RUN_INSTANCE="${FIRST_RUN_INSTANCE:=0}"
 # RUN_MODEL="${RUN_MODEL:=true}"
 # POST_INSTANCE_METRICS="${POST_INSTANCE_METRICS:=no_metrics}"
 # POST_EXAMPLE_METRICS="${POST_EXAMPLE_METRICS:=no_metrics}"
@@ -52,6 +53,9 @@ if [ ! -z "$TOP_K" ] ;then
     DEFAULT_SUITE="${DEFAULT_SUITE}_top_k_${TOP_K}"
 fi
 
+if [ ! -z "$FIRST_RUN_INSTANCE" ] ;then
+    DEFAULT_SUITE="${DEFAULT_SUITE}_first_inst_${FIRST_RUN_INSTANCE}"
+fi
 
 
 SUITE="${SUITE:=$DEFAULT_SUITE}"
@@ -106,7 +110,7 @@ for TASK_NAME in $TASK_NAMES; do
     for NUM_BEAMS in $NUM_BEAMS_LIST; do
         echo_space
 
-        echo "TASK_NAMES IS $TASK_NAMES"
+        echo "SUITTASK_NAMES IS $TASK_NAMES"
         echo "TASK_NAME  IS $TASK_NAME"
         #get run entry and output file names
 
@@ -154,16 +158,19 @@ for TASK_NAME in $TASK_NAMES; do
         STATS_FILE=${RUN_PATH}/stats.json
         
         if [ "$RUN_MODEL" = true ] ; then
-            echo helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
+
+        
+        
+            echo helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES  --first-run-instance $FIRST_RUN_INSTANCE \
                 -o $OUTPUT_PATH --suite $SUITE --num-threads $NUM_THREADS --cache-instances
 
             if [ "$DISABLE_CACHE" = true ] ; then
                 echo "Disable cache"
-                helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
+                helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES  --first-run-instance $FIRST_RUN_INSTANCE \
                     -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS --disable-cache --cache-instances
             else
                 echo "Do not disable cache"
-                helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES \
+                helm-run --run-entries $RUN_ENTRY --num-train-trials $NUM_TRAIN_TRIALS --max-eval-instances $EVAL_INSTANCES  --first-run-instance $FIRST_RUN_INSTANCE \
                     -o $OUTPUT_PATH --suite $SUITE  --num-threads $NUM_THREADS --cache-instances
             fi
         fi

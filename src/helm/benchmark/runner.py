@@ -145,7 +145,7 @@ def remove_per_instance_stats_nans(per_instance_stats_list: List[PerInstanceStat
 
 
 def downsample_eval_instances(
-    instances: List[Instance], max_eval_instances: int, eval_splits: List[str]
+    instances: List[Instance], max_eval_instances: int, first_run_instance:int, eval_splits: List[str]
 ) -> List[Instance]:
     """
     Get the instances necessary for this run:
@@ -153,6 +153,9 @@ def downsample_eval_instances(
     Eval instances (split=valid or test): keep at most `max_eval_instances` specified in `AdapterSpec` by sampling
     Return the resulting train and eval instances.
     """
+
+    # breakpoint()
+
     all_train_instances: List[Instance] = [instance for instance in instances if instance.split == TRAIN_SPLIT]
 
     all_eval_instances: List[Instance] = [instance for instance in instances if instance.split in eval_splits]
@@ -161,11 +164,13 @@ def downsample_eval_instances(
         np.random.seed(0)
         selected_eval_instances = list(
             np.random.choice(
-                all_eval_instances,  # type: ignore
-                max_eval_instances,
-                replace=False,
+            all_eval_instances,  # type: ignore
+            first_run_instance+max_eval_instances,
+            replace=False,
             )
-        )
+        )[first_run_instance:]
+
+        
     else:
         selected_eval_instances = all_eval_instances
 
@@ -335,9 +340,12 @@ class Runner:
 
         # Get the instances necessary for this run.
         max_eval_instances = run_spec.adapter_spec.max_eval_instances
+        first_run_instance = run_spec.adapter_spec.first_run_instance
+
+        
         eval_splits = run_spec.adapter_spec.eval_splits or EVAL_SPLITS
         if max_eval_instances is not None:
-            instances = downsample_eval_instances(instances, max_eval_instances, eval_splits)
+            instances = downsample_eval_instances(instances=instances, max_eval_instances=max_eval_instances, first_run_instance=first_run_instance, eval_splits=eval_splits) 
 
         # Data preprocessing
         instances = DataPreprocessor(run_spec.data_augmenter_spec).preprocess(

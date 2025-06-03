@@ -29,6 +29,7 @@ from helm.benchmark.run_spec_factory import construct_run_specs
 def run_entries_to_run_specs(
     run_entries: List[RunEntry],
     max_eval_instances: Optional[int] = None,
+    first_run_instance:Optional[int]=None,
     num_train_trials: Optional[int] = None,
     models_to_run: Optional[List[str]] = None,
     groups_to_run: Optional[List[str]] = None,
@@ -53,7 +54,11 @@ def run_entries_to_run_specs(
             # Modify AdapterSpec
             adapter_spec: AdapterSpec = run_spec.adapter_spec
             if max_eval_instances is not None and adapter_spec.max_eval_instances is None:
-                adapter_spec = replace(adapter_spec, max_eval_instances=max_eval_instances)
+                adapter_spec = replace(adapter_spec,  max_eval_instances=max_eval_instances)
+
+            if first_run_instance is not None and adapter_spec.first_run_instance is None:
+            
+                adapter_spec = replace(adapter_spec,  first_run_instance=first_run_instance)
 
             if adapter_spec.max_train_instances == 0:
                 adapter_spec = replace(adapter_spec, num_train_trials=1)
@@ -161,6 +166,13 @@ def add_run_args(parser: argparse.ArgumentParser):
         type=int,
         required=True,
         help="Maximum number of instances to evaluate on, overrides the value in Adapter spec.",
+    )    
+
+    parser.add_argument(
+        "--first-run-instance",
+        type=int,
+        required=True,
+        help="Which instance to start evaluating on",
     )
     parser.add_argument(
         "-t",
@@ -317,14 +329,19 @@ def main():
         if any(model_expander_pattern.search(run_entry.description) for run_entry in run_entries):
             raise Exception("--models-to-run must be set if the `models=` run expander expands to multiple models")
 
+    # --max-eval-instances
+    # --first-run-instance
     run_specs = run_entries_to_run_specs(
         run_entries=run_entries,
         max_eval_instances=args.max_eval_instances,
+        first_run_instance=args.first_run_instance,
         num_train_trials=args.num_train_trials,
         models_to_run=args.models_to_run,
         groups_to_run=args.groups_to_run,
         priority=args.priority,
     )
+    # print("hello")
+    # breakpoint()
     hlog(f"{len(run_entries)} entries produced {len(run_specs)} run specs")
 
     if len(run_specs) == 0:
