@@ -43,6 +43,44 @@ import numpy as np
 #         current_sequence = input_ids[:, -len(self.stop_sequence) :]
 #         return bool(torch.all(current_sequence == stop_sequence_tensor).item())
 
+def pad_to_dim(m, correct_sizes, axes, num_dim, cat_axis, pad_value):
+    
+    pad_tuple = [0]*(2*num_dim)
+
+    for axis in axes:
+        if axis != cat_axis:
+            diff = correct_sizes[axis]-m.size(axis) 
+            if  diff != 0:
+                pad_tuple[2*((num_dim-1)-axis)+1] = diff
+    return torch.nn.functional.pad(input=m, pad=pad_tuple, value=pad_value)
+    
+
+def match_sizes(m1, m2,cat_axis, pad_value):
+    #if they're the same size
+    s1=list(m1.size())
+    s2=list(m2.size())
+    s1.pop(cat_axis)
+    s2.pop(cat_axis)
+    if s1 == s2:
+        return m1, m2
+
+    num_dim=len(m1.size())
+    axes=list(range(num_dim))
+    correct_sizes= [max(m1.size(axis),m2.size(axis)) for axis in axes]
+    m1=pad_to_dim(m1, correct_sizes, axes, num_dim, cat_axis, pad_value)
+    m2=pad_to_dim(m2, correct_sizes, axes, num_dim, cat_axis, pad_value)
+    return m1, m2
+
+
+def safe_append_tensor(tensor_agg, batch_tensor, cat_axis, pad_value):
+    if tensor_agg is None:
+        return batch_tensor
+    
+    tensor_agg, batch_tensor=match_sizes(tensor_agg, batch_tensor,cat_axis, pad_value)
+    return  torch.cat((tensor_agg,batch_tensor), axis=cat_axis)
+
+
+
 class StopOnStrings(StoppingCriteria):
     def __init__(self, stop_strings, tokenizer):
         self.stop_strings = stop_strings
@@ -409,14 +447,17 @@ class HuggingFaceServer:
                     #generate
                     batch_sequences = batch_output.sequences
                     batch_logits = torch.stack(list(batch_output.logits), dim=0)
-                    def safe_append_tensor(tensor_agg, batch_tensor, axis):
-                        if tensor_agg is None:
-                            return batch_tensor
-                        return  torch.cat((tensor_agg,batch_tensor), axis=axis)
+                    # def safe_append_tensor(tensor_agg, batch_tensor, axis):
+                    #     if tensor_agg is None:
+                    #         return batch_tensor
+                    #     return  torch.cat((tensor_agg,batch_tensor), axis=axis)
 
-                    sequences = safe_append_tensor(sequences, batch_sequences, 0)
-                    logits = safe_append_tensor(logits, batch_logits, 1)
-                #sequences is n_samples by 197
+
+                    sequences = safe_append_tensor(sequences, batch_sequences, 0, pad_value=self.eos)
+                    logits = safe_append_tensor(logits, batch_logits, 1, pad_value=-1)
+                    print(f"logits size {logits.size()}")
+                    print(f"sequences size {sequences.size()}")
+                #sequences is n_samples by max_length
                 #logits is 100 by n_samples  by vocab size
                 for completion_id in range(num_generated):
                     generated_tokens_logprobs = []
