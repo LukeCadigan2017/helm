@@ -280,7 +280,7 @@ def get_med_qa_spec() -> RunSpec:
 
 
 @run_spec_function("wmt_14")
-def get_wmt_14_spec(language_pair: str, max_train_instances: int = 1, num_beams: int=1,num_return_sequences=1,top_p=1,top_k=0,eos_type="task",temperature=1,batch_size=0) -> RunSpec:
+def get_wmt_14_spec(language_pair: str, max_train_instances: int = 1, num_beams: int=1,num_return_sequences=1,top_p=1,top_k=0,eos_type="task",temperature=1,batch_size=0, exact_mode_str="false") -> RunSpec:
     FULL_LANGUAGE_NAMES = {
         "cs": "Czech",
         "de": "German",
@@ -291,6 +291,8 @@ def get_wmt_14_spec(language_pair: str, max_train_instances: int = 1, num_beams:
     }
     source_language, target_language = language_pair.split("-")
 
+    exact_mode = (exact_mode_str=="true")
+
     scenario_spec = ScenarioSpec(
         class_name="helm.benchmark.scenarios.wmt_14_scenario.WMT14Scenario",
         args={"source_language": source_language, "target_language": target_language},
@@ -300,7 +302,7 @@ def get_wmt_14_spec(language_pair: str, max_train_instances: int = 1, num_beams:
         source_language=FULL_LANGUAGE_NAMES[source_language],
         target_language=FULL_LANGUAGE_NAMES[target_language],
         max_train_instances=max_train_instances,
-        beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size),
+        beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size,exact_mode=exact_mode),
         # generated_output_file=generated_output_file,
         num_return_sequences=num_return_sequences,
         eos_type=eos_type

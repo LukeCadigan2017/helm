@@ -142,6 +142,11 @@ for TASK_NAME in $TASK_NAMES; do
         if [ ! -z "$TEMPERATURE" ] ;then
             RUN_ENTRY="${RUN_ENTRY}temperature=${TEMPERATURE},"
         fi
+        if [ ! -z "$EXACT_MODE" ] ;then
+            RUN_ENTRY="${RUN_ENTRY}exact_mode_str=${EXACT_MODE},"
+        fi
+
+
         OUTPUT_PATH="$(./get_output_dir.ksh $SUITE_OUTPUT_DIR $TASK_NAME $MODEL $NUM_BEAMS)"
         TRUE_OUTPUT_PATH=${OUTPUT_PATH}/runs/${SUITE}
 

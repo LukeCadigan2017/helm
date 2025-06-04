@@ -111,7 +111,7 @@ class StopOnStrings(StoppingCriteria):
         return False
 
 
-def exact_mode_algo(model, x:str,bos:int, eos:int, wrapped_tokenizer):
+def exact_mode_algo(model, encoded_input,bos:int, eos:int):
     def get_next_log_probs(x, y, model):
         with torch.no_grad():
             outputs = model(input_ids=x, decoder_input_ids=y)
@@ -137,25 +137,13 @@ def exact_mode_algo(model, x:str,bos:int, eos:int, wrapped_tokenizer):
                         best_y=new_y
                         gamma=new_gamma
         return best_y, gamma
-    def get_decode_log_prob(x,output, model, wrapped_tokenizer):
-        score=0
-        for idx in range(1, output.size()[1]):
-            pred=output[0, idx]
-            y=output[:, :idx]
-            log_p= get_next_log_probs(x,y , model)[pred]
-            score+=log_p    
-        with wrapped_tokenizer as tokenizer:
-            print("gen_outputs ",score," : ",tokenizer.decode(y[0], skip_special_tokens=True))
-        return score
-    
+
+    x=encoded_input.input_ids
     y = bos*torch.ones((1,1), dtype=int)
 
     ended_y=torch.concat((y, torch.tensor([[eos]], dtype=int)), axis=1)
     start_gamma=get_next_log_probs(x, ended_y, model)[eos]
     best_y, gamma = DFS(x, y,0, start_gamma, model, eos)
-    print(f"best_y is {best_y}")
-    print(f"Gamma is ",gamma)
-    get_decode_log_prob(x,best_y, model, wrapped_tokenizer)
     return best_y, gamma
 
 class HuggingFaceRequest(TypedDict):
@@ -220,7 +208,8 @@ class HuggingFaceServer:
         with wrapped_tokenizer as tokenizer:
             self.eos=tokenizer.eos_token
             self.bos=tokenizer.bos_token
-            self.eos_id = tokenizer(self.eos, return_tensors="pt", return_token_type_ids=False).input_ids.flatten()[0].item()
+            self.eos_id = tokenizer(tokenizer.eos_token, return_tensors="pt", return_token_type_ids=False).input_ids.flatten()[0].item()
+            self.bos_id = tokenizer(tokenizer.bos_token, return_tensors="pt", return_token_type_ids=False).input_ids.flatten()[0].item()
             
         # Security issue: currently we trust remote code by default.
         # We retain this temporarily to maintain reverse compatibility.
@@ -295,6 +284,7 @@ class HuggingFaceServer:
         top_k=raw_request["beam_params"].top_k
         temperature=raw_request["beam_params"].temperature
         length_penalty=raw_request["beam_params"].length_penalty
+        exact_mode=raw_request["beam_params"].exact_mode
         
         batch_size=raw_request["beam_params"].batch_size
         
@@ -312,7 +302,38 @@ class HuggingFaceServer:
         else:
 
             #beam search
-            if(num_beams >1):
+
+
+            #exact mode
+            if exact_mode==True:
+                # breakpoint()
+                # best_y, gamma= exact_mode_algo(model=self.model, x=encoded_input,bos=self.bos, eos=self.eos, wrapped_tokenizer=self.wrapped_tokenizer)
+                best_y, gamma=exact_mode_algo(self.model, encoded_input,self.bos_id, self.eos_id)
+                full_sentence=torch.concat((encoded_input.input_ids, best_y), axis=1)
+                with torch.no_grad():
+                    
+
+                    #this is a test
+                    with torch.no_grad():
+                        output0 = self.model(encoded_input["input_ids"])
+                        sequences0 = encoded_input["input_ids"]
+                        scores0 = output0.logits
+                    
+                    
+                    output = self.model(full_sentence)
+                    sequences = full_sentence
+                    logits = output.logits
+
+                completion_id=0
+                generated_tokens_logprobs = []
+                for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
+                    logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=0)
+                    # Get log probability of chosen token.
+                    j = i + len(encoded_input.input_ids[0])
+                    generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())
+                all_generated_tokens_logprobs.append(generated_tokens_logprobs)
+
+            elif(num_beams >1):
                 # should be this?
                 # with torch.no_grad():
                     # outputs = self.model.generate(
@@ -362,10 +383,6 @@ class HuggingFaceServer:
                             token_logprob=transition_scores[completion_id][i].item()
                             generated_tokens_logprobs.append(token_logprob)
                         all_generated_tokens_logprobs.append(generated_tokens_logprobs)
-            
-            #exact mode
-            elif num_beams==-1:
-                exact_mode_algo(model=self.model, x=encoded_input,bos=self.bos, eos=self.eos, wrapped_tokenizer=self.wrapped_tokenizer)
             
             #helm default
             elif num_beams is None or num_beams==0: 
