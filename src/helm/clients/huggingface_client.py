@@ -313,8 +313,10 @@ class HuggingFaceServer:
                 print(f"self.device is {self.device}")    
                 best_y=best_y.to(self.device)
                 input_ids=encoded_input.input_ids.to(self.device)
-                print(f"encoded_input {input_ids.is_cuda}")
-                print(f"best_y {best_y.is_cuda}")
+                print(f"encoded_input cuda is {input_ids.is_cuda}")
+                print(f"best_y cuda is {best_y.is_cuda}")
+                print(f"input type {type(input_ids)}")
+                print(f"best_y type {type(best_y)}")
 
                 full_sentence=torch.concat((input_ids, best_y), axis=1)
                 with torch.no_grad():
