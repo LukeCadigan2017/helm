@@ -58,6 +58,19 @@ if [ ! -z "$FIRST_RUN_INSTANCE" ] ;then
 fi
 
 
+if [ ! -z "$EOS_TYPE" ] ;then
+    DEFAULT_SUITE="${DEFAULT_SUITE}_eos_type_${EOS_TYPE}"
+fi
+
+if [ ! -z "$TEMPERATURE" ] ;then
+    DEFAULT_SUITE="${DEFAULT_SUITE}_temperature_${TEMPERATURE}"
+fi
+if [ ! -z "$EXACT_MODE" ] ;then
+    DEFAULT_SUITE="${DEFAULT_SUITE}_exact_mode_str_${EXACT_MODE}"
+fi
+
+
+
 SUITE="${SUITE:=$DEFAULT_SUITE}"
 
 
