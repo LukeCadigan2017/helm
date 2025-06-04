@@ -316,7 +316,7 @@ class HuggingFaceServer:
                 input_ids=encoded_input.input_ids.to(self.device)
 
 
-                full_sentence=torch.concat((input_ids, best_y), axis=1)
+                full_sentence=torch.concat((input_ids.to(self.device), best_y.to(self.device)), axis=1)
                 with torch.no_grad():
                     
 
