@@ -311,8 +311,9 @@ class HuggingFaceServer:
                 best_y, gamma=exact_mode_algo(self.model, encoded_input,self.bos_id, self.eos_id)
 
                 print(f"self.device is {self.device}")    
-                best_y=best_y.to(self.device)
-                input_ids=encoded_input.input_ids.to(self.device)
+
+                input_ids=encoded_input.input_ids
+                best_y = best_y.to(input_ids.device)
                 print(f"encoded_input cuda is {input_ids.is_cuda}")
                 print(f"best_y cuda is {best_y.is_cuda}")
                 print(f"input type {type(input_ids)}")
