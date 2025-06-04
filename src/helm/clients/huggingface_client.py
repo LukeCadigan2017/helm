@@ -309,7 +309,14 @@ class HuggingFaceServer:
                 # breakpoint()
                 # best_y, gamma= exact_mode_algo(model=self.model, x=encoded_input,bos=self.bos, eos=self.eos, wrapped_tokenizer=self.wrapped_tokenizer)
                 best_y, gamma=exact_mode_algo(self.model, encoded_input,self.bos_id, self.eos_id)
-                full_sentence=torch.concat((encoded_input.input_ids, best_y), axis=1)
+
+                print(f"encoded_input {encoded_input.input_ids.is_cuda}")
+                print(f"best_y {best_y.is_cuda}")
+                best_y=best_y.to(self.device)
+                input_ids=encoded_input.input_ids.to(self.device)
+
+
+                full_sentence=torch.concat((input_ids, best_y), axis=1)
                 with torch.no_grad():
                     
 
