@@ -217,8 +217,8 @@ class HuggingFaceServer:
         with wrapped_tokenizer as tokenizer:
             self.eos=tokenizer.eos_token
             self.bos=tokenizer.bos_token
-            eos_id=  tokenizer(tokenizer.eos_token, return_tensors="pt", return_token_type_ids=False).input_ids.flatten()[0].item()
-            self.eos_id = torch.tensor([eos_id]).reshape(1,1).to(0 if self.device is None else self.device)
+            self.eos_id=  tokenizer(tokenizer.eos_token, return_tensors="pt", return_token_type_ids=False).input_ids.flatten()[0].item()
+            self.eos_id_tensor = torch.tensor([self.eos_id]).reshape(1,1).to(0 if self.device is None else self.device)
             
         # Security issue: currently we trust remote code by default.
         # We retain this temporarily to maintain reverse compatibility.
@@ -317,7 +317,7 @@ class HuggingFaceServer:
             if exact_mode==True:
                 # breakpoint()
                 # best_y, gamma= exact_mode_algo(model=self.model, x=encoded_input,bos=self.bos, eos=self.eos, wrapped_tokenizer=self.wrapped_tokenizer)
-                best_y, gamma=exact_mode_algo(self.model, encoded_input, self.eos_id)
+                best_y, gamma=exact_mode_algo(self.model, encoded_input, self.eos_id_tensor)
 
                 # print(f"self.device is {self.device}")    
 
@@ -433,7 +433,7 @@ class HuggingFaceServer:
             #non-beam search tests
             #default for test_run_all.ksh
             elif num_beams==1:
-                batch_size = num_generated if batch_size is 0 else batch_size
+                batch_size = num_generated if batch_size == 0 else batch_size
                 assert (num_generated % batch_size)==0
                 logits=None
                 sequences=None
@@ -461,6 +461,7 @@ class HuggingFaceServer:
 
                     sequences = safe_append_tensor(sequences, batch_sequences, 0, pad_value=self.eos_id)
                     logits = safe_append_tensor(logits, batch_logits, 1, pad_value=-1)
+                    print(f"Sequences size {sequences.size()}")
 
                 #sequences is n_samples by max_length
                 #logits is 100 by n_samples  by vocab size
