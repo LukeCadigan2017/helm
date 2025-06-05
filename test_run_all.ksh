@@ -85,6 +85,7 @@ echo SNELLIUS_METRICS is $SNELLIUS_METRICS
 echo RUN_MODEL is $RUN_MODEL
 echo TOP_P is $TOP_P
 echo TOP_K is $TOP_K
+echo BATCH_SIZE IS $BATCH_SIZE
 echo "$# is $#"
 
 
