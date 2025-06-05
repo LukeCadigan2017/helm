@@ -440,23 +440,24 @@ class HuggingFaceServer:
                     new_batch=min(num_left, batch_size)
                     num_left -= new_batch
                 # for i in range(int(num_generated / batch_size)):
-                    batch_output = self.model.generate(
-                        **encoded_input,
-                        num_return_sequences=new_batch,
-                        max_new_tokens=raw_request["max_new_tokens"],
+                    with torch.no_grad():
+                        batch_output = self.model.generate(
+                            **encoded_input,
+                            num_return_sequences=new_batch,
+                            max_new_tokens=raw_request["max_new_tokens"],
 
-                        # length_penalty=length_penalty,
-                        temperature=temperature,
-                        top_p=top_p,
-                        top_k=top_k,
-                        do_sample=True,
+                            # length_penalty=length_penalty,
+                            temperature=temperature,
+                            top_p=top_p,
+                            top_k=top_k,
+                            do_sample=True,
 
-                        return_dict_in_generate=True,
-                        output_scores=True,
-                        output_logits=True,
-                        **optional_args,
-                        stopping_criteria=stopping_criteria,
-                    )
+                            return_dict_in_generate=True,
+                            output_scores=True,
+                            output_logits=True,
+                            **optional_args,
+                            stopping_criteria=stopping_criteria,
+                        )
                     #generate
                     batch_sequences = batch_output.sequences
                     batch_logits = torch.stack(list(batch_output.logits), dim=0)
