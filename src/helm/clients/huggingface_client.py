@@ -434,10 +434,16 @@ class HuggingFaceServer:
             #default for test_run_all.ksh
             elif num_beams==1:
                 batch_size = num_generated if batch_size == 0 else batch_size
-                assert (num_generated % batch_size)==0
+                # assert (num_generated % batch_size)==0
+                
+                
                 logits=None
                 sequences=None
-                for i in range(int(num_generated / batch_size)):
+                num_left=num_generated
+                while(num_left>0):
+                    new_batch=min(num_left, batch_size)
+                    num_left -= new_batch
+                # for i in range(int(num_generated / batch_size)):
                     batch_output = self.model.generate(
                         **encoded_input,
                         num_return_sequences=batch_size,
