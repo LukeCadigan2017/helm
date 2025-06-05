@@ -84,35 +84,40 @@ def get_process_gen_params(test_name):
         return task_names, custom_metrics, instance_metrics
 
     root_folder=f"snellius_copies/helm_output"
-    if(test_name=="wmt_samples"):
+
+
+    if(test_name=="wmt_samples0"):
         mode = "wmt"
-        # suite_name="sample_return_20_eval_500"
-        # suite_name="sample_return_100_eval_100"
+        suite_name="sample_100_eval_100_first_inst_0"
+        num_beams_list=[1]
+        models=["allenai_OLMo_2_1124_7B_Instruct","allenai_OLMo_2_1124_13B_Instruct"]
+
+    elif(test_name=="wmt_samples1"):
+        mode = "wmt"
+        num_beams_list=[1]
+        suite_name="sample_100_eval_1000"
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    elif(test_name=="wmt_samples_original"):
+        mode = "wmt"
         suite_name="sample_10_eval_1000"
         num_beams_list=[1]
-        # models=["meta_llama_Llama_3.1_8B_Instruct"]
         models=["allenai_OLMo_2_0425_1B_Instruct","allenai_OLMo_2_1124_7B_Instruct","allenai_OLMo_2_1124_13B_Instruct","meta_llama_Llama_3.2_1B_Instruct","meta_llama_Llama_3.1_8B_Instruct"]
 
     elif(test_name=="wmt_single"):
         mode = "wmt"
-        # suite_name="sample_return_20_eval_500"
-        # suite_name="sample_return_100_eval_100"
         suite_name="sample_100_eval_1000"
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
 
     elif(test_name=="wmt_single_10"):
         mode = "wmt"
-        # suite_name="sample_return_20_eval_500"
-        # suite_name="sample_return_100_eval_100"
         suite_name="sample_10_eval_1000"
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
 
     elif(test_name=="wmt_test"):
         mode = "wmt"
-        # suite_name="sample_return_20_eval_500"
-        # suite_name="sample_return_100_eval_100"
         suite_name="sample_10_eval_1000"
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
@@ -133,7 +138,6 @@ def get_process_gen_params(test_name):
 
         root_folder="snellius_copies/helm_output/notable_samples"
         mode = "wmt"
-        # suite_name="sample_return_20_eval_500"
         suite_name="sample_return_100_eval_100"
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
@@ -142,7 +146,6 @@ def get_process_gen_params(test_name):
 
         root_folder="snellius_copies/helm_output/notable_samples"
         mode = "wmt"
-        # suite_name="sample_return_20_eval_500"
         suite_name="sample_return_100_eval_100"
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
@@ -160,11 +163,6 @@ def get_process_gen_params(test_name):
         num_beams_list=[128]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
 
-    # elif(test_name=="wmt_beam8_new"):
-    #     mode = "wmt"
-    #     suite_name="full_wmt_1_samples_1000_evals"
-    #     num_beams_list=[16]
-    #     models=["meta_llama_Llama_3.1_8B_Instruct"]
 
     elif (test_name=="full_instruct"):
         mode="instruct"
@@ -177,9 +175,6 @@ def get_process_gen_params(test_name):
         suite_name="full_instruct_1_samples_100_evals"
         num_beams_list=[8]
         models=["allenai_OLMo_2_1124_13B_Instruct"]
-        
-
-
 
     ###### INDIVIDUAL TESTS  ######
     elif(test_name=="llama_gsm_sample"):

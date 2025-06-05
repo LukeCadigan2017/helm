@@ -291,7 +291,8 @@ def plot_grouped(df, xlabel, ylabel, groupby='example_idx', title=None, trend_li
     for i in grouped.index:
         # print(grouped.loc[i][ylabel])
         _, c, s = grouped.loc[i][ylabel]
-        yerr.append(1.96*s/math.sqrt(c))
+        if c>0:
+            yerr.append(1.96*s/math.sqrt(c))
 
     # Plot with error bars (standard deviation)
     ax.errorbar(x, y, yerr=yerr, fmt='o', ecolor='gray', capsize=3, label='Data with std dev')
