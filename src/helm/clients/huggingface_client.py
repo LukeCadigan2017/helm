@@ -255,7 +255,6 @@ class HuggingFaceServer:
             # if len(raw_request["stop_sequences"]) > 0:
             #     stopping_criteria = StoppingCriteriaList()
             #     stop_strings=stop_strings+raw_request["stop_sequences"]
-            #     # breakpoint()
             #     stopping_criteria.append(StopOnStrings(stop_strings=stop_strings,tokenizer=tokenizer))
 
 
@@ -434,9 +433,6 @@ class HuggingFaceServer:
             #default for test_run_all.ksh
             elif num_beams==1:
                 batch_size = num_generated if batch_size == 0 else batch_size
-                # assert (num_generated % batch_size)==0
-                
-                
                 logits=None
                 sequences=None
                 num_left=num_generated
@@ -446,7 +442,7 @@ class HuggingFaceServer:
                 # for i in range(int(num_generated / batch_size)):
                     batch_output = self.model.generate(
                         **encoded_input,
-                        num_return_sequences=batch_size,
+                        num_return_sequences=new_batch,
                         max_new_tokens=raw_request["max_new_tokens"],
 
                         # length_penalty=length_penalty,
