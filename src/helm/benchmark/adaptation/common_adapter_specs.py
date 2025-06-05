@@ -284,9 +284,10 @@ def get_generation_adapter_spec(
     max_tokens: int = 5,
     stop_sequences: Optional[List] = None,  # default value of `stop_sequences` is ["\n"]
     temperature: float = 0.0,
-    num_beams: int = 1,
+    # num_beams: int = 1,
     multi_label: bool = False,
     sample_train: bool = True,
+    beam_params=None,
 ) -> AdapterSpec:
     """
     [instructions]
@@ -326,7 +327,9 @@ def get_generation_adapter_spec(
         num_outputs=num_outputs,
         max_tokens=max_tokens,
         temperature=temperature,
-        num_beams = num_beams,
+        # num_beams = num_beams,
+
+        beam_params=beam_params,
         # stop_sequences=stop_sequences,
         multi_label=multi_label,
         sample_train=sample_train
@@ -336,8 +339,8 @@ def get_generation_adapter_spec(
 def get_instruct_adapter_spec(
     num_outputs: int = 1,
     max_tokens: int = 512,
-    temperature: float = 0.7,
-    num_beams:int=1,
+    # temperature: float = 0.7,
+    beam_params=None,
     num_return_sequences:int=1
 ) -> AdapterSpec:
     """
@@ -351,12 +354,9 @@ def get_instruct_adapter_spec(
         output_prefix="",
         output_suffix="",
         max_train_instances=0,
-        num_outputs=num_outputs,
         max_tokens=max_tokens,
-        num_beams=num_beams
-        # temperature=temperature,
-        # stop_sequences=[],
-
+        beam_params=beam_params,
+        num_outputs=max(num_return_sequences, num_outputs),
     )
 
 
@@ -426,7 +426,6 @@ def get_summarization_adapter_spec(num_sents: Optional[int], max_train_instances
         stop_sequences=["###"],  # Separator between few-shot instances.
         **kwargs,
     )
-
 
 
 
