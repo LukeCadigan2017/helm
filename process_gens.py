@@ -86,17 +86,35 @@ def get_process_gen_params(test_name):
     root_folder=f"snellius_copies/helm_output"
 
 
+    ####### all in one go 1000
+
     if(test_name=="wmt_samples0"):
+        mode = "wmt"
+        num_beams_list=[1]
+        suite_name="sample_100_eval_1000"
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    ##### all in one go 500
+    elif(test_name=="wmt_samples1"):
+        mode = "wmt"
+        suite_name="sample_100_eval_500_first_inst_0"
+        num_beams_list=[1]
+        models=["allenai_OLMo_2_0425_1B_Instruct","meta_llama_Llama_3.2_1B_Instruct"]
+
+    elif(test_name=="wmt_samples2_1"):
         mode = "wmt"
         suite_name="sample_100_eval_100_first_inst_0"
         num_beams_list=[1]
         models=["allenai_OLMo_2_1124_7B_Instruct","allenai_OLMo_2_1124_13B_Instruct"]
 
-    elif(test_name=="wmt_samples1"):
+    elif(test_name=="wmt_samples2_2"):
         mode = "wmt"
+        suite_name="sample_100_eval_400_first_inst_100"
         num_beams_list=[1]
-        suite_name="sample_100_eval_1000"
-        models=["meta_llama_Llama_3.1_8B_Instruct"]
+        models=["allenai_OLMo_2_1124_7B_Instruct","allenai_OLMo_2_1124_13B_Instruct"]
+
+
+
 
     elif(test_name=="wmt_samples_original"):
         mode = "wmt"

@@ -79,6 +79,8 @@ def safe_append_tensor(tensor_agg, batch_tensor, cat_axis, pad_value):
     tensor_agg, batch_tensor=match_sizes(tensor_agg, batch_tensor,cat_axis, pad_value)
     return  torch.cat((tensor_agg,batch_tensor), axis=cat_axis)
 
+def safe_append_list(list_agg, new_list):
+    return new_list if list_agg is None else list_agg+new_list
 
 
 class StopOnStrings(StoppingCriteria):
@@ -238,9 +240,27 @@ class HuggingFaceServer:
                 )
         self.wrapped_tokenizer = wrapped_tokenizer
 
+    def decode_text(self, sequences, input_len, echo_prompt=False):
+        
+        if not echo_prompt:
+            sequences = [sequence[input_len:] for sequence in sequences]
+
+        with self.wrapped_tokenizer as tokenizer:
+            all_tokens = [[tokenizer.decode(token) for token in sequence_tokens] for sequence_tokens in sequences]
+            all_decoded_text = tokenizer.batch_decode(sequences)
+        return all_tokens, all_decoded_text
+
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
         print("Serving request", flush=True)
+        
         eos_token_string=None
+        logits=None
+        sequences=None
+        all_decoded_text=None
+        all_tokens=None
+
+        
+        
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
         prompt=raw_request["prompt"]
@@ -295,6 +315,9 @@ class HuggingFaceServer:
         exact_mode=raw_request["beam_params"].exact_mode
         
         batch_size=raw_request["beam_params"].batch_size
+
+        
+        
         
         # raw_num_return_sequences=int(raw_request["num_return_sequences"])
         
@@ -314,7 +337,6 @@ class HuggingFaceServer:
 
             #exact mode
             if exact_mode==True:
-                # breakpoint()
                 # best_y, gamma= exact_mode_algo(model=self.model, x=encoded_input,bos=self.bos, eos=self.eos, wrapped_tokenizer=self.wrapped_tokenizer)
                 best_y, gamma=exact_mode_algo(self.model, encoded_input, self.eos_id_tensor)
 
@@ -433,8 +455,6 @@ class HuggingFaceServer:
             #default for test_run_all.ksh
             elif num_beams==1:
                 batch_size = num_generated if batch_size == 0 else batch_size
-                logits=None
-                sequences=None
                 num_left=num_generated
                 while(num_left>0):
                     new_batch=min(num_left, batch_size)
@@ -460,32 +480,40 @@ class HuggingFaceServer:
                         )
                     #generate
                     batch_sequences = batch_output.sequences
-                    batch_logits = torch.stack(list(batch_output.logits), dim=0)
+                    batch_logits=batch_output.logits
+                    
+                    # batch_logits = torch.stack(list(batch_output.logits), dim=0)
+                    # print(f"len is {len(all_generated_tokens_logprobs)}")
+                    for completion_id in range(new_batch):
+                        generated_tokens_logprobs = []
+                        for i in range(len(batch_sequences[completion_id]) - len(encoded_input.input_ids[0])):
+                            logprobs = torch.nn.functional.log_softmax(batch_logits[i][completion_id], dim=0)
+                            # Get log probability of chosen token.
+                            j = i + len(encoded_input.input_ids[0])
+                            generated_tokens_logprobs.append(logprobs[batch_sequences[completion_id][j]].item())
+                        all_generated_tokens_logprobs.append(generated_tokens_logprobs)
+                        
+                    #batch_tokens is a list of outputs. Each output is list of word-strings
+                    #batch_decoded_text is a list of outputs. Each output is strings.
+                    
+                    batch_tokens, batch_decoded_text = self.decode_text(sequences=batch_sequences, input_len=len(encoded_input.input_ids[0]),echo_prompt=raw_request["echo_prompt"])
+                    all_tokens= safe_append_list(all_tokens,batch_tokens)
+                    all_decoded_text =safe_append_list(all_decoded_text,batch_decoded_text)
+                    
 
-                    sequences = safe_append_tensor(sequences, batch_sequences, 0, pad_value=self.eos_id)
-                    logits = safe_append_tensor(logits, batch_logits, 1, pad_value=-1)
-                    # print(f"Sequences size {sequences.size()}",flush=True)
+                    sequences = safe_append_list(sequences, list(batch_sequences.detach().cpu())  )
 
-                #sequences is n_samples by max_length
-                #logits is 100 by n_samples  by vocab size
-                for completion_id in range(num_generated):
-                    generated_tokens_logprobs = []
-                    for i in range(len(sequences[completion_id]) - len(encoded_input.input_ids[0])):
-                        logprobs = torch.nn.functional.log_softmax(logits[i][completion_id], dim=0)
-                        # Get log probability of chosen token.
-                        j = i + len(encoded_input.input_ids[0])
-                        generated_tokens_logprobs.append(logprobs[sequences[completion_id][j]].item())
-                    all_generated_tokens_logprobs.append(generated_tokens_logprobs)
+                    print(sequences[0].is_cuda)
+                    # sequences = safe_append_tensor(sequences, batch_sequences.detach().cpu(), 0, pad_value=self.eos_id)
+                    # logits = safe_append_tensor(logits, batch_logits.detach().cpu(), 1, pad_value=-1)
+
             else:
                 raise Exception(f"Weird number of num_beams {num_beams}")
 
-        # Remove prompt from the start of each sequence if echo_prompt is False.
-        if not raw_request["echo_prompt"]:
-            sequences = [sequence[len(encoded_input.input_ids[0]) :] for sequence in sequences]
-        
-        with self.wrapped_tokenizer as tokenizer:
-            all_tokens = [[tokenizer.decode(token) for token in sequence_tokens] for sequence_tokens in sequences]
-            all_decoded_text = tokenizer.batch_decode(sequences)
+        # Remove prompt from the start of each sequence if echo_prompt is False.        
+        if all_tokens is None:
+            all_tokens, all_decoded_text = self.decode_text(sequences=sequences, input_len=len(encoded_input.input_ids[0]),echo_prompt=raw_request["echo_prompt"])
+
         raw_completions = []
 
         # if(num_beams==1):
