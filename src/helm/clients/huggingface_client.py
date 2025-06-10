@@ -184,6 +184,8 @@ class HuggingFaceServer:
         end_of_text_token:str,
         **kwargs,
     ):
+
+        torch.set_float32_matmul_precision('medium')
         self._lock= Lock()
         self.stop_sequence_dict={}
         self.device: Optional[str]

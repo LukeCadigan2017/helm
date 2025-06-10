@@ -186,7 +186,7 @@ model_deployments:
       args: 
         pretrained_model_name_or_path: allenai/OLMo-2-1124-13B-DPO
 
-  ######################### T5 #########################
+  ######################### Toy #########################
   - name:  distilbert/distilgpt2
     model_name:  distilbert/distilgpt2
     tokenizer_name:  distilbert/distilgpt2
@@ -195,6 +195,15 @@ model_deployments:
       class_name: "helm.clients.huggingface_client.HuggingFaceClient"
       args: 
         pretrained_model_name_or_path:  distilbert/distilgpt2
+
+  - name: sshleifer/tiny-gpt2
+    model_name: sshleifer/tiny-gpt2
+    tokenizer_name: sshleifer/tiny-gpt2
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: sshleifer/tiny-gpt2
 
   ######################### Prometheus #########################
 

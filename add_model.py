@@ -55,7 +55,8 @@ model_tuples=[]
 # for model_ext in ["Meta-Llama-3-70B-Instruct"]:
 #   model_tuples.append(("meta-llama", model_ext))
 
-for model_name in ["allenai/OLMo-2-0425-1B"]:
+for model_name in ["sshleifer/tiny-gpt2"]:
+# for model_name in ["allenai/OLMo-2-0425-1B"]:
 # for model_name in "allenai/OLMoE-1B-7B-0125","allenai/OLMoE-1B-7B-0125-SFT","allenai/OLMoE-1B-7B-0125-DPO","allenai/OLMoE-1B-7B-0125-Instruct","allenai/OLMoE-1B-7B-0125-RM":
 
 # for model_name in ["allenai/OLMo-2-1124-7B", "allenai/OLMo-2-1124-13B", "allenai/OLMo-2-1124-7B-SFT ", "allenai/OLMo-2-1124-13B-SFT", "allenai/OLMo-2-1124-7B-DPO", "allenai/OLMo-2-1124-13B-DPO"]:
