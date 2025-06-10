@@ -505,7 +505,7 @@ class HuggingFaceServer:
 
                     sequences = safe_append_list(sequences, list(batch_sequences.detach().cpu())  )
 
-                    print(sequences[0].is_cuda)
+                    # print(sequences[0].is_cuda)
                     # sequences = safe_append_tensor(sequences, batch_sequences.detach().cpu(), 0, pad_value=self.eos_id)
                     # logits = safe_append_tensor(logits, batch_logits.detach().cpu(), 1, pad_value=-1)
 
