@@ -56,32 +56,37 @@ def fix_example_themis(completionExample):
 def get_process_gen_params(test_name):
 
     def get_metrics(mode):
+        compare_metric=None
         if(mode=="wmt"):
             task_names=["wmt_14_language_pair_de_en_"]
             custom_metrics=[ PostMetric.BLEU1_METRIC(),PostMetric.BLEU4_METRIC()]
             instance_metrics=["comet"]
+            compare_metric="example_comet"
         elif(mode=="gsm"):
             task_names=["gsm_"]
             custom_metrics=[PostMetric.EXAMPLE_FINAL_NUM_EXACT_MATCH_METRIC()]
             instance_metrics=[]
+            compare_metric="final_num_exact_match"
             # instance_metrics=["exact_match_indicator","final_number_exact_match"]
         elif(mode=="instruct"):
             print("\n\n----------------\n NOTE: ONLY PRINTING 4 tasks ----------------\n")
             # task_names=["open_assistant:language=en,num_respondents=1,","self_instruct:num_respondents=1,"]
             task_names=[
-                        "anthropic_hh_rlhf_subset_hh_num_respondents_1_",
-                         "koala_num_respondents_1_", 
-                        "anthropic_hh_rlhf_subset_red_team_num_respondents_1_",
                         "self_instruct_num_respondents_1_",
-                        "grammar_path_src_helm_benchmark_scenarios_best_chatgpt_prompts.yaml_tags_num_respondents_1_",
-                        "vicuna_num_respondents_1_"]
+                        # "anthropic_hh_rlhf_subset_hh_num_respondents_1_",
+                        "vicuna_num_respondents_1_",
+                        #  "koala_num_respondents_1_", 
+                        # "anthropic_hh_rlhf_subset_red_team_num_respondents_1_",
+                        # "grammar_path_src_helm_benchmark_scenarios_best_chatgpt_prompts.yaml_tags_num_respondents_1_"
+                        ]
             custom_metrics=[]
             instance_metrics=[]
+            compare_metric="example_themis"
         else:
             raise Exception(f"Did not recognize mode {mode}")
         assert isinstance(task_names, list)
         assert isinstance(task_names[0],str)
-        return task_names, custom_metrics, instance_metrics
+        return task_names, custom_metrics, instance_metrics, compare_metric
 
     root_folder=f"snellius_copies/helm_output"
 
@@ -113,114 +118,45 @@ def get_process_gen_params(test_name):
         num_beams_list=[1]
         models=["allenai_OLMo_2_1124_7B_Instruct","allenai_OLMo_2_1124_13B_Instruct"]
 
-
-
-
-    elif(test_name=="wmt_samples_original"):
-        mode = "wmt"
-        suite_name="sample_10_eval_1000"
+    elif(test_name=="gsm_samples1"):
+        mode = "gsm"
+        suite_name="sample_100_eval_20_first_inst_0"
         num_beams_list=[1]
-        models=["allenai_OLMo_2_0425_1B_Instruct","allenai_OLMo_2_1124_7B_Instruct","allenai_OLMo_2_1124_13B_Instruct","meta_llama_Llama_3.2_1B_Instruct","meta_llama_Llama_3.1_8B_Instruct"]
-
-    elif(test_name=="wmt_single"):
-        mode = "wmt"
-        suite_name="sample_100_eval_1000"
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
+    elif(test_name=="gsm_samples2"):
+        mode = "gsm"
+        suite_name="sample_100_eval_80_first_inst_20"
+        num_beams_list=[1]
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
+    elif(test_name=="gsm_samples3"):
+        mode = "gsm"
+        suite_name="sample_100_eval_400_first_inst_100"
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
 
-    elif(test_name=="wmt_single_10"):
+    elif(test_name=="fairseq_softmax"):
         mode = "wmt"
-        suite_name="sample_10_eval_1000"
+        suite_name="fairseq"
         num_beams_list=[1]
-        models=["meta_llama_Llama_3.1_8B_Instruct"]
-
-    elif(test_name=="wmt_test"):
-        mode = "wmt"
-        suite_name="sample_10_eval_1000"
-        num_beams_list=[1]
-        models=["meta_llama_Llama_3.1_8B_Instruct"]
-
-    elif(test_name=="wmt_single_top_k_2"):
-        mode = "wmt"
-        suite_name="sample_10_eval_20_top_k_2"
-        num_beams_list=[1]
-        models=["meta_llama_Llama_3.1_8B_Instruct"]
-
-    elif(test_name=="wmt_top_k"):
-        mode = "wmt"
-        suite_name="sample_100_eval_100_top_k_30"
-        num_beams_list=[1]
-        models=["meta_llama_Llama_3.1_8B_Instruct"]
-
-    elif(test_name=="wmt_sample_50"):
-
-        root_folder="snellius_copies/helm_output/notable_samples"
-        mode = "wmt"
-        suite_name="sample_return_100_eval_100"
-        num_beams_list=[1]
-        models=["meta_llama_Llama_3.1_8B_Instruct"]
-
-    elif(test_name=="wmt_sample_100"):
-
-        root_folder="snellius_copies/helm_output/notable_samples"
-        mode = "wmt"
-        suite_name="sample_return_100_eval_100"
-        num_beams_list=[1]
-        models=["meta_llama_Llama_3.1_8B_Instruct"]
-
-    elif(test_name=="wmt_beam8"):
-        mode = "wmt"
-        suite_name="sample_1_eval_1000"
-        num_beams_list=[8]
-        models=["meta_llama_Llama_3.1_8B_Instruct", "allenai_OLMo_2_1124_13B_Instruct"]
+        models=["fairseq_softmax"]
 
     
-    elif(test_name=="wmt_beam128"):
-        mode = "wmt"
-        suite_name="sample_1_eval_1000"
-        num_beams_list=[128]
-        models=["meta_llama_Llama_3.1_8B_Instruct"]
-
-
-    elif (test_name=="full_instruct"):
-        mode="instruct"
-        suite_name="full_instruct_1_samples_100_evals"
-        num_beams_list=[2,4,8]
-        models=["allenai_OLMo_2_1124_13B_Instruct"]
-
-    elif (test_name=="instruct8"):
-        mode="instruct"
-        suite_name="full_instruct_1_samples_100_evals"
-        num_beams_list=[8]
-        models=["allenai_OLMo_2_1124_13B_Instruct"]
-
-    ###### INDIVIDUAL TESTS  ######
-    elif(test_name=="llama_gsm_sample"):
-        mode = "gsm"
-        suite_name="sample_10_eval_1000"
+    elif(test_name=="instruct"):
+        mode = "instruct"
+        suite_name="sample_100_eval_100_first_inst_0"
         num_beams_list=[1]
-        models=["meta_llama_Llama_3.1_8B_Instruct"]
-        
-    elif(test_name=="olmo_wmt"):
-        mode = "wmt"
-        suite_name="full_wmt_1_samples_1000_evals"
-        num_beams_list=[2,4,8,16]
         models=["allenai_OLMo_2_1124_13B_Instruct"]
-        
-    
-    elif(test_name=="olmo_gsm"):
-        mode = "gsm"
-        suite_name="full_wmt_1_samples_1000_evals"
-        num_beams_list=[2,4,8]
-        models=["allenai_OLMo_2_1124_13B_Instruct"]
+
+
+
 
     else:
         except_str=f"task name {test_name} not found"
         print(except_str)
         raise Exception(except_str)
     
-    task_names, custom_metrics, instance_metrics= get_metrics(mode)
-    return root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics
+    task_names, custom_metrics, instance_metrics, compare_metric= get_metrics(mode)
+    return root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics, compare_metric
     
 
 @dataclass(frozen=False)
@@ -281,6 +217,12 @@ def get_run_folder(root_folder:str, num_beams:int, model:str, task_name: str, su
 
 
 ############ Gen Summary stuff ############
+
+def get_completion_from_examples(examples):
+    examples.sort(key=lambda x:float(x.logprob),reverse=True)
+    completion=examples[0].text
+    completion_logprob=examples[0].logprob
+    return examples, completion, completion_logprob
 
 def clean_generation_summary(generationSummary:GenerationSummary)->GenerationSummary:
     def clean_instance_generation(instanceGenerations:InstanceGenerations)->InstanceGenerations:
@@ -462,8 +404,8 @@ class ProcessGens:
         if isinstance(process_gens_modes, str):
             process_gens_modes = [process_gens_modes]
         for process_gens_mode in process_gens_modes:
-            root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics= get_process_gen_params(process_gens_mode)
-            self.init(root_folder=root_folder,num_beams_list=num_beams_list,models=models,custom_metrics=custom_metrics,task_names=task_names,  suite_name=suite_name,instance_metrics=instance_metrics, print_files=print_files)
+            root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics, compare_metric= get_process_gen_params(process_gens_mode)
+            self.init(root_folder=root_folder,num_beams_list=num_beams_list,models=models,custom_metrics=custom_metrics,task_names=task_names,  suite_name=suite_name,instance_metrics=instance_metrics, print_files=print_files, compare_metric=compare_metric)
             
     def get_params(self):
         root_folder     =self.process_gen_params["root_folder"]
@@ -473,7 +415,9 @@ class ProcessGens:
         task_names      =self.process_gen_params["task_names"]
         suite_name      =self.process_gen_params["suite_name"]
         instance_metrics=self.process_gen_params["instance_metrics"]
-        return root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics
+
+        compare_metric=self.process_gen_params["compare_metric"]
+        return root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics, compare_metric
 
     def calculate_instance_id(self, instance_generation):
         key=instance_generation.prompt
@@ -521,7 +465,7 @@ class ProcessGens:
                                 metrics_dicts.append(pd_metrics_dict)
         return metrics_dicts
 
-    def init(self,root_folder:str, num_beams_list:List[int], models:List[float], custom_metrics:List[PostMetric.PostMetric],task_names:List[str], instance_metrics:Dict[int, Dict[str, Dict[str, float]]]=None, suite_name:str="", print_files:bool=False):
+    def init(self,root_folder:str, num_beams_list:List[int], models:List[float], custom_metrics:List[PostMetric.PostMetric],task_names:List[str], instance_metrics:Dict[int, Dict[str, Dict[str, float]]]=None, suite_name:str="", print_files:bool=False, compare_metric:str=""):
         
         # #this is the pre-computed metrics
         # print("get_metrics_df")
@@ -557,9 +501,109 @@ class ProcessGens:
             "custom_metrics":custom_metrics,
             "task_names":task_names,
             "suite_name":suite_name,
-            "instance_metrics":instance_metrics
+            "instance_metrics":instance_metrics,
+            "compare_metric":compare_metric
         }
         
 
+
+
+    # elif(test_name=="wmt_samples_original"):
+    #     mode = "wmt"
+    #     suite_name="sample_10_eval_1000"
+    #     num_beams_list=[1]
+    #     models=["allenai_OLMo_2_0425_1B_Instruct","allenai_OLMo_2_1124_7B_Instruct","allenai_OLMo_2_1124_13B_Instruct","meta_llama_Llama_3.2_1B_Instruct","meta_llama_Llama_3.1_8B_Instruct"]
+
+    # elif(test_name=="wmt_single"):
+    #     mode = "wmt"
+    #     suite_name="sample_100_eval_1000"
+    #     num_beams_list=[1]
+    #     models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    # elif(test_name=="wmt_single_10"):
+    #     mode = "wmt"
+    #     suite_name="sample_10_eval_1000"
+    #     num_beams_list=[1]
+    #     models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    # elif(test_name=="wmt_test"):
+    #     mode = "wmt"
+    #     suite_name="sample_10_eval_1000"
+    #     num_beams_list=[1]
+    #     models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    # elif(test_name=="wmt_single_top_k_2"):
+    #     mode = "wmt"
+    #     suite_name="sample_10_eval_20_top_k_2"
+    #     num_beams_list=[1]
+    #     models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    # elif(test_name=="wmt_top_k"):
+    #     mode = "wmt"
+    #     suite_name="sample_100_eval_100_top_k_30"
+    #     num_beams_list=[1]
+    #     models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    # elif(test_name=="wmt_sample_50"):
+
+    #     root_folder="snellius_copies/helm_output/notable_samples"
+    #     mode = "wmt"
+    #     suite_name="sample_return_100_eval_100"
+    #     num_beams_list=[1]
+    #     models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    # elif(test_name=="wmt_sample_100"):
+
+    #     root_folder="snellius_copies/helm_output/notable_samples"
+    #     mode = "wmt"
+    #     suite_name="sample_return_100_eval_100"
+    #     num_beams_list=[1]
+    #     models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    # elif(test_name=="wmt_beam8"):
+    #     mode = "wmt"
+    #     suite_name="sample_1_eval_1000"
+    #     num_beams_list=[8]
+    #     models=["meta_llama_Llama_3.1_8B_Instruct", "allenai_OLMo_2_1124_13B_Instruct"]
+
+    
+    # elif(test_name=="wmt_beam128"):
+    #     mode = "wmt"
+    #     suite_name="sample_1_eval_1000"
+    #     num_beams_list=[128]
+    #     models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+
+    # elif (test_name=="full_instruct"):
+    #     mode="instruct"
+    #     suite_name="full_instruct_1_samples_100_evals"
+    #     num_beams_list=[2,4,8]
+    #     models=["allenai_OLMo_2_1124_13B_Instruct"]
+
+    # elif (test_name=="instruct8"):
+    #     mode="instruct"
+    #     suite_name="full_instruct_1_samples_100_evals"
+    #     num_beams_list=[8]
+    #     models=["allenai_OLMo_2_1124_13B_Instruct"]
+
+    # ###### INDIVIDUAL TESTS  ######
+    # elif(test_name=="llama_gsm_sample"):
+    #     mode = "gsm"
+    #     suite_name="sample_10_eval_1000"
+    #     num_beams_list=[1]
+    #     models=["meta_llama_Llama_3.1_8B_Instruct"]
+        
+    # elif(test_name=="olmo_wmt"):
+    #     mode = "wmt"
+    #     suite_name="full_wmt_1_samples_1000_evals"
+    #     num_beams_list=[2,4,8,16]
+    #     models=["allenai_OLMo_2_1124_13B_Instruct"]
+        
+    
+    # elif(test_name=="olmo_gsm"):
+    #     mode = "gsm"
+    #     suite_name="full_wmt_1_samples_1000_evals"
+    #     num_beams_list=[2,4,8]
+    #     models=["allenai_OLMo_2_1124_13B_Instruct"]
 
         

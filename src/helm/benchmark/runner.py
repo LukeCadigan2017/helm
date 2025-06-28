@@ -82,7 +82,7 @@ class InstanceGenerations:
 class GenerationSummary:
     task_name:str
     instance_generations :List[InstanceGenerations]
-    adapter_spec: AdapterSpec
+    adapter_spec: AdapterSpec=None
 
 
 def get_benchmark_output_path() -> str:

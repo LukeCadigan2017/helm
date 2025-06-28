@@ -274,7 +274,7 @@ def analyze_completion_by_beam(processGens:ProcessGens, num_instances:int=20):
     return indexed_by_model
 
 
-def plot_grouped(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20):
+def plot_grouped(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20, error_bar=True):
     if(ax is None):
         _, ax = plt.subplots()
     warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -295,7 +295,10 @@ def plot_grouped(df, xlabel, ylabel, groupby='example_idx', title=None, trend_li
             yerr.append(1.96*s/math.sqrt(c))
 
     # Plot with error bars (standard deviation)
-    ax.errorbar(x, y, yerr=yerr, fmt='o', ecolor='gray', capsize=3, label='Data with std dev')
+    if error_bar:
+        ax.errorbar(x, y, yerr=yerr, fmt='o', ecolor='gray', capsize=3, label='Data with std dev')
+    else:
+        ax.scatter(x,y)
 
     # plt.scatter(x,y)
     ax.set_xlabel(xlabel)
@@ -313,8 +316,8 @@ def plot_grouped(df, xlabel, ylabel, groupby='example_idx', title=None, trend_li
             pass
     else: 
         raise Exception("Plot_keys errors: did not recognize trend_line type")
-    
-    # plt.show()
+    return ax
+
 
 def plot_all(dfs_by_model, compare_metric):
     for model_name, filtered_dfs in dfs_by_model.items():
@@ -331,7 +334,47 @@ def plot_all(dfs_by_model, compare_metric):
         plot_grouped(df=filtered_dfs, xlabel="output_logprob", groupby="bins", ylabel=compare_metric, title=f"{model_name} with equal-bins")
         plot_grouped(df=filtered_df, xlabel='output_logprob_norm',  groupby="bins", ylabel=compare_metric+'_norm', title=f"{model_name} with equal-bins")
 
-def plot_spline(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20):
+
+
+#Good resource for spline interpretation https://bookdown.org/ssjackson300/Machine-Learning-Lecture-Notes/splines.html 
+#created with this:
+#https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html
+from scipy.interpolate import make_smoothing_spline
+def plot_smooth_spline(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20, error_bar=False):
+    if(ax is None):
+        _, ax = plt.subplots(figsize=(50, 50))
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+    if(groupby=="bins"):
+        
+        df["bins"]=pd.qcut(df[xlabel],nbins)
+    
+    grouped = df.groupby(groupby)[[xlabel, ylabel]].agg(['mean', 'count', 'std'])
+    
+    grouped = grouped.sort_values(by=(xlabel, 'mean'))
+
+    x = grouped[(xlabel, 'mean')].values
+    y = grouped[(ylabel, 'mean')].values
+    
+
+    yerr = grouped[(ylabel, 'std')].values
+    yerr=[]
+    for i in grouped.index:
+        # print(grouped.loc[i][ylabel])
+        _, c, s = grouped.loc[i][ylabel]
+        yerr.append(1.96*s/math.sqrt(c))
+
+    # Plot with error bars (standard deviation)
+
+    if(error_bar):
+        ax.errorbar(x, y, yerr=yerr, fmt='o', ecolor='gray', capsize=3, label='Data with std dev')
+    else:
+        ax.scatter(x,y)
+    spl = make_smoothing_spline(x, y)
+    plt.plot(x, spl(x), '-.')
+    
+
+
+def plot_spline(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20, error_bar=False):
     if(ax is None):
         _, ax = plt.subplots()
     warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -351,11 +394,16 @@ def plot_spline(df, xlabel, ylabel, groupby='example_idx', title=None, trend_lin
         yerr.append(1.96*s/math.sqrt(c))
 
     # Plot with error bars (standard deviation)
-    ax.errorbar(x, y, yerr=yerr, fmt='o', ecolor='gray', capsize=3, label='Data with std dev')
-    y_fit = cp.Variable(len(x))
 
+    if(error_bar):
+        ax.errorbar(x, y, yerr=yerr, fmt='o', ecolor='gray', capsize=3, label='Data with std dev')
+    else:
+        ax.scatter(x,y)
+
+    y_fit = cp.Variable(len(x))
     second_diffs = y_fit[:-2] - 2 * y_fit[1:-1] + y_fit[2:]
-    objective = cp.Minimize(cp.sum_squares(y_fit - y))
+    lam=1
+    objective = cp.Minimize(cp.sum_squares(y_fit - y)   + lam*second_diffs^2)
     constraints = [second_diffs <= 0]  
     prob = cp.Problem(objective, constraints)
     prob.solve()

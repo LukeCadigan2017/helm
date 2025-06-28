@@ -241,6 +241,7 @@ class HuggingFaceServer:
                     self.device
                 )
         self.wrapped_tokenizer = wrapped_tokenizer
+        self.batch_size=None
 
     def decode_text(self, sequences, input_len, echo_prompt=False):
         
@@ -251,10 +252,33 @@ class HuggingFaceServer:
             all_tokens = [[tokenizer.decode(token) for token in sequence_tokens] for sequence_tokens in sequences]
             all_decoded_text = tokenizer.batch_decode(sequences)
         return all_tokens, all_decoded_text
+                
+    def lower_batch_size(self):
+
+        if self.batch_size==1:
+            raise Exception("Luke: Could not run, even with batch size of 1. Use larger GPU")
+        sizes_to_try=[100, 75, 50, 30, 20, 20, 15, 12, 10, 9, 8,7,6,5,4,3,2,1]
+        for size_to_try in sizes_to_try:
+            if(size_to_try< self.batch_size):
+                self.batch_size=size_to_try
+                return 
+
 
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
-        print("Serving request", flush=True)
+        # print("Serving request", flush=True)
         
+        #confirm this works
+        try:
+            return self.serve_request_inner(raw_request)
+        except Exception as e: 
+            # breakpoint()
+            if 'torch.OutOfMemoryError' in str(e):
+                self.lower_batch_size()
+                return self.serve_request(raw_request)
+            else:
+                raise e
+            
+    def serve_request_inner(self, raw_request: HuggingFaceRequest) -> Dict:
         eos_token_string=None
         logits=None
         sequences=None
@@ -262,7 +286,19 @@ class HuggingFaceServer:
         all_tokens=None
 
         
-        
+
+        #don't have None batch size
+        if  self.batch_size is None and raw_request["beam_params"].batch_size is not None:
+            self.batch_size=raw_request["beam_params"].batch_size
+        print(f"Serving request. Batch {self.batch_size}", flush=True)
+        # #fake exception
+        # if self.batch_size>5:
+        #     print(f"Failed: batch_size is {self.batch_size}")
+        #     raise Exception("torch.OutOfMemoryError")
+        # else:
+        #     print(f"Success: batch_size is {self.batch_size}")
+
+
         stopping_criteria: Optional[StoppingCriteriaList] = None
         optional_args = {}
         prompt=raw_request["prompt"]
