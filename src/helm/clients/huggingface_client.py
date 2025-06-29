@@ -286,6 +286,13 @@ class HuggingFaceServer:
         self.wrapped_tokenizer = wrapped_tokenizer
         self.batch_size=None
 
+        nvmlInit()
+        handle = nvmlDeviceGetHandleByIndex(torch.cuda.current_device())
+        info = nvmlDeviceGetMemoryInfo(handle)
+        initial_free = float(info.free)/(1024 * 1024 * 1024)
+        print(f"intitial_free is {initial_free}", flush=True)
+                
+
     def decode_text(self, sequences, input_len, echo_prompt=False):
         
         if not echo_prompt:
@@ -525,11 +532,7 @@ class HuggingFaceServer:
             #default for test_run_all.ksh
             elif num_beams==1:
                 successful=False
-                nvmlInit()
-                handle = nvmlDeviceGetHandleByIndex(torch.cuda.current_device())
-                info = nvmlDeviceGetMemoryInfo(handle)
-                free = float(info.free)/(1024 * 1024 * 1024)
-                print(f"Initial free is {free}")
+
 
 
                 while not successful:
@@ -600,7 +603,7 @@ class HuggingFaceServer:
                     except Exception as e: 
                         is_cuda_memory_error= ('CUDA out of memory. Tried to allocate' in str(e))
                         if is_cuda_memory_error:
-                            min_memory_available = 80 * 1024 * 1024 * 1024  # 80GB
+                            min_memory_available = 0.8* 60 * 1024 * 1024 * 1024  # 60GB is max. Get 80% of it
                             clear_gpu_memory()
                             wait_until_enough_gpu_memory(min_memory_available)
                             self.lower_batch_size()
