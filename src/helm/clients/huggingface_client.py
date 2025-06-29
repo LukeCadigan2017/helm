@@ -624,6 +624,14 @@ class HuggingFaceServer:
                             gc.collect()
                             print("Wait for memory", flush=True)
                             wait_until_enough_gpu_memory(min_memory_available)
+
+                            print("Print all tensors", flush=True)
+                            for obj in gc.get_objects():
+                                try:
+                                    if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+                                        print(type(obj), obj.size())
+                                except:
+                                    pass
                             print("Reload model", flush=True)
                             self.set_model()
                             self.lower_batch_size()
