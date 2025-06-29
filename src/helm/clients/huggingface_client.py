@@ -268,27 +268,7 @@ class HuggingFaceServer:
 
 
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
-        # print("Serving request", flush=True)
-        
-        #confirm this works
-        try:
-            return self.serve_request_inner(raw_request)
-        except Exception as e: 
-            is_cuda_memory_error= ('CUDA out of memory. Tried to allocate' in str(e))
-            print("\n\n\n\n\n\n\n Luke: Caught exception e")
-            print("Catch error in serve request",flush=True)
-            print(f"str(e) is {str(e)}")
-            print(f"This should be true: {is_cuda_memory_error}",flush=True)
-            if is_cuda_memory_error:
-                torch.cuda.empty_cache()
-                gc.collect()
-                time.sleep(5)
-                self.lower_batch_size()
-                return self.serve_request(raw_request)
-            else:
-                raise e
-            
-    def serve_request_inner(self, raw_request: HuggingFaceRequest) -> Dict:
+        print(f"Serving request.", flush=True)
         eos_token_string=None
         logits=None
         sequences=None
@@ -301,8 +281,6 @@ class HuggingFaceServer:
         if  self.batch_size is None:
             self.batch_size=1000 if  (raw_request["beam_params"].batch_size  is None) else raw_request["beam_params"].batch_size
 
-        print(f"\n\n\n\n\n\n\n\n Serving request. Batch {self.batch_size}", flush=True)
-        print(f'Raw request batch is  {raw_request["beam_params"].batch_size}', flush=True)
         # #fake exception
         # if self.batch_size>5:
         #     print(f"Failed: batch_size is {self.batch_size}")
@@ -504,59 +482,80 @@ class HuggingFaceServer:
             #non-beam search tests
             #default for test_run_all.ksh
             elif num_beams==1:
-                batch_size = num_generated if batch_size == 0 else batch_size
-                num_left=num_generated
-                while(num_left>0):
-                    new_batch=min(num_left, batch_size)
-                    num_left -= new_batch
-                # for i in range(int(num_generated / batch_size)):
-                    with torch.no_grad():
-                        batch_output = self.model.generate(
-                            **encoded_input,
-                            num_return_sequences=new_batch,
-                            max_new_tokens=raw_request["max_new_tokens"],
+                successful=False
+                while not successful:
+                    try:
+                        print(f"\n\n\n\n\n\n\n\n Serving request. Batch {self.batch_size}", flush=True)
+                        batch_output=None
+                        batch_sequences=None
+                        batch_logits=None
+                        batch_size=min(self.batch_size, batch_size)
+                        batch_size = num_generated if batch_size == 0 else batch_size
+                        num_left=num_generated
+                        while(num_left>0):
+                            new_batch=min(num_left, batch_size)
+                            num_left -= new_batch
+                        # for i in range(int(num_generated / batch_size)):
+                            with torch.no_grad():
+                                batch_output = self.model.generate(
+                                    **encoded_input,
+                                    num_return_sequences=new_batch,
+                                    max_new_tokens=raw_request["max_new_tokens"],
 
-                            # length_penalty=length_penalty,
-                            temperature=temperature,
-                            top_p=top_p,
-                            top_k=top_k,
-                            do_sample=True,
+                                    # length_penalty=length_penalty,
+                                    temperature=temperature,
+                                    top_p=top_p,
+                                    top_k=top_k,
+                                    do_sample=True,
 
-                            return_dict_in_generate=True,
-                            output_scores=True,
-                            output_logits=True,
-                            **optional_args,
-                            stopping_criteria=stopping_criteria,
-                        )
-                    #generate
-                    batch_sequences = batch_output.sequences
-                    batch_logits=batch_output.logits
-                    
-                    # batch_logits = torch.stack(list(batch_output.logits), dim=0)
-                    # print(f"len is {len(all_generated_tokens_logprobs)}")
-                    for completion_id in range(new_batch):
-                        generated_tokens_logprobs = []
-                        for i in range(len(batch_sequences[completion_id]) - len(encoded_input.input_ids[0])):
-                            logprobs = torch.nn.functional.log_softmax(batch_logits[i][completion_id], dim=0)
-                            # Get log probability of chosen token.
-                            j = i + len(encoded_input.input_ids[0])
-                            generated_tokens_logprobs.append(logprobs[batch_sequences[completion_id][j]].item())
-                        all_generated_tokens_logprobs.append(generated_tokens_logprobs)
-                        
-                    #batch_tokens is a list of outputs. Each output is list of word-strings
-                    #batch_decoded_text is a list of outputs. Each output is strings.
-                    
-                    batch_tokens, batch_decoded_text = self.decode_text(sequences=batch_sequences, input_len=len(encoded_input.input_ids[0]),echo_prompt=raw_request["echo_prompt"])
-                    all_tokens= safe_append_list(all_tokens,batch_tokens)
-                    all_decoded_text =safe_append_list(all_decoded_text,batch_decoded_text)
-                    
+                                    return_dict_in_generate=True,
+                                    output_scores=True,
+                                    output_logits=True,
+                                    **optional_args,
+                                    stopping_criteria=stopping_criteria,
+                                )
+                            #generate
+                            batch_sequences = batch_output.sequences
+                            batch_logits=batch_output.logits
 
-                    sequences = safe_append_list(sequences, list(batch_sequences.detach().cpu())  )
+                            # batch_logits = torch.stack(list(batch_output.logits), dim=0)
+                            # print(f"len is {len(all_generated_tokens_logprobs)}")
+                            for completion_id in range(new_batch):
+                                generated_tokens_logprobs = []
+                                for i in range(len(batch_sequences[completion_id]) - len(encoded_input.input_ids[0])):
+                                    logprobs = torch.nn.functional.log_softmax(batch_logits[i][completion_id], dim=0)
+                                    # Get log probability of chosen token.
+                                    j = i + len(encoded_input.input_ids[0])
+                                    generated_tokens_logprobs.append(logprobs[batch_sequences[completion_id][j]].item())
+                                all_generated_tokens_logprobs.append(generated_tokens_logprobs)
+                                
+                            #batch_tokens is a list of outputs. Each output is list of word-strings
+                            #batch_decoded_text is a list of outputs. Each output is strings.
+                            
+                            batch_tokens, batch_decoded_text = self.decode_text(sequences=batch_sequences, input_len=len(encoded_input.input_ids[0]),echo_prompt=raw_request["echo_prompt"])
+                            all_tokens= safe_append_list(all_tokens,batch_tokens)
+                            all_decoded_text =safe_append_list(all_decoded_text,batch_decoded_text)
+                            
 
-                    # print(sequences[0].is_cuda)
-                    # sequences = safe_append_tensor(sequences, batch_sequences.detach().cpu(), 0, pad_value=self.eos_id)
-                    # logits = safe_append_tensor(logits, batch_logits.detach().cpu(), 1, pad_value=-1)
+                            sequences = safe_append_list(sequences, list(batch_sequences.detach().cpu())  )
 
+                            # print(sequences[0].is_cuda)
+                            # sequences = safe_append_tensor(sequences, batch_sequences.detach().cpu(), 0, pad_value=self.eos_id)
+                            # logits = safe_append_tensor(logits, batch_logits.detach().cpu(), 1, pad_value=-1)
+                            successful=True
+                    except Exception as e: 
+                        is_cuda_memory_error= ('CUDA out of memory. Tried to allocate' in str(e))
+                        if is_cuda_memory_error:
+                            del batch_output                     
+                            del batch_sequences
+                            del batch_logits
+                            torch.cuda.empty_cache()
+                            gc.collect()
+                            time.sleep(5)
+                            self.lower_batch_size()
+                            return self.serve_request(raw_request)
+                        else:
+                            raise e
             else:
                 raise Exception(f"Weird number of num_beams {num_beams}")
 
