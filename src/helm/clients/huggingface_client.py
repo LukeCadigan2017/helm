@@ -271,11 +271,12 @@ class HuggingFaceServer:
         try:
             return self.serve_request_inner(raw_request)
         except Exception as e: 
+            is_cuda_memory_error= ('CUDA out of memory. Tried to allocate' in str(e))
             print("\n\n\n\n\n\n\n Luke: Caught exception e")
             print("Catch error in serve request",flush=True)
-            print(f"This should be true: { ('torch.OutOfMemoryError' in str(e))}",flush=True)
             print(f"str(e) is {str(e)}")
-            if 'torch.OutOfMemoryError' in str(e):
+            print(f"This should be true: {is_cuda_memory_error}",flush=True)
+            if is_cuda_memory_error:
                 self.lower_batch_size()
                 return self.serve_request(raw_request)
             else:
