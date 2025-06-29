@@ -261,7 +261,7 @@ class HuggingFaceServer:
             for option in options:
                 if(option< num):
                     return option
-            raise Exception("Exception: Could not find smaller number")
+            raise Exception(f"Exception: Could not find smaller number than {num}")
         self.batch_size=get_next_smaller(self.batch_size)
 
 
