@@ -31,6 +31,7 @@ import json
 from pprint import pprint
 import sys
 import numpy as np
+from pynvml import NVMLError
 
 # class StopAtSpecificTokenCriteria(StoppingCriteria):
 #     def __init__(self, stop_sequence: List[int]):
@@ -67,6 +68,7 @@ def wait_until_enough_gpu_memory(min_memory_available, max_retries=10, sleep_tim
         print(f"Waiting for {min_memory_available} bytes of free GPU memory. Retrying in {sleep_time} seconds...")
         time.sleep(sleep_time)
     else:
+        print(torch.cuda.memory_summary(device=None, abbreviated=False))
         raise RuntimeError(f"Failed to acquire {min_memory_available} bytes of free GPU memory after {max_retries} retries.")
 
 
@@ -257,24 +259,37 @@ class HuggingFaceServer:
         if "trust_remote_code" not in kwargs:
             kwargs["trust_remote_code"] = True
 
+        self.pretrained_model_name_or_path=pretrained_model_name_or_path
+        self.model_kwargs=kwargs
         with htrack_block(f"Loading Hugging Face model {pretrained_model_name_or_path}"):
             # WARNING this may fail if your GPU does not have enough memory
-            if self.device is None:
-                # kwargs contains device_map=auto
-                # Do not call to() because accelerate will take care of model device placement.
-                self.model = AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path, **kwargs)
-            else:
-                self.model = AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path, **kwargs).to(
-                    self.device
-                )
+            self.set_model()
+
+
         self.wrapped_tokenizer = wrapped_tokenizer
         self.batch_size=None
 
-        nvmlInit()
-        handle = nvmlDeviceGetHandleByIndex(torch.cuda.current_device())
-        info = nvmlDeviceGetMemoryInfo(handle)
-        self.initial_free = float(info.free)/(1024 * 1024 * 1024)
+        try:
+            nvmlInit()
+            handle = nvmlDeviceGetHandleByIndex(torch.cuda.current_device())
+            info = nvmlDeviceGetMemoryInfo(handle)
+            self.initial_free = float(info.free)/(1024 * 1024 * 1024)
+        except NVMLError as err:
+            self.initial_free=0
+
+
         # print(f"intitial_free is {self.initial_free }", flush=True)
+
+    def set_model(self):
+        if self.device is None:
+                # kwargs contains device_map=auto
+                # Do not call to() because accelerate will take care of model device placement.
+            self.model = AutoModelForCausalLM.from_pretrained(self.pretrained_model_name_or_path, **self.model_kwargs)
+        else:
+            self.model = AutoModelForCausalLM.from_pretrained(self.pretrained_model_name_or_path, **self.model_kwargs).to(
+                self.device
+            )
+        
                 
 
     def decode_text(self, sequences, input_len, echo_prompt=False):
@@ -586,32 +601,34 @@ class HuggingFaceServer:
                             successful=True
                     except Exception as e: 
                         is_cuda_memory_error= ('CUDA out of memory. Tried to allocate' in str(e))
-                        # if is_cuda_memory_error:
-                        #     available_percent=0.8
-                        #     min_memory_available = available_percent* self.initial_free  * 1024 * 1024 * 1024  # 60GB is max. Get 80% of it
+                        if is_cuda_memory_error:
+                            available_percent=0.8
+                            min_memory_available = available_percent* self.initial_free  * 1024 * 1024 * 1024  # 60GB is max. Get 80% of it
                             
 
-                        #     del batch_output                     
-                        #     del batch_sequences
-                        #     del batch_logits
-                        #     del batch_tokens
-                        #     del batch_decoded_text
+                            del batch_output                     
+                            del batch_sequences
+                            del batch_logits
+                            del batch_tokens
+                            del batch_decoded_text
 
 
-                        #     del all_tokens
-                        #     del all_decoded_text
-                        #     del sequences
-                        #     all_generated_tokens_logprobs=[]
-                        #     generated_tokens_logprobs=[]
-                        #     torch.cuda.empty_cache()
-                        #     gc.collect()
+                            del all_tokens
+                            del all_decoded_text
+                            del sequences
+                            del self.model
+                            all_generated_tokens_logprobs=[]
+                            generated_tokens_logprobs=[]
+                            torch.cuda.empty_cache()
+                            gc.collect()
+                            self.set_model()
 
-                        #     wait_until_enough_gpu_memory(min_memory_available)
-                        #     self.lower_batch_size()
-                        #     print(torch.cuda.memory_summary(device=None, abbreviated=False))
-                        #     return self.serve_request(raw_request)
-                        # else:
-                        raise e
+                            wait_until_enough_gpu_memory(min_memory_available)
+                            self.lower_batch_size()
+                            
+                            return self.serve_request(raw_request)
+                        else:
+                            raise e
             else:
                 raise Exception(f"Weird number of num_beams {num_beams}")
 
