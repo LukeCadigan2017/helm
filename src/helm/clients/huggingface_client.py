@@ -278,6 +278,7 @@ class HuggingFaceServer:
             print(f"str(e) is {str(e)}")
             print(f"This should be true: {is_cuda_memory_error}",flush=True)
             if is_cuda_memory_error:
+                torch.cuda.empty_cache()
                 self.lower_batch_size()
                 return self.serve_request(raw_request)
             else:
