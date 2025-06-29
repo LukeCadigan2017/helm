@@ -282,7 +282,6 @@ class HuggingFaceServer:
             if is_cuda_memory_error:
                 torch.cuda.empty_cache()
                 gc.collect()
-                del variables
                 time.sleep(5)
                 self.lower_batch_size()
                 return self.serve_request(raw_request)
