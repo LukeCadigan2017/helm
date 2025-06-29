@@ -274,7 +274,7 @@ class HuggingFaceServer:
         handle = nvmlDeviceGetHandleByIndex(torch.cuda.current_device())
         info = nvmlDeviceGetMemoryInfo(handle)
         self.initial_free = float(info.free)/(1024 * 1024 * 1024)
-        print(f"intitial_free is {self.initial_free }", flush=True)
+        # print(f"intitial_free is {self.initial_free }", flush=True)
                 
 
     def decode_text(self, sequences, input_len, echo_prompt=False):
@@ -586,32 +586,32 @@ class HuggingFaceServer:
                             successful=True
                     except Exception as e: 
                         is_cuda_memory_error= ('CUDA out of memory. Tried to allocate' in str(e))
-                        if is_cuda_memory_error:
-                            available_percent=0.8
-                            min_memory_available = available_percent* self.initial_free  * 1024 * 1024 * 1024  # 60GB is max. Get 80% of it
+                        # if is_cuda_memory_error:
+                        #     available_percent=0.8
+                        #     min_memory_available = available_percent* self.initial_free  * 1024 * 1024 * 1024  # 60GB is max. Get 80% of it
                             
 
-                            del batch_output                     
-                            del batch_sequences
-                            del batch_logits
-                            del batch_tokens
-                            del batch_decoded_text
+                        #     del batch_output                     
+                        #     del batch_sequences
+                        #     del batch_logits
+                        #     del batch_tokens
+                        #     del batch_decoded_text
 
 
-                            del all_tokens
-                            del all_decoded_text
-                            del sequences
-                            all_generated_tokens_logprobs=[]
-                            generated_tokens_logprobs=[]
-                            torch.cuda.empty_cache()
-                            gc.collect()
+                        #     del all_tokens
+                        #     del all_decoded_text
+                        #     del sequences
+                        #     all_generated_tokens_logprobs=[]
+                        #     generated_tokens_logprobs=[]
+                        #     torch.cuda.empty_cache()
+                        #     gc.collect()
 
-                            wait_until_enough_gpu_memory(min_memory_available)
-                            self.lower_batch_size()
-                            print(torch.cuda.memory_summary(device=None, abbreviated=False))
-                            return self.serve_request(raw_request)
-                        else:
-                            raise e
+                        #     wait_until_enough_gpu_memory(min_memory_available)
+                        #     self.lower_batch_size()
+                        #     print(torch.cuda.memory_summary(device=None, abbreviated=False))
+                        #     return self.serve_request(raw_request)
+                        # else:
+                        raise e
             else:
                 raise Exception(f"Weird number of num_beams {num_beams}")
 
