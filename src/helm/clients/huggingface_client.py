@@ -51,22 +51,6 @@ import time
 import gc
 from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetMemoryInfo
 
-def clear_gpu_memory():
-    del batch_output                     
-    del batch_sequences
-    del batch_logits
-    del batch_tokens
-    del batch_decoded_text
-
-
-    del all_tokens
-    del all_decoded_text
-    del sequences
-    all_generated_tokens_logprobs=[]
-    generated_tokens_logprobs=[]
-    torch.cuda.empty_cache()
-    gc.collect()
-
 
 def wait_until_enough_gpu_memory(min_memory_available, max_retries=10, sleep_time=5):
 
@@ -289,8 +273,8 @@ class HuggingFaceServer:
         nvmlInit()
         handle = nvmlDeviceGetHandleByIndex(torch.cuda.current_device())
         info = nvmlDeviceGetMemoryInfo(handle)
-        initial_free = float(info.free)/(1024 * 1024 * 1024)
-        print(f"intitial_free is {initial_free}", flush=True)
+        self.initial_free = float(info.free)/(1024 * 1024 * 1024)
+        print(f"intitial_free is {self.initial_free }", flush=True)
                 
 
     def decode_text(self, sequences, input_len, echo_prompt=False):
@@ -603,8 +587,25 @@ class HuggingFaceServer:
                     except Exception as e: 
                         is_cuda_memory_error= ('CUDA out of memory. Tried to allocate' in str(e))
                         if is_cuda_memory_error:
-                            min_memory_available = 0.8* 60 * 1024 * 1024 * 1024  # 60GB is max. Get 80% of it
-                            clear_gpu_memory()
+                            available_percent=0.8
+                            min_memory_available = available_percent* self.initial_free  * 1024 * 1024 * 1024  # 60GB is max. Get 80% of it
+                            
+
+                            del batch_output                     
+                            del batch_sequences
+                            del batch_logits
+                            del batch_tokens
+                            del batch_decoded_text
+
+
+                            del all_tokens
+                            del all_decoded_text
+                            del sequences
+                            all_generated_tokens_logprobs=[]
+                            generated_tokens_logprobs=[]
+                            torch.cuda.empty_cache()
+                            gc.collect()
+
                             wait_until_enough_gpu_memory(min_memory_available)
                             self.lower_batch_size()
                             print(torch.cuda.memory_summary(device=None, abbreviated=False))
