@@ -254,14 +254,15 @@ class HuggingFaceServer:
         return all_tokens, all_decoded_text
                 
     def lower_batch_size(self):
-
-        if self.batch_size==1:
-            raise Exception("Luke: Could not run, even with batch size of 1. Use larger GPU")
-        sizes_to_try=[100, 75, 50, 30, 20, 20, 15, 12, 10, 9, 8,7,6,5,4,3,2,1]
-        for size_to_try in sizes_to_try:
-            if(size_to_try< self.batch_size):
-                self.batch_size=size_to_try
-                return 
+        def get_next_smaller(num):
+            options=[100, 75, 50, 30, 20, 20, 15, 12, 10, 9, 8,7,6,5,4,3,2,1]
+            if num is None:
+                return options[0]
+            for option in options:
+                if(option< num):
+                    return option
+            raise Exception("Exception: Could not find smaller number")
+        self.batch_size=get_next_smaller(self.batch_size)
 
 
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
@@ -289,12 +290,13 @@ class HuggingFaceServer:
         all_decoded_text=None
         all_tokens=None
 
-        
+
 
         #don't have None batch size
         if  self.batch_size is None:
             self.batch_size=1000 if  (raw_request["beam_params"].batch_size  is None) else raw_request["beam_params"].batch_size
-        print(f"Serving request. Batch {self.batch_size}", flush=True)
+
+        print(f"\n\n\n\n\n\n\n\n Serving request. Batch {self.batch_size}", flush=True)
         print(f'Raw request batch is  {raw_request["beam_params"].batch_size}', flush=True)
         # #fake exception
         # if self.batch_size>5:
@@ -357,7 +359,7 @@ class HuggingFaceServer:
         length_penalty=raw_request["beam_params"].length_penalty
         exact_mode=raw_request["beam_params"].exact_mode
         
-        batch_size=raw_request["beam_params"].batch_size
+        batch_size=self.batch_size
 
         
         
