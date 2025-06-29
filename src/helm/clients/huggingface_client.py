@@ -291,8 +291,8 @@ class HuggingFaceServer:
         
 
         #don't have None batch size
-        if  self.batch_size is None and raw_request["beam_params"].batch_size is not None:
-            self.batch_size=raw_request["beam_params"].batch_size
+        if  self.batch_size is None:
+            self.batch_size=1000 if  (raw_request["beam_params"].batch_size  is None) else raw_request["beam_params"].batch_size
         print(f"Serving request. Batch {self.batch_size}", flush=True)
         print(f'Raw request batch is  {raw_request["beam_params"].batch_size}', flush=True)
         # #fake exception
