@@ -271,7 +271,10 @@ class HuggingFaceServer:
         try:
             return self.serve_request_inner(raw_request)
         except Exception as e: 
-            # breakpoint()
+            print("\n\n\n\n\n\n\n Luke: Caught exception e")
+            print("Catch error in serve request",flush=True)
+            print(f"This should be true: { ('torch.OutOfMemoryError' in str(e))}",flush=True)
+            print(f"str(e) is {str(e)}")
             if 'torch.OutOfMemoryError' in str(e):
                 self.lower_batch_size()
                 return self.serve_request(raw_request)
@@ -291,6 +294,7 @@ class HuggingFaceServer:
         if  self.batch_size is None and raw_request["beam_params"].batch_size is not None:
             self.batch_size=raw_request["beam_params"].batch_size
         print(f"Serving request. Batch {self.batch_size}", flush=True)
+        print(f'Raw request batch is  {raw_request["beam_params"].batch_size}', flush=True)
         # #fake exception
         # if self.batch_size>5:
         #     print(f"Failed: batch_size is {self.batch_size}")
