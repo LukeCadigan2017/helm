@@ -8,6 +8,8 @@ from transformers.generation.stopping_criteria import (
     EosTokenCriteria
 )
 from typing import Any, Dict, List, Optional, TypedDict
+import gc
+import time
 
 from helm.common.cache import CacheConfig
 from helm.common.hierarchical_logger import htrack_block, hlog
@@ -279,6 +281,9 @@ class HuggingFaceServer:
             print(f"This should be true: {is_cuda_memory_error}",flush=True)
             if is_cuda_memory_error:
                 torch.cuda.empty_cache()
+                gc.collect()
+                del variables
+                time.sleep(5)
                 self.lower_batch_size()
                 return self.serve_request(raw_request)
             else:
