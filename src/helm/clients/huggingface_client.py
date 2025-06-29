@@ -45,6 +45,47 @@ import numpy as np
 #         current_sequence = input_ids[:, -len(self.stop_sequence) :]
 #         return bool(torch.all(current_sequence == stop_sequence_tensor).item())
 
+
+import torch
+import time
+import gc
+from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetMemoryInfo
+
+def clear_gpu_memory():
+    del batch_output                     
+    del batch_sequences
+    del batch_logits
+    del batch_tokens
+    del batch_decoded_text
+
+
+    del all_tokens
+    del all_decoded_text
+    del sequences
+    all_generated_tokens_logprobs=[]
+    generated_tokens_logprobs=[]
+    torch.cuda.empty_cache()
+    gc.collect()
+
+
+def wait_until_enough_gpu_memory(min_memory_available, max_retries=10, sleep_time=5):
+
+    nvmlInit()
+    handle = nvmlDeviceGetHandleByIndex(torch.cuda.current_device())
+
+    for retry_num in range(max_retries):
+        info = nvmlDeviceGetMemoryInfo(handle)
+        free = float(info.free)/(1024 * 1024 * 1024)
+
+        print(f"Waiting for enough gpu memory. Retry {retry_num}. GPU avail: {free}.")
+        if info.free >= min_memory_available:
+            break
+        print(f"Waiting for {min_memory_available} bytes of free GPU memory. Retrying in {sleep_time} seconds...")
+        time.sleep(sleep_time)
+    else:
+        raise RuntimeError(f"Failed to acquire {min_memory_available} bytes of free GPU memory after {max_retries} retries.")
+
+
 def pad_to_dim(m, correct_sizes, axes, num_dim, cat_axis, pad_value):
     
     pad_tuple = [0]*(2*num_dim)
@@ -484,12 +525,25 @@ class HuggingFaceServer:
             #default for test_run_all.ksh
             elif num_beams==1:
                 successful=False
+                nvmlInit()
+                handle = nvmlDeviceGetHandleByIndex(torch.cuda.current_device())
+                info = nvmlDeviceGetMemoryInfo(handle)
+                free = float(info.free)/(1024 * 1024 * 1024)
+                print(f"Initial free is {free}")
+
+
                 while not successful:
                     try:
                         print(f"\n\n\n\n\n\n\n\n Serving request. Batch {self.batch_size}", flush=True)
                         batch_output=None
                         batch_sequences=None
                         batch_logits=None
+                        batch_tokens=None
+                        batch_decoded_text=None
+                        all_tokens=None
+                        all_decoded_text=None
+                        sequences=None
+
                         batch_size=min(self.batch_size, batch_size)
                         batch_size = num_generated if batch_size == 0 else batch_size
                         num_left=num_generated
@@ -536,7 +590,6 @@ class HuggingFaceServer:
                             batch_tokens, batch_decoded_text = self.decode_text(sequences=batch_sequences, input_len=len(encoded_input.input_ids[0]),echo_prompt=raw_request["echo_prompt"])
                             all_tokens= safe_append_list(all_tokens,batch_tokens)
                             all_decoded_text =safe_append_list(all_decoded_text,batch_decoded_text)
-                            
 
                             sequences = safe_append_list(sequences, list(batch_sequences.detach().cpu())  )
 
@@ -547,15 +600,10 @@ class HuggingFaceServer:
                     except Exception as e: 
                         is_cuda_memory_error= ('CUDA out of memory. Tried to allocate' in str(e))
                         if is_cuda_memory_error:
-                            print(f"Error is {str(e)}")
-                            del batch_output                     
-                            del batch_sequences
-                            del batch_logits
-                            torch.cuda.empty_cache()
-                            gc.collect()
-                            time.sleep(5)
+                            min_memory_available = 80 * 1024 * 1024 * 1024  # 80GB
+                            clear_gpu_memory()
+                            wait_until_enough_gpu_memory(min_memory_available)
                             self.lower_batch_size()
-
                             print(torch.cuda.memory_summary(device=None, abbreviated=False))
                             return self.serve_request(raw_request)
                         else:
