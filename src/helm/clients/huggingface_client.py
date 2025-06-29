@@ -605,7 +605,7 @@ class HuggingFaceServer:
                             available_percent=0.8
                             min_memory_available = available_percent* self.initial_free  * 1024 * 1024 * 1024  # 60GB is max. Get 80% of it
                             
-
+                            print("Deleting everything", flush=True)
                             del batch_output                     
                             del batch_sequences
                             del batch_logits
@@ -619,11 +619,13 @@ class HuggingFaceServer:
                             del self.model
                             all_generated_tokens_logprobs=[]
                             generated_tokens_logprobs=[]
+
                             torch.cuda.empty_cache()
                             gc.collect()
-                            self.set_model()
-
+                            print("Wait for memory", flush=True)
                             wait_until_enough_gpu_memory(min_memory_available)
+                            print("Reload model", flush=True)
+                            self.set_model()
                             self.lower_batch_size()
                             
                             return self.serve_request(raw_request)
