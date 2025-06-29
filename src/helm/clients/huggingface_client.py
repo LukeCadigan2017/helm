@@ -62,14 +62,20 @@ def wait_until_enough_gpu_memory(min_memory_available, max_retries=10, sleep_tim
         info = nvmlDeviceGetMemoryInfo(handle)
         free = float(info.free)/(1024 * 1024 * 1024)
 
-        print(f"Waiting for enough gpu memory. Retry {retry_num}. GPU avail: {free}.")
         if info.free >= min_memory_available:
             break
-        print(f"Waiting for {min_memory_available} bytes of free GPU memory. Retrying in {sleep_time} seconds...")
+        print(f"Requested: {min_memory_available/(1024 * 1024 * 1024)}GB. Available: {free} GB. Not enough Gpu GB Retrying in {sleep_time} seconds...")
         time.sleep(sleep_time)
     else:
-        print(torch.cuda.memory_summary(device=None, abbreviated=False))
-        raise RuntimeError(f"Failed to acquire {min_memory_available} bytes of free GPU memory after {max_retries} retries.")
+        print("\n\n\n\n-----------------------\nPrint all tensors", flush=True)
+        for obj in gc.get_objects():
+            try:
+                if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+                    print(type(obj), obj.size())
+            except:
+                pass
+        print(torch.cuda.memory_summary(device=None, abbreviated=False), flush=True)
+        raise RuntimeError(f"Failed to acquire {min_memory_available/(1024 * 1024 * 1024)} GB of free GPU memory after {max_retries} retries.")
 
 
 def pad_to_dim(m, correct_sizes, axes, num_dim, cat_axis, pad_value):
@@ -625,13 +631,6 @@ class HuggingFaceServer:
                             print("Wait for memory", flush=True)
                             wait_until_enough_gpu_memory(min_memory_available)
 
-                            print("Print all tensors", flush=True)
-                            for obj in gc.get_objects():
-                                try:
-                                    if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
-                                        print(type(obj), obj.size())
-                                except:
-                                    pass
                             print("Reload model", flush=True)
                             self.set_model()
                             self.lower_batch_size()
