@@ -493,7 +493,7 @@ class HuggingFaceServer:
                         batch_size = num_generated if batch_size == 0 else batch_size
                         num_left=num_generated
                         while(num_left>0):
-                            new_batch=min(num_left, batch_size)
+                            new_batch=min(num_left, batch_size, self.batch_size)
                             num_left -= new_batch
                         # for i in range(int(num_generated / batch_size)):
                             with torch.no_grad():
@@ -546,6 +546,7 @@ class HuggingFaceServer:
                     except Exception as e: 
                         is_cuda_memory_error= ('CUDA out of memory. Tried to allocate' in str(e))
                         if is_cuda_memory_error:
+                            print(f"Error is {str(e)}")
                             del batch_output                     
                             del batch_sequences
                             del batch_logits
@@ -553,6 +554,8 @@ class HuggingFaceServer:
                             gc.collect()
                             time.sleep(5)
                             self.lower_batch_size()
+
+                            print(torch.cuda.memory_summary(device=None, abbreviated=False))
                             return self.serve_request(raw_request)
                         else:
                             raise e
