@@ -63,6 +63,7 @@ def wait_until_enough_gpu_memory(min_memory_available, max_retries=10, sleep_tim
         free = float(info.free)/(1024 * 1024 * 1024)
 
         if info.free >= min_memory_available:
+            print(f"Recovered cuda. Freed up {free} GB of GPU")
             break
         print(f"Requested: {min_memory_available/(1024 * 1024 * 1024)}GB. Available: {free} GB. Not enough Gpu GB Retrying in {sleep_time} seconds...")
         time.sleep(sleep_time)
