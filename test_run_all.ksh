@@ -72,6 +72,7 @@ fi
 
 
 SUITE="${SUITE:=$DEFAULT_SUITE}"
+INSTRUCT="${INSTRUCT:=true}"
 
 
 echo SUITE IS $SUITE
@@ -104,7 +105,7 @@ fi
 . $TASK_ENV.env
 
 echo TASK_NAMES IS $TASK_NAMES
-
+echo NUM_TRAIN_TRIALS is $NUM_TRAIN_TRIALS
 
 # cat ./test_run_all.ksh
 
@@ -164,13 +165,12 @@ for TASK_NAME in $TASK_NAMES; do
         OUTPUT_PATH="$(./get_output_dir.ksh $SUITE_OUTPUT_DIR $TASK_NAME $MODEL $NUM_BEAMS)"
         TRUE_OUTPUT_PATH=${OUTPUT_PATH}/runs/${SUITE}
 
-        RUN_ENTRY=${RUN_ENTRY}model=${MODEL},follow_format_instructions=instruct
-        # if [ -d "$OUTPUT_PATH" ]; then
-        #     echo Cannot run! Directory $OUTPUT_PATH already exists
-        #     echo $OUTPUT_PATH
-        #     ls $OUTPUT_PATH
-        #     exit 1 
-        # fi
+        RUN_ENTRY=${RUN_ENTRY}model=${MODEL}
+
+
+        if [ "$INSTRUCT" = true ] ; then
+            RUN_ENTRY=${RUN_ENTRY},follow_format_instructions=instruct
+        fi
         
         mkdir -p $OUTPUT_PATH
         RUN_PATH=${OUTPUT_PATH}/runs/$SUITE
