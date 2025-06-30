@@ -338,7 +338,7 @@ class HuggingFaceServer:
 
     def serve_request(self, raw_request: HuggingFaceRequest) -> Dict:
         self.set_model()
-        print(f"Serving request.", flush=True)
+        # print(f"Serving request.", flush=True)
         eos_token_string=None
         logits=None
         sequences=None
@@ -553,7 +553,7 @@ class HuggingFaceServer:
             #default for test_run_all.ksh
             elif num_beams==1:
                 try: 
-                    print(f"\n\n\n\n\n\n\n\n Serving request. Batch {self.batch_size}", flush=True)
+                    print(f"Serving request. Batch size: {self.batch_size}", flush=True)
                     batch_output=None
                     batch_sequences=None
                     batch_logits=None
