@@ -870,7 +870,7 @@ class HuggingFaceClient(CachingClient):
             for i in range(num_attempts):
                 return_value=huggingface_model.serve_request(raw_request)
                 if return_value is None:
-                    huggingface_model.recover_from_oom(self)
+                    huggingface_model.recover_from_oom()
                     print(f"Attempt {i} unsucessful. Retrying")
                 else:
                     return return_value
