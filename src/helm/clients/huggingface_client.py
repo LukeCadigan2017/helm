@@ -311,7 +311,7 @@ class HuggingFaceServer:
                     self.device
                 )
         
-                
+            print(f"Model dtype: {next(self.model.parameters()).dtype}")                
 
     def decode_text(self, sequences, input_len, echo_prompt=False):
         
