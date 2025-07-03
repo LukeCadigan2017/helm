@@ -619,6 +619,7 @@ class HuggingFaceServer:
                 except Exception as e: 
                     is_cuda_memory_error= ('CUDA out of memory. Tried to allocate' in str(e))
                     if is_cuda_memory_error:
+                        print(f"Encountered cuda error:\n {str(e)}")
 
                         
                         print("Deleting everything", flush=True)
