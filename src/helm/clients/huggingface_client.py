@@ -338,7 +338,7 @@ class HuggingFaceServer:
                 
     def lower_batch_size(self):
         def get_next_smaller(num):
-            options=[100, 75, 50, 34, 25, 20, 16, 12, 10, 8, 6, 5, 4, 3, 2, 1]
+            options=[100, 50, 34, 25, 20, 17, 13, 10, 8, 6, 5, 4, 3, 2, 1]
             # options=[100,1]
             if num is None:
                 return options[0]
