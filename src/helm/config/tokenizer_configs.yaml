@@ -14,12 +14,19 @@ tokenizer_configs:
   ######################### Luke Real Models #########################
   ####################################################################
 
-
-  - name: Qwen/Qwen3-14B 
+  - name: Qwen/Qwen2.5-7B-Instruct 
     tokenizer_spec:
       class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
       args:
-        pretrained_model_name_or_path: Qwen/Qwen3-14B
+        pretrained_model_name_or_path: Qwen/Qwen2.5-7B-Instruct
+    end_of_text_token: "<|im_end|>"
+    prefix_token: "None" 
+
+  - name: Qwen/Qwen2.5-14B-Instruct 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: Qwen/Qwen2.5-14B-Instruct
     end_of_text_token: "<|im_end|>"
     prefix_token: "None" 
   ######################### Llama #########################
