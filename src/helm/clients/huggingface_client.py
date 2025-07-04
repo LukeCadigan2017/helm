@@ -569,7 +569,7 @@ class HuggingFaceServer:
             elif num_beams==1:
                 try: 
                     cur_time=datetime.datetime.now()
-                    print(f"Time:{cur_time}.\t. Serving request. Batch size: {self.batch_size}", flush=True)
+                    print(f"{cur_time}:\t Serving request. Batch size: {self.batch_size}", flush=True)
                     batch_output=None
                     batch_sequences=None
                     batch_logits=None
