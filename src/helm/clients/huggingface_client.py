@@ -301,11 +301,24 @@ class HuggingFaceServer:
 
 
     def set_model(self):
+        print(f"model_name {self.pretrained_model_name_or_path}")
+        print(f"kwargs is  {self.model_kwargs}")
+        print(f"bool is {self.pretrained_model_name_or_path=='allenai/OLMo-2-1124-13B-Instruct'}")
+        print(f"device is {self.device}")
         if self.model is None:
             if self.device is None:
                     # kwargs contains device_map=auto
                     # Do not call to() because accelerate will take care of model device placement.
-                self.model = AutoModelForCausalLM.from_pretrained(self.pretrained_model_name_or_path, **self.model_kwargs)
+                if self.pretrained_model_name_or_path=="allenai/OLMo-2-1124-13B-Instruct":
+                    print("Load quantized!")
+                    AutoModelForCausalLM.from_pretrained(self.pretrained_model_name_or_path, 
+                        torch_dtype=torch.float16, 
+                        load_in_8bit=True,
+                        **self.model_kwargs)
+                else:
+                    self.model = AutoModelForCausalLM.from_pretrained(self.pretrained_model_name_or_path, **self.model_kwargs)
+
+
             else:
                 self.model = AutoModelForCausalLM.from_pretrained(self.pretrained_model_name_or_path, **self.model_kwargs).to(
                     self.device
