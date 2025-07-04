@@ -311,7 +311,7 @@ class HuggingFaceServer:
                     # Do not call to() because accelerate will take care of model device placement.
                 if self.pretrained_model_name_or_path=="allenai/OLMo-2-1124-13B-Instruct":
                     print("Load quantized!")
-                    AutoModelForCausalLM.from_pretrained(self.pretrained_model_name_or_path, 
+                    self.model = AutoModelForCausalLM.from_pretrained(self.pretrained_model_name_or_path, 
                         torch_dtype=torch.float16, 
                         load_in_8bit=True,
                         **self.model_kwargs)
