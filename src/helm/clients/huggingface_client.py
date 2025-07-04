@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, TypedDict
 import gc
 import time
 
+import traceback
 from helm.common.cache import CacheConfig
 from helm.common.hierarchical_logger import htrack_block, hlog
 from helm.common.optional_dependencies import handle_module_not_found_error
@@ -32,6 +33,7 @@ from pprint import pprint
 import sys
 import numpy as np
 from pynvml import NVMLError
+import datetime
 
 # class StopAtSpecificTokenCriteria(StoppingCriteria):
 #     def __init__(self, stop_sequence: List[int]):
@@ -566,7 +568,8 @@ class HuggingFaceServer:
             #default for test_run_all.ksh
             elif num_beams==1:
                 try: 
-                    print(f"Serving request. Batch size: {self.batch_size}", flush=True)
+                    cur_time=datetime.datetime.now()
+                    print(f"Time:{cur_time}.\t. Serving request. Batch size: {self.batch_size}", flush=True)
                     batch_output=None
                     batch_sequences=None
                     batch_logits=None
@@ -632,8 +635,9 @@ class HuggingFaceServer:
                 except Exception as e: 
                     is_cuda_memory_error= ('CUDA out of memory. Tried to allocate' in str(e))
                     if is_cuda_memory_error:
-                        print(f"Encountered cuda error:\n {str(e)}")
-
+                        print(f"--------------------\n Encountered cuda error:\n")
+                        print(f"e:{str(e)}")
+                        print(traceback.format_exc())
                         
                         print("Deleting everything", flush=True)
                         batch_output=None                   
