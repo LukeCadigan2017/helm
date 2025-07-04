@@ -587,6 +587,7 @@ class HuggingFaceServer:
                     batch_size = num_generated if batch_size == 0 else batch_size
                     num_left=num_generated
                     while(num_left>0):
+                        print(f"Starting num_left {num_left}", flush=True)
                         new_batch=min(num_left, batch_size, self.batch_size)
                         num_left -= new_batch
                     # for i in range(int(num_generated / batch_size)):
@@ -631,6 +632,8 @@ class HuggingFaceServer:
                         all_decoded_text =safe_append_list(all_decoded_text,batch_decoded_text)
 
                         sequences = safe_append_list(sequences, list(batch_sequences.detach().cpu())  )
+
+                        print(f"Finished num_left {num_left}", flush=True)
 
                         # print(sequences[0].is_cuda)
                         # sequences = safe_append_tensor(sequences, batch_sequences.detach().cpu(), 0, pad_value=self.eos_id)
