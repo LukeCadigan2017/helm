@@ -1,6 +1,6 @@
 from copy import deepcopy
 import torch
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForCausalLM,  BitsAndBytesConfig
 from transformers.generation.stopping_criteria import (
     StoppingCriteria,
     StoppingCriteriaList,
@@ -313,9 +313,11 @@ class HuggingFaceServer:
                     # Do not call to() because accelerate will take care of model device placement.
                 if self.pretrained_model_name_or_path=="allenai/OLMo-2-1124-13B-Instruct":
                     print("Load quantized!")
+
+                    quantization_config = BitsAndBytesConfig(load_in_8bit=True)
                     self.model = AutoModelForCausalLM.from_pretrained(self.pretrained_model_name_or_path, 
                         torch_dtype=torch.float16, 
-                        load_in_8bit=True,
+                        quantization_config=quantization_config,
                         **self.model_kwargs)
                 else:
                     self.model = AutoModelForCausalLM.from_pretrained(self.pretrained_model_name_or_path, **self.model_kwargs)
@@ -385,6 +387,8 @@ class HuggingFaceServer:
             encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to(
                 0 if self.device is None else self.device
             )
+            if torch.cuda.is_available():
+                encoded_input=encoded_input.to('cuda')
             # if len(raw_request["stop_sequences"]) > 0:
             #     stopping_criteria = StoppingCriteriaList()
             #     stop_strings=stop_strings+raw_request["stop_sequences"]
