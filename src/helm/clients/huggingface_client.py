@@ -50,7 +50,6 @@ import datetime
 
 
 import torch
-import time
 import gc
 from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetMemoryInfo
 
@@ -278,6 +277,9 @@ class HuggingFaceServer:
         self.wrapped_tokenizer = wrapped_tokenizer
         self.batch_size=None
 
+        self.start_time=time.time()
+        self.counter=0
+
         try:
             nvmlInit()
             handle = nvmlDeviceGetHandleByIndex(torch.cuda.current_device())
@@ -383,6 +385,10 @@ class HuggingFaceServer:
         prompt_tokens_logprobs = []
         stop_strings=[self.eos]
         all_generated_tokens_logprobs = []
+
+        elapsed=   round(   (time.time()- self.start_time)/60      ,1)
+        print(f"{elapsed}m: Request {self.counter}.\tBatch size: {self.batch_size}", flush=True)
+        
         with self.wrapped_tokenizer as tokenizer:
             encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to(
                 0 if self.device is None else self.device
@@ -573,7 +579,6 @@ class HuggingFaceServer:
             elif num_beams==1:
                 try: 
                     cur_time=datetime.datetime.now()
-                    print(f"{cur_time}:\t Serving request. Batch size: {self.batch_size}", flush=True)
                     batch_output=None
                     batch_sequences=None
                     batch_logits=None
@@ -587,7 +592,7 @@ class HuggingFaceServer:
                     batch_size = num_generated if batch_size == 0 else batch_size
                     num_left=num_generated
                     while(num_left>0):
-                        print(f"Starting num_left {num_left}", flush=True)
+                        # print(f"Starting num_left {num_left}", flush=True)
                         new_batch=min(num_left, batch_size, self.batch_size)
                         num_left -= new_batch
                     # for i in range(int(num_generated / batch_size)):
@@ -632,8 +637,6 @@ class HuggingFaceServer:
                         all_decoded_text =safe_append_list(all_decoded_text,batch_decoded_text)
 
                         sequences = safe_append_list(sequences, list(batch_sequences.detach().cpu())  )
-
-                        print(f"Finished num_left {num_left}", flush=True)
 
                         # print(sequences[0].is_cuda)
                         # sequences = safe_append_tensor(sequences, batch_sequences.detach().cpu(), 0, pad_value=self.eos_id)
@@ -714,6 +717,7 @@ class HuggingFaceServer:
         #     txt=txt.split("<|endoftext|>")[0]
         #     f.write(f"Prompt is {raw_request['prompt']}")
         #     f.write(f"Completion is {}")
+        self.counter+=1
         return {"completions": completions, "input_length": len(encoded_input.input_ids[0]), "unscored_examples":raw_completions}
 
 
