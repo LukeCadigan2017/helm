@@ -305,11 +305,12 @@ class HuggingFaceServer:
 
 
     def set_model(self):
-        print(f"model_name {self.pretrained_model_name_or_path}")
-        print(f"kwargs is  {self.model_kwargs}")
-        print(f"bool is {self.pretrained_model_name_or_path=='allenai/OLMo-2-1124-13B-Instruct'}")
-        print(f"device is {self.device}")
+
         if self.model is None:
+            print(f"model_name {self.pretrained_model_name_or_path}")
+            print(f"kwargs is  {self.model_kwargs}")
+            print(f"bool is {self.pretrained_model_name_or_path=='allenai/OLMo-2-1124-13B-Instruct'}")
+            print(f"device is {self.device}")
             if self.device is None:
                     # kwargs contains device_map=auto
                     # Do not call to() because accelerate will take care of model device placement.
@@ -388,7 +389,6 @@ class HuggingFaceServer:
 
         elapsed=   round(   (time.time()- self.start_time)/60      ,1)
         print(f"{elapsed}m: Request {self.counter}.\tBatch size: {self.batch_size}", flush=True)
-        
         with self.wrapped_tokenizer as tokenizer:
             encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to(
                 0 if self.device is None else self.device
