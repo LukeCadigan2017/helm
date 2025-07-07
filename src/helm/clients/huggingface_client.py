@@ -390,6 +390,18 @@ class HuggingFaceServer:
         elapsed=   round(   (time.time()- self.start_time)/60      ,1)
         print(f"{elapsed}m: Request {self.counter}.\tBatch size: {self.batch_size}", flush=True)
         with self.wrapped_tokenizer as tokenizer:
+            if self.pretrained_model_name_or_path=="Qwen/Qwen3-8B":
+
+                messages = [
+                    {"role": "user", "content": prompt}
+                ]
+                prompt = tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=False,
+                    add_generation_prompt=True,
+                    enable_thinking=False # Switches between thinking and non-thinking modes. Default is True.
+                )
+
             encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to(
                 0 if self.device is None else self.device
             )
