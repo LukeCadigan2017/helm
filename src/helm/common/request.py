@@ -17,6 +17,7 @@ class BeamParams:
     length_penalty:float=0
     batch_size:int=0
     exact_mode: bool=False
+    template:bool=False
 
 @dataclass(frozen=True)
 class Request:

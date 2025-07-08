@@ -39,10 +39,12 @@ huggingface-cli whoami
 # export MODEL=meta-llama/Llama-3.1-8B
 # export MODEL=stas/tiny-random-llama-2
 # export MODEL=sshleifer/tiny-gpt2
-# export MODEL=distilbert/distilgpt2
+export MODEL=distilbert/distilgpt2
 # export MODEL=Qwen/Qwen3-0.6B
 # export MODEL=meta-llama/Llama-3.2-1B-Instruct
 
+# export MODEL=allenai/OLMo-2-0425-1B
+# export MODEL=meta-llama/Llama-3.1-8B-Instruct
 # export MODEL=allenai/OLMo-2-1124-7B-RM
 # export MODEL=allenai/OLMo-2-1124-13B-RM
 
@@ -83,11 +85,11 @@ export EXACT_MODE=false
 # export TOP_K=2
 
 
-# export MODEL=allenai/OLMo-2-0425-1B
-export MODEL=meta-llama/Llama-3.1-8B-Instruct
+
 export INSTRUCT=true
 export RUN_MODEL=true
 export DISABLE_CACHE=true
+export TEMPLATE=true
 # export SNELLIUS_METRICS="example_comet"
 
 ######## USE THESE ########

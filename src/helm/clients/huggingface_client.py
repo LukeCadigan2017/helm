@@ -387,10 +387,10 @@ class HuggingFaceServer:
         stop_strings=[self.eos]
         all_generated_tokens_logprobs = []
 
+        template=raw_request["beam_params"].template
         elapsed=   round(   (time.time()- self.start_time)/60      ,1)
         print(f"{elapsed}m: Request {self.counter}.\tBatch size: {self.batch_size}", flush=True)
         with self.wrapped_tokenizer as tokenizer:
-
 
 
             if "Qwen/Qwen3" in self.pretrained_model_name_or_path:
@@ -404,16 +404,17 @@ class HuggingFaceServer:
                     enable_thinking=False # Switches between thinking and non-thinking modes. Default is True.
                 )
 
-            # elif self.pretrained_model_name_or_path=="meta-llama/Llama-3.1-8B-Instruct":
-            #     print("Applying chat template!!!!")
-            #     messages = [
-            #         {"role": "user", "content": prompt}
-            #     ]
-            #     prompt = tokenizer.apply_chat_template(
-            #         messages,
-            #         tokenize=False,
-            #         add_generation_prompt=True
-            #     )
+            elif(template):
+                print("Applying chat template!!!!")
+                messages = [
+                    {"role": "user", "content": prompt}
+                ]
+                prompt = tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=False,
+                    add_generation_prompt=True
+                )
+                print(f"prompt is {prompt}")
             encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to(
                 0 if self.device is None else self.device
             )

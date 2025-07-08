@@ -69,6 +69,14 @@ if [ ! -z "$EXACT_MODE" ] ;then
     DEFAULT_SUITE="${DEFAULT_SUITE}_exact_mode_str_${EXACT_MODE}"
 fi
 
+if [ ! -z "$TEMPLATE" ] ;then
+    RUN_ENTRY="${RUN_ENTRY}template=${TEMPLATE},"
+fi
+
+if [ "$TEMPLATE" = true ] ; then
+    DEFAULT_SUITE="${DEFAULT_SUITE}_template_${TEMPLATE}"
+fi
+
 
 
 SUITE="${SUITE:=$DEFAULT_SUITE}"
@@ -87,6 +95,7 @@ echo RUN_MODEL is $RUN_MODEL
 echo TOP_P is $TOP_P
 echo TOP_K is $TOP_K
 echo BATCH_SIZE IS $BATCH_SIZE
+echo TEMPLATE IS $TEMPLATE
 echo "$# is $#"
 
 
@@ -159,6 +168,10 @@ for TASK_NAME in $TASK_NAMES; do
         fi
         if [ ! -z "$EXACT_MODE" ] ;then
             RUN_ENTRY="${RUN_ENTRY}exact_mode_str=${EXACT_MODE},"
+        fi
+
+        if [ ! -z "$TEMPLATE" ] ;then
+            RUN_ENTRY="${RUN_ENTRY}template=${TEMPLATE},"
         fi
 
 
