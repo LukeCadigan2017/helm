@@ -390,8 +390,7 @@ class HuggingFaceServer:
         elapsed=   round(   (time.time()- self.start_time)/60      ,1)
         print(f"{elapsed}m: Request {self.counter}.\tBatch size: {self.batch_size}", flush=True)
         with self.wrapped_tokenizer as tokenizer:
-            if self.pretrained_model_name_or_path=="Qwen/Qwen3-8B":
-
+            if "Qwen/Qwen3" in self.pretrained_model_name_or_path:
                 messages = [
                     {"role": "user", "content": prompt}
                 ]

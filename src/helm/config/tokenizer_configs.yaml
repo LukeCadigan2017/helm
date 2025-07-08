@@ -37,6 +37,38 @@ tokenizer_configs:
         pretrained_model_name_or_path: Qwen/Qwen3-8B
     end_of_text_token: "<|im_end|>"
     prefix_token: "None" 
+
+  - name: Qwen/Qwen3-0.6B 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: Qwen/Qwen3-0.6B
+    end_of_text_token: "<|im_end|>"
+    prefix_token: "None" 
+
+  - name: Qwen/Qwen3-1.7B 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: Qwen/Qwen3-1.7B
+    end_of_text_token: "<|im_end|>"
+    prefix_token: "None" 
+
+  - name: Qwen/Qwen3-4B 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: Qwen/Qwen3-4B
+    end_of_text_token: "<|im_end|>"
+    prefix_token: "None" 
+
+  - name: Qwen/Qwen3-32B 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: Qwen/Qwen3-32B
+    end_of_text_token: "<|im_end|>"
+    prefix_token: "None" 
   ######################### Llama #########################
 
   - name: meta-llama/Llama-3.2-1B 
