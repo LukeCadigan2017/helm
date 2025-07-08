@@ -188,8 +188,10 @@ class EXAMPLE_FINAL_NUM_EXACT_MATCH_METRIC(PostMetric):
         return "final_num_exact_match"
     @classmethod
     def calculate_metric(self,instance_generation:InstanceGenerations,generated_output:GeneratedOutput) -> float:
+        breakpoint()
+        print("must implement!")
         return bleu_1(generated_output.text, instance_generation.reference)  
-        return final_number_exact_match(gold=instance_generation.reference,pred=generated_output.text )   
+        # return final_number_exact_match(gold=instance_generation.reference,pred=generated_output.text )   
 
 
 ############################ INSTANCE METRICS ############################

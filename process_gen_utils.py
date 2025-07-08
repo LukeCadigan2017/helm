@@ -41,11 +41,30 @@ def get_model_details(model_name):
 
 
     info_dict={
-        "allenai_OLMo_2_0425_1B_Instruct":{"size": 1, "suite":  "olmo","model_type":"instruct"},
-        "allenai_OLMo_2_1124_7B_Instruct":{"size": 7, "suite":  "olmo","model_type":"instruct"},
-        "allenai_OLMo_2_1124_13B_Instruct":{"size": 13, "suite":  "olmo","model_type":"instruct"},
-        "meta_llama_Llama_3.2_1B_Instruct":{"size": 1, "suite": "llama","model_type":"instruct"},
-        "meta_llama_Llama_3.1_8B_Instruct":{"size": 8, "suite": "llama","model_type":"instruct"},
+        #olmo
+        "allenai_OLMo_2_0425_1B_Instruct":{"size": 1, "suite":  "olmo","model_type":"instruct", "name":"Olmo 1B"},
+        "allenai_OLMo_2_0425_1B":{"size": 1, "suite":  "olmo","model_type":"base", "name":"Olmo 1B base"},
+
+        "allenai_OLMo_2_1124_7B_Instruct":{"size": 7, "suite":  "olmo","model_type":"instruct", "name":"Olmo 7B base" },
+        "allenai_OLMo_2_1124_7B":{"size": 7, "suite":  "olmo","model_type":"base", "name":"Olmo 7B" },
+
+        "allenai_OLMo_2_1124_13B_Instruct":{"size": 13, "suite":  "olmo","model_type":"instruct", "name":"Olmo 13B" },
+        "allenai_OLMo_2_1124_13B":{"size": 13, "suite":  "olmo","model_type":"base", "name":"Olmo 13B base" },
+
+        #llama instruct
+        "meta_llama_Llama_3.2_1B_Instruct":{"size": 1, "suite": "llama","model_type":"instruct",  "name":"Llama 1B"},
+        "meta_llama_Llama_3.2_1B":{"size": 1, "suite": "llama","model_type":"base",  "name":"Llama 1B base"},
+
+        "meta_llama_Llama_3.1_8B_Instruct":{"size": 8, "suite": "llama","model_type":"instruct",  "name":"Llama 8B"},
+        "meta_llama_Llama_3.1_8B_Instruct":{"size": 8, "suite": "llama","model_type":"base",  "name":"Llama 8B base"},
+
+
+        # #compare types
+        "allenai_OLMo_2_1124_7B_DPO":{"size": 7, "suite":  "olmo","model_type":"dpo", "name":"Olmo 7B dpo" },
+        "allenai_OLMo_2_1124_7B_SFT":{"size": 7, "suite":  "olmo","model_type":"sft", "name":"Olmo 7B sft" },
+
+        "allenai_OLMo_2_1124_13B_DPO":{"size": 13, "suite":  "olmo","model_type":"dpo", "name":"Olmo 13B dpo" },
+        "allenai_OLMo_2_1124_13B_SFT":{"size": 13, "suite":  "olmo","model_type":"sft", "name":"Olmo 13B sft" },
     }
     
     return info_dict[model_name]
@@ -340,9 +359,9 @@ def plot_all(dfs_by_model, compare_metric):
 #created with this:
 #https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html
 from scipy.interpolate import make_smoothing_spline
-def plot_smooth_spline(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20, error_bar=False):
+def plot_smooth_spline(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20, error_bar=False, figsize=(50,50)):
     if(ax is None):
-        _, ax = plt.subplots(figsize=(50, 50))
+        _, ax = plt.subplots(figsize=figsize)
     warnings.simplefilter(action='ignore', category=FutureWarning)
     if(groupby=="bins"):
         
@@ -357,11 +376,13 @@ def plot_smooth_spline(df, xlabel, ylabel, groupby='example_idx', title=None, tr
     
 
     yerr = grouped[(ylabel, 'std')].values
+    
     yerr=[]
-    for i in grouped.index:
-        # print(grouped.loc[i][ylabel])
-        _, c, s = grouped.loc[i][ylabel]
-        yerr.append(1.96*s/math.sqrt(c))
+    if error_bar:
+        for i in grouped.index:
+            # print(grouped.loc[i][ylabel])
+            _, c, s = grouped.loc[i][ylabel]
+            yerr.append(1.96*s/math.sqrt(c))
 
     # Plot with error bars (standard deviation)
 
@@ -414,6 +435,8 @@ def plot_spline(df, xlabel, ylabel, groupby='example_idx', title=None, trend_lin
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.legend()
+    if(title):
+        ax.set_title(title)
     ax.grid(True)
 
 #returns rate that col1 is higher than col1
@@ -452,3 +475,46 @@ def get_winrate_by_rank(df,compare_metric,ax=None):
     ax.scatter(x,y)
     ax.set_xlabel('example_idx')
     ax.set_ylabel(f'win rate vs idx {max_example_idx}')
+
+def plot_constrained_spline(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20, error_bar=False):
+    if(ax is None):
+        _, ax = plt.subplots(figsize=(50, 50))
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+    if(groupby=="bins"):
+        
+        df["bins"]=pd.qcut(df[xlabel],nbins)
+    
+    grouped = df.groupby(groupby)[[xlabel, ylabel]].agg(['mean', 'count', 'std'])
+    
+    grouped = grouped.sort_values(by=(xlabel, 'mean'))
+
+    x = grouped[(xlabel, 'mean')].values
+    y = grouped[(ylabel, 'mean')].values
+        
+    n = len(x)
+
+    # Sort x (just in case)
+    sorted_idx = np.argsort(x)
+    x = x[sorted_idx]
+    y = y[sorted_idx]
+
+    # Step size
+    h = np.diff(x)
+
+    # Variables: fitted y values at knots
+    f = cp.Variable(n)
+    second_diff = [(f[i+1] - 2*f[i] + f[i-1]) / ((h[i-1] + h[i-1]) / 2)**2 for i in range(1, n-1)]
+
+    lambda_reg = 0 
+    objective = cp.Minimize(cp.sum_squares(f - y) + lambda_reg * cp.sum_squares(cp.hstack(second_diff)))
+
+    constraints = [d <= 0 for d in second_diff]
+
+    problem = cp.Problem(objective, constraints)
+    problem.solve()
+
+    # Plot
+    ax.scatter(x, y)
+    ax.plot(x, f.value, color='red')
+    ax.legend()
+    ax.set_title('Smoothing spline with non-negative derivative')

@@ -59,9 +59,10 @@ def get_process_gen_params(test_name):
         compare_metric=None
         if(mode=="wmt"):
             task_names=["wmt_14_language_pair_de_en_"]
-            custom_metrics=[ PostMetric.BLEU1_METRIC(),PostMetric.BLEU4_METRIC()]
+            custom_metrics=[]
             instance_metrics=["comet"]
             compare_metric="example_comet"
+
         elif(mode=="gsm"):
             task_names=["gsm_"]
             custom_metrics=[PostMetric.EXAMPLE_FINAL_NUM_EXACT_MATCH_METRIC()]
@@ -73,11 +74,11 @@ def get_process_gen_params(test_name):
             # task_names=["open_assistant:language=en,num_respondents=1,","self_instruct:num_respondents=1,"]
             task_names=[
                         "self_instruct_num_respondents_1_",
-                        # "anthropic_hh_rlhf_subset_hh_num_respondents_1_",
+                        "anthropic_hh_rlhf_subset_hh_num_respondents_1_",
                         "vicuna_num_respondents_1_",
-                        #  "koala_num_respondents_1_", 
-                        # "anthropic_hh_rlhf_subset_red_team_num_respondents_1_",
-                        # "grammar_path_src_helm_benchmark_scenarios_best_chatgpt_prompts.yaml_tags_num_respondents_1_"
+                         "koala_num_respondents_1_", 
+                        "anthropic_hh_rlhf_subset_red_team_num_respondents_1_",
+                        "grammar_path_src_helm_benchmark_scenarios_best_chatgpt_prompts.yaml_tags_num_respondents_1_"
                         ]
             custom_metrics=[]
             instance_metrics=[]
@@ -92,6 +93,17 @@ def get_process_gen_params(test_name):
 
 
     ####### all in one go 1000
+
+    #0- 8b llama8
+    #1 - 1B (olmo, llama)
+    #2 - 2 olmo (7,13)
+    #3 - special type
+
+    override_task_names=None
+    override_custom_metrics=None
+    override_instance_metrics=None
+    override_compare_metric=None
+
 
     if(test_name=="wmt_samples0"):
         mode = "wmt"
@@ -117,6 +129,53 @@ def get_process_gen_params(test_name):
         suite_name="sample_100_eval_400_first_inst_100"
         num_beams_list=[1]
         models=["allenai_OLMo_2_1124_7B_Instruct","allenai_OLMo_2_1124_13B_Instruct"]
+
+    elif(test_name=="wmt_samples3"):
+        mode = "wmt"
+        suite_name="sample_100_eval_500_first_inst_0"
+        num_beams_list=[1]
+        models=[
+            #idk
+            "meta_llama_Llama_3.2_1B_Instruct",
+
+
+
+            #dpo / sft
+            "allenai_OLMo_2_1124_7B_SFT", 'allenai_OLMo_2_1124_7B_DPO',
+            "allenai_OLMo_2_1124_13B_DPO", "allenai_OLMo_2_1124_13B_SFT",
+            
+            #base models
+            "meta_llama_Llama_3.2_1B",
+            "meta_llama_Llama_3.1_8B", 
+            "allenai_OLMo_2_0425_1B",
+            "allenai_OLMo_2_1124_7B",
+            "allenai_OLMo_2_1124_13B",
+        ]
+
+
+
+    elif(test_name=="wmt_samples4"):
+        mode = "wmt"
+        suite_name="sample_100_eval_500_first_inst_0"
+        num_beams_list=[1]
+        models=[
+            # "Qwen/Qwen3-0.6B",
+            "Qwen/Qwen3-1.7B",
+            "Qwen/Qwen3-4B",
+            "Qwen/Qwen3-8B",
+            # "Qwen/Qwen3-32B",
+        ]
+
+
+
+    elif(test_name=="llama_template"):
+        mode = "wmt"
+        num_beams_list=[1]
+        suite_name="llama_template"
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+
+
 
     elif(test_name=="gsm_samples1"):
         mode = "gsm"
@@ -145,17 +204,39 @@ def get_process_gen_params(test_name):
         mode = "instruct"
         suite_name="sample_100_eval_100_first_inst_0"
         num_beams_list=[1]
+        models=["Qwen_Qwen3_8B"]
+        
+
+    elif(test_name=="qwen_25_instruct"):
+        mode = "instruct"
+        suite_name="sample_100_eval_100_first_inst_0"
+        num_beams_list=[1]
+        models=["Qwen_Qwen2.5_7B_Instruct"]
+        override_task_names=["koala_num_respondents_1_"]
+        
+
+    elif(test_name=="olmo_instruct"):
+        mode = "instruct"
+        suite_name="sample_100_eval_100_first_inst_0"
+        num_beams_list=[1]
         models=["allenai_OLMo_2_1124_13B_Instruct"]
 
+    elif(test_name=="current_test"):
+        mode = "wmt"
+        suite_name="sample_100_eval_500_first_inst_0"
+        num_beams_list=[1]
+        models=["meta-llama/Llama-3.1-8B"]
 
 
 
     else:
-        except_str=f"task name {test_name} not found"
+        except_str=f"Luke: task name {test_name} not found"
         print(except_str)
         raise Exception(except_str)
     
     task_names, custom_metrics, instance_metrics, compare_metric= get_metrics(mode)
+    if override_task_names:
+        task_names= override_task_names
     return root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics, compare_metric
     
 
@@ -341,6 +422,7 @@ def calculate_instances_dict(init_dict, root_folder, num_beams_list:List[int], m
         for instance_generation in gen_summary.instance_generations:
             instance_dict[instance_generation.instance_id] = instance_generation
         return instance_dict
+    print_files=True
     return calculate_dict(init_dict,root_folder, num_beams_list, models, task_names, suite_name,get_instance_dict_from_run_folder, print_files)
 
 get_first = lambda x: next(iter(x.values()))

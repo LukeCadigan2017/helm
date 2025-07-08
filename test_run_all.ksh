@@ -171,6 +171,9 @@ for TASK_NAME in $TASK_NAMES; do
         if [ "$INSTRUCT" = true ] ; then
             RUN_ENTRY=${RUN_ENTRY},follow_format_instructions=instruct
         fi
+
+        echo "INSTRUCT IS $INSTRUCT"
+        echo "RUN_ENTRY IS $RUN_ENTRY"
         
         mkdir -p $OUTPUT_PATH
         RUN_PATH=${OUTPUT_PATH}/runs/$SUITE
