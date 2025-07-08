@@ -405,7 +405,7 @@ class HuggingFaceServer:
                 )
 
             elif(template):
-                print("Applying chat template!!!!")
+                # print("Applying chat template!!!!")
                 messages = [
                     {"role": "user", "content": prompt}
                 ]
@@ -414,7 +414,7 @@ class HuggingFaceServer:
                     tokenize=False,
                     add_generation_prompt=True
                 )
-                print(f"prompt is {prompt}")
+                # print(f"prompt is {prompt}")
             encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to(
                 0 if self.device is None else self.device
             )
