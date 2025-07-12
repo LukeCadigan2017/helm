@@ -37,35 +37,60 @@ def get_ids(example):
     return [token.token_id for token in example.tokens]
 
 
+
 def get_model_details(model_name):
 
 
     info_dict={
         #olmo
-        "allenai_OLMo_2_0425_1B_Instruct":{"size": 1, "suite":  "olmo","model_type":"instruct", "name":"Olmo 1B"},
-        "allenai_OLMo_2_0425_1B":{"size": 1, "suite":  "olmo","model_type":"base", "name":"Olmo 1B base"},
+        "allenai_OLMo_2_0425_1B_Instruct":{"size": 1, "suite":  "olmo","model_type":"instruct", "name":"Olmo 1B Instruct"},
+        "allenai_OLMo_2_0425_1B":{"size": 1, "suite":  "olmo","model_type":"base", "name":"Olmo 1B Base"},
 
-        "allenai_OLMo_2_1124_7B_Instruct":{"size": 7, "suite":  "olmo","model_type":"instruct", "name":"Olmo 7B base" },
-        "allenai_OLMo_2_1124_7B":{"size": 7, "suite":  "olmo","model_type":"base", "name":"Olmo 7B" },
+        "allenai_OLMo_2_1124_7B_Instruct":{"size": 7, "suite":  "olmo","model_type":"instruct", "name":"Olmo 7B Instruct" },
+        "allenai_OLMo_2_1124_7B":{"size": 7, "suite":  "olmo","model_type":"base", "name":"Olmo 7B Base" },
 
-        "allenai_OLMo_2_1124_13B_Instruct":{"size": 13, "suite":  "olmo","model_type":"instruct", "name":"Olmo 13B" },
-        "allenai_OLMo_2_1124_13B":{"size": 13, "suite":  "olmo","model_type":"base", "name":"Olmo 13B base" },
+        "allenai_OLMo_2_1124_13B_Instruct":{"size": 13, "suite":  "olmo","model_type":"instruct", "name":"Olmo 13B Instruct" },
+        "allenai_OLMo_2_1124_13B":{"size": 13, "suite":  "olmo","model_type":"base", "name":"Olmo 13B Base" },
 
         #llama instruct
-        "meta_llama_Llama_3.2_1B_Instruct":{"size": 1, "suite": "llama","model_type":"instruct",  "name":"Llama 1B"},
-        "meta_llama_Llama_3.2_1B":{"size": 1, "suite": "llama","model_type":"base",  "name":"Llama 1B base"},
+        "meta_llama_Llama_3.2_1B_Instruct":{"size": 1, "suite": "llama","model_type":"instruct",  "name":"Llama 1B Instruct"},
+        "meta_llama_Llama_3.2_1B":{"size": 1, "suite": "llama","model_type":"base",  "name":"Llama 1B Base"},
 
-        "meta_llama_Llama_3.1_8B_Instruct":{"size": 8, "suite": "llama","model_type":"instruct",  "name":"Llama 8B"},
-        "meta_llama_Llama_3.1_8B_Instruct":{"size": 8, "suite": "llama","model_type":"base",  "name":"Llama 8B base"},
+        "meta_llama_Llama_3.1_8B_Instruct":{"size": 8, "suite": "llama","model_type":"instruct",  "name":"Llama 8B Instruct"},
+        "meta_llama_Llama_3.1_8B":{"size": 8, "suite": "llama","model_type":"base",  "name":"Llama 8B Base"},
 
-
+        
+        "meta-llama/Meta-Llama-3-70B-Instruct":{"size": 70, "suite": "llama","model_type":"instruct",  "name":"Llama 70B Instruct"},
+        "allenai/OLMo-2-0325-32B-Instruct":{"size": 32, "suite": "olmo","model_type":"base",  "name":"Olmo 32 Base"},
+        
         # #compare types
-        "allenai_OLMo_2_1124_7B_DPO":{"size": 7, "suite":  "olmo","model_type":"dpo", "name":"Olmo 7B dpo" },
-        "allenai_OLMo_2_1124_7B_SFT":{"size": 7, "suite":  "olmo","model_type":"sft", "name":"Olmo 7B sft" },
+        "allenai_OLMo_2_1124_7B_DPO":{"size": 7, "suite":  "olmo","model_type":"dpo", "name":"Olmo 7B DPO" },
+        "allenai_OLMo_2_1124_7B_SFT":{"size": 7, "suite":  "olmo","model_type":"sft", "name":"Olmo 7B SFT" },
 
-        "allenai_OLMo_2_1124_13B_DPO":{"size": 13, "suite":  "olmo","model_type":"dpo", "name":"Olmo 13B dpo" },
-        "allenai_OLMo_2_1124_13B_SFT":{"size": 13, "suite":  "olmo","model_type":"sft", "name":"Olmo 13B sft" },
+        "allenai_OLMo_2_1124_13B_DPO":{"size": 13, "suite":  "olmo","model_type":"dpo", "name":"Olmo 13B DPO" },
+        "allenai_OLMo_2_1124_13B_SFT":{"size": 13, "suite":  "olmo","model_type":"sft", "name":"Olmo 13B SFT" },
+
+        "allenai_OLMo_2_1124_13B_DPO":{"size": 13, "suite":  "olmo","model_type":"dpo", "name":"Olmo 13B DPO" },
+        "allenai_OLMo_2_1124_13B_SFT":{"size": 13, "suite":  "olmo","model_type":"sft", "name":"Olmo 13B SFT" },
+
+        "Qwen_Qwen3_0.6B":{"size": 0.6, "suite":  "qwen","model_type":"base", "name":"Qwen 0.6B" },
+        "Qwen_Qwen3_1.7B":{"size": 1.7, "suite":  "qwen","model_type":"base", "name":"Qwen 1.7B" },
+        "Qwen_Qwen3_4B":{"size": 4, "suite":  "qwen","model_type":"base", "name":"Qwen 4B" },
+        "Qwen_Qwen3_8B":{"size": 8, "suite":  "qwen","model_type":"base", "name":"Qwen 8B" },
+        "Qwen_Qwen3_32B":{"size": 32, "suite":  "qwen","model_type":"base", "name":"Qwen 32B" },
+
+        "meta_llama_Llama_3.1_8B_Instruct_template":{"size": 8, "suite": "llama","model_type":"instruct",  "name":"Llama 8B Instruct Template"},
+        "allenai_OLMo_2_1124_13B_Instruct_template":{"size": 13, "suite":  "olmo","model_type":"instruct", "name":"Olmo 13B Instruct Template" },
+        
     }
+    
+    for new_name, dict_name in [ ("Qwen/Qwen3-0.6B","Qwen_Qwen3_0.6B"),
+        ("Qwen/Qwen3-1.7B","Qwen_Qwen3_1.7B"),
+        ("Qwen/Qwen3-4B","Qwen_Qwen3_4B"),
+        ("Qwen/Qwen3-8B","Qwen_Qwen3_8B"),
+        ("Qwen/Qwen3-32B","Qwen_Qwen3_32B")]:
+        info_dict[new_name] = info_dict[dict_name] 
+
     
     return info_dict[model_name]
 
@@ -518,3 +543,38 @@ def plot_constrained_spline(df, xlabel, ylabel, groupby='example_idx', title=Non
     ax.plot(x, f.value, color='red')
     ax.legend()
     ax.set_title('Smoothing spline with non-negative derivative')
+
+
+
+def qualitative_plots(models_array, dfs_by_model, compare_metric, figsize=None):
+    
+
+    nrows=len(models_array)
+    ncols=max(len(s) for s in models_array)
+
+    if figsize is None:
+        figsize=(nrows*5, ncols*5)
+        print(f"figsize is {figsize}")
+    _, axes=plt.subplots(nrows=nrows, ncols= ncols, figsize=figsize)
+    
+    for row, suite_models in enumerate(models_array):
+        for col in range(ncols):
+            ax=axes[row][col]
+            if col < len(suite_models):
+                model_name=suite_models[col]
+                print(f"model_name is {model_name}")
+
+                filtered_df=dfs_by_model[model_name]
+                def calculate_title():
+                    readable_model=get_model_details(model_name)['name']
+                    return f"{readable_model}: {suptitle}" if ax is None else readable_model
+                # plot by rank within sentence
+                suptitle="Grouped by rank within sentence"
+                ax=plot_grouped(df=filtered_df, xlabel="rank",groupby='example_idx', ylabel=compare_metric, title=calculate_title(), ax=ax, error_bar=False)  
+                ax.set_xlabel(None)
+                ax.set_ylabel(None)
+            else:
+                ax.axis('off')
+
+        
+    plt.tight_layout()

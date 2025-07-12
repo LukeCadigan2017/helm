@@ -1,0 +1,23 @@
+
+
+What I must do:
+
+1) Histogram of the comet scores of best vs worst
+
+2) Investigate causes
+Possible causes
+    Use of common words
+    Sample entropy
+    Length
+
+Calculate typicallity of each model
+    Maybe store this locally
+Calculate "sample entropy" for each sentence
+
+
+
+3) Measure metrics for inadequacy of the mode
+
+Measure the "inadequacy of the mode" for different sentence lengths, across all models
+
+4) 

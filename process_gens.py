@@ -135,11 +135,26 @@ def get_process_gen_params(test_name):
         suite_name="sample_100_eval_500_first_inst_0"
         num_beams_list=[1]
         models=[
-            #idk
             "meta_llama_Llama_3.2_1B_Instruct",
+        ]
 
+    elif(test_name=="wmt_samples4"):
+        mode = "wmt"
+        suite_name="sample_100_eval_500_first_inst_0"
+        num_beams_list=[1]
+        models=[
+            "Qwen/Qwen3-0.6B",
+            "Qwen/Qwen3-1.7B",
+            "Qwen/Qwen3-4B",
+            "Qwen/Qwen3-8B",
+            # "Qwen/Qwen3-32B",
+        ]
 
-
+    elif(test_name=="wmt_samples5"):
+        mode = "wmt"
+        suite_name="sample_100_eval_500_first_inst_0"
+        num_beams_list=[1]
+        models=[
             #dpo / sft
             "allenai_OLMo_2_1124_7B_SFT", 'allenai_OLMo_2_1124_7B_DPO',
             "allenai_OLMo_2_1124_13B_DPO", "allenai_OLMo_2_1124_13B_SFT",
@@ -153,17 +168,12 @@ def get_process_gen_params(test_name):
         ]
 
 
-
-    elif(test_name=="wmt_samples4"):
+    elif(test_name=="only_qwen_8b"):
         mode = "wmt"
         suite_name="sample_100_eval_500_first_inst_0"
         num_beams_list=[1]
         models=[
-            # "Qwen/Qwen3-0.6B",
-            "Qwen/Qwen3-1.7B",
-            "Qwen/Qwen3-4B",
-            "Qwen/Qwen3-8B",
-            # "Qwen/Qwen3-32B",
+            "Qwen/Qwen3-8B"
         ]
 
 
@@ -174,24 +184,34 @@ def get_process_gen_params(test_name):
         suite_name="llama_template"
         models=["meta_llama_Llama_3.1_8B_Instruct"]
 
+    elif(test_name=="olmo_template"):
+        mode = "wmt"
+        num_beams_list=[1]
+        suite_name="sample_100_eval_500_first_inst_0_template_true"
+        models=["allenai_OLMo_2_1124_13B_Instruct"]
 
 
-
-    elif(test_name=="gsm_samples1"):
+    elif(test_name=="gsm_samples1_1"):
         mode = "gsm"
         suite_name="sample_100_eval_20_first_inst_0"
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
-    elif(test_name=="gsm_samples2"):
+    elif(test_name=="gsm_samples1_2"):
         mode = "gsm"
         suite_name="sample_100_eval_80_first_inst_20"
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
-    elif(test_name=="gsm_samples3"):
+    elif(test_name=="gsm_samples1_3"):
         mode = "gsm"
         suite_name="sample_100_eval_400_first_inst_100"
         num_beams_list=[1]
         models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+    elif(test_name=="gsm_samples2"):
+        mode = "gsm"
+        suite_name="sample_100_eval_500_first_inst_0"
+        num_beams_list=[1]
+        models=["Qwen_Qwen3_8B"]
 
     elif(test_name=="fairseq_softmax"):
         mode = "wmt"
@@ -530,6 +550,7 @@ class ProcessGens:
                                 pd_metrics_dict["task_name"]=task_name
                                 pd_metrics_dict["model"]=model
                                 pd_metrics_dict["example_idx"]=example_idx
+                                pd_metrics_dict["rank"]=100-example_idx
                                 pd_metrics_dict["suite"]=suite_name
                                 
                                 pd_metrics_dict["instanceID"]=self.calculate_instance_id(instance_generation)
