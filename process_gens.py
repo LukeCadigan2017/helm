@@ -65,7 +65,7 @@ def get_process_gen_params(test_name):
 
         elif(mode=="gsm"):
             task_names=["gsm_"]
-            custom_metrics=[PostMetric.EXAMPLE_FINAL_NUM_EXACT_MATCH_METRIC()]
+            custom_metrics=[PostMetric.EXAMPLE_FINAL_NUM_EXACT_MATCH_METRIC(), PostMetric.EXAMPLE_EXACT_MATCH()]
             instance_metrics=[]
             compare_metric="final_num_exact_match"
             # instance_metrics=["exact_match_indicator","final_number_exact_match"]
@@ -218,6 +218,12 @@ def get_process_gen_params(test_name):
         suite_name="fairseq"
         num_beams_list=[1]
         models=["fairseq_softmax"]
+
+    elif(test_name=="fairseq_sparsemax"):
+        mode = "wmt"
+        suite_name="fairseq"
+        num_beams_list=[1]
+        models=["fairseq_sparsemax"]
 
     
     elif(test_name=="instruct"):
