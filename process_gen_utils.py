@@ -416,8 +416,38 @@ def plot_smooth_spline(df, xlabel, ylabel, groupby='example_idx', title=None, tr
     else:
         ax.scatter(x,y)
     spl = make_smoothing_spline(x, y)
-    plt.plot(x, spl(x), '-.')
+    ax.plot(x, spl(x), '-.')
+    return ax
     
+
+
+from pygam import LinearGAM, s
+
+
+
+def plot_gam(df, compare_metric):
+    grouped = df.groupby("example_idx")[["rank", compare_metric]].mean()
+
+
+    # Assuming df is your dataframe
+    X = grouped["rank"].values.reshape(-1,1)
+    y = grouped[compare_metric].values.reshape( -1)
+
+
+    gam = LinearGAM(s(0)).gridsearch(X, y)
+
+    gam.summary()
+
+    X_pred = np.linspace(0, 100,200).reshape(-1, 1)
+    y_pred = gam.predict(X_pred)
+
+    plt.figure(figsize=(10, 6))
+    plt.scatter(X, y, label='Data', alpha=0.5)
+    plt.plot(X_pred, y_pred, label='GAM Prediction', color='red')
+    plt.xlabel('X')
+    plt.ylabel('y')
+    plt.legend()
+    plt.show()
 
 
 def plot_spline(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20, error_bar=False):
@@ -480,6 +510,8 @@ def get_winrate_by_rank(df,compare_metric,ax=None):
     
     
 
+    
+
     max_example_idx = examples_df["example_idx"].max()
     col1=max_example_idx
     
@@ -488,7 +520,13 @@ def get_winrate_by_rank(df,compare_metric,ax=None):
     for col2 in range(max_example_idx):
         x.append(col2)
         
+
+        
         pivoted[f"win_rate"] = pivoted.apply( lambda row: get_win_rate(row,col2, col1) , axis=1)
+        
+        
+        
+        
         win_rate=pivoted["win_rate"].mean()
         y.append(win_rate)
 
@@ -578,3 +616,19 @@ def qualitative_plots(models_array, dfs_by_model, compare_metric, figsize=None):
 
         
     plt.tight_layout()
+
+
+
+
+def append_to_dict(dict, key_list, value):
+    cur_key=key_list[0]
+    
+    #make sure it exists
+    if cur_key not in dict.keys():
+        dict[cur_key]={}
+
+    #append recursively if not
+    if(len(key_list)>1):
+        append_to_dict(dict[cur_key], key_list[1:], value)
+    else:
+        dict[cur_key]=value
