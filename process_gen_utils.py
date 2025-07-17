@@ -187,15 +187,7 @@ def beam_diff_check():
                     print(f"Match! Beam2: {p1} vs {p2} is {diff}, {instance_idx} {idx2}, {idx128}")
                     assert(diff<0.1)
 
-def get_dfs(processGens):
-    examples_df = pd.DataFrame(processGens.metrics_dicts)
-    completions_df=examples_df.loc[examples_df['isCompletion'] == True]
 
-    print(completions_df.columns)
-    print(f"Num examples: {examples_df.shape[0]}")
-    print(f"Num completions: {completions_df.shape[0]}")
-
-    return examples_df, completions_df
 
 
 def compare_beams_by_metric(analysis_df,compare_metric,compare_beams, compare_func= lambda a,b: b-a,plot_histogram=True):
@@ -620,15 +612,15 @@ def qualitative_plots(models_array, dfs_by_model, compare_metric, figsize=None):
 
 
 
-def append_to_dict(dict, key_list, value):
+def append_to_dict(cur_dict, key_list, value):
     cur_key=key_list[0]
     
     #make sure it exists
-    if cur_key not in dict.keys():
-        dict[cur_key]={}
+    if cur_key not in cur_dict.keys():
+        cur_dict[cur_key]={}
 
     #append recursively if not
     if(len(key_list)>1):
-        append_to_dict(dict[cur_key], key_list[1:], value)
+        append_to_dict(cur_dict[cur_key], key_list[1:], value)
     else:
-        dict[cur_key]=value
+        cur_dict[cur_key]=value

@@ -49,7 +49,15 @@ def fix_example_themis(completionExample):
 
 
 
+def get_dfs(processGens):
+    examples_df = pd.DataFrame(processGens.metrics_dicts)
+    completions_df=examples_df.loc[examples_df['isCompletion'] == True]
 
+    print(completions_df.columns)
+    print(f"Num examples: {examples_df.shape[0]}")
+    print(f"Num completions: {completions_df.shape[0]}")
+
+    return examples_df, completions_df
 
 
 
@@ -321,7 +329,9 @@ def get_run_folder(root_folder:str, num_beams:int, model:str, task_name: str, su
     assert_dir_exists(run_folder)
     return run_folder
 
-
+def get_df_file(root_folder:str, num_beams:int, model:str, task_name: str, suite_name:str):
+    run_folder=get_run_folder(root_folder=root_folder, num_beams=num_beams, model=model, task_name=task_name, suite_name=suite_name)
+    return f"{run_folder}/example_df.pkl"
 
 ############ Gen Summary stuff ############
 
@@ -616,6 +626,52 @@ class ProcessGens:
         
 
 
+
+def get_dfs_by_model(process_gen_modes, recalculate_everything=False):
+    dfs_by_model=None
+    processGens=None
+    df_files={}
+    found_all_files=recalculate_everything
+    for process_gen_mode in process_gen_modes:
+        root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics, compare_metric = get_process_gen_params(process_gen_mode)
+        for model in models:        
+            for task_name in task_names:
+                for num_beams in num_beams_list:
+                    df_file=get_df_file(root_folder=root_folder, num_beams=num_beams, model=model, task_name=task_name, suite_name=suite_name)
+                    df_files[model]=df_file
+
+    found_all_files=True
+    for df_file in df_files.values():
+        if not os.path.isfile(df_file):
+            print(f"Could not find file {df_file}")
+            found_all_files=False
+    
+    if recalculate_everything or not found_all_files:
+        processGens=ProcessGens()
+        print("Recalculate everything!!!!!")
+        processGens.init_with_mode(process_gen_modes)
+        root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics, compare_metric = processGens.get_params()
+
+        examples_df, completions_df=get_dfs(processGens)
+        dfs_by_model={}
+        for model_name in examples_df['model'].unique():
+            filtered_df = examples_df[examples_df["model"]==model_name]
+            dfs_by_model[model_name]=filtered_df
+            
+
+        for model_name, filtered_df in dfs_by_model.items():
+            df_file = df_files[model_name]
+            filtered_df.to_pickle(df_file)
+
+
+
+    else:
+        dfs_by_model={}
+        for model, df_file in df_files.items():
+            dfs_by_model[model] = pd.read_pickle(df_file)
+
+
+    return dfs_by_model, processGens, (root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics, compare_metric)
 
     # elif(test_name=="wmt_samples_original"):
     #     mode = "wmt"
