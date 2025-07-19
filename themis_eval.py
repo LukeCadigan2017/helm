@@ -220,7 +220,7 @@ def themis_eval(generation_summary, criteria_list=["Overall Quality"]):
                     "target": generated_output.text.strip(), # The target content
                 }
                 prompt=get_prompt(ex=ex, PROMPT=PROMPT)
-                print(f"prompt is {prompt}")
+                # print(f"prompt is {prompt}")
                 all_test_prompts.append((prompt, output_id))
         outs = process(engine=engine, inputs=all_test_prompts, args=args)
 
