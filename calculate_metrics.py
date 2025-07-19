@@ -29,6 +29,9 @@ from scipy.stats import linregress
 class Calculate_Metrics():
     def __init__(self, df, compare_metric):
 
+        if df is None:
+            return
+
         unique_models=df['model'].unique()
         assert len(unique_models)==1
         self.model_name=unique_models[0]
@@ -52,6 +55,7 @@ class Calculate_Metrics():
         self.stats_metrics()
         self.gam_metrics()
         self.get_length_stats()
+        self.get_calculated_stats()
 
 
 
@@ -61,7 +65,7 @@ class Calculate_Metrics():
 
     def basic_metrics(self):
         self.ave_val=float(self.mean_pivoted.mean())
-        self.metrics["ave_val"]=self.ave_val
+        self.metrics["Average Score"]=self.ave_val
 
         best_rank = self.mean_pivoted.idxmax()
 
@@ -75,7 +79,7 @@ class Calculate_Metrics():
         self.metrics["best_median"]=float(self.median_pivoted[100])
 
         self.metrics["model_name"]=self.model_name
-        self.metrics["entropy"]=float(self.df["output_logprob"].mean())
+        self.metrics["Entropy"]=float( -1.0* self.df["output_logprob"].mean())
 
 
         def get_win_rate(row, col1:str, col2:str) -> float:
@@ -94,7 +98,7 @@ class Calculate_Metrics():
 
         res=linregress(self.x, self.y)
         lin_effect= 100*res.slope
-        self.metrics["lin_effect"]=lin_effect
+        self.metrics["PQ Slope"]=lin_effect
 
 
     def gam_metrics(self):
@@ -114,7 +118,7 @@ class Calculate_Metrics():
         argmax_idx=np.argmax(all_y_pred)
         pred_peak_x=all_x[argmax_idx]
         pred_peak_y=all_y_pred[argmax_idx]
-        self.metrics["pred_peak_x"]=float(pred_peak_x)
+        self.metrics["Peak Rank"]=float(pred_peak_x)
         self.metrics["pred_peak_y"]=float(pred_peak_y)
 
 
@@ -122,7 +126,7 @@ class Calculate_Metrics():
 
         gam_ave_diff= np.mean(np.abs(all_y_pred-self.ave_val))
 
-        self.metrics["gam_ave_diff"]=float(gam_ave_diff)
+        self.metrics["PQ Effect"]=float(gam_ave_diff)
 
         #degen_integral
         num_slices=1000
@@ -132,14 +136,14 @@ class Calculate_Metrics():
 
         degen_intral=ave_diff*(100-pred_peak_x)/100
 
-        self.metrics["degen_intral"]=degen_intral
+        self.metrics["PQ Dropoff"]=degen_intral
 
 
     def get_length_stats(self):
         length_y = self.grouped["completion_length"].values.reshape( -1)
         res=linregress(self.x, length_y)
         length_lin_effect= 100*res.slope
-        self.metrics["length_lin_effect"]=length_lin_effect
+        self.metrics["Length Bias"]=-1*length_lin_effect
         self.metrics["length_100"]=length_y[0]
         self.metrics["length_0"]=length_y[-1]
         self.metrics["length_ave"]=np.mean(length_y)
@@ -148,9 +152,9 @@ class Calculate_Metrics():
     def get_calculated_stats(self):
 
         #top and bottom of distribution
-        self.metrics["0_rank_diff"]=self.metrics["0_rank"] - self.metrics["ave_val"]
-        self.metrics["100_rank_diff"]=self.metrics["100_rank"] - self.metrics["ave_val"]
-        self.metrics["iom_est"] =self.metrics["pred_peak_y"] - self.metrics["100_rank"]
+        self.metrics["0_rank_diff"]=self.metrics["0_rank"] - self.metrics["Average Score"]
+        self.metrics["100_rank_diff"]=self.metrics["100_rank"] - self.metrics["Average Score"]
+        self.metrics["PQ Tradeoff Peak"] =self.metrics["pred_peak_y"] - self.metrics["100_rank"]
 
 
     # Probability-Quality metrics
@@ -164,15 +168,16 @@ class Calculate_Metrics():
     # length_lin_effect     Is there a length bias? 
 
     def get_x_y_cols(self):
-        x_metrics=["ave_val", "entropy", "length_lin_effect"]
-        y_metrics= ["gam_ave_diff", "lin_effect", "iom_est"]
+        x_metrics=["Average Score", "Entropy", "Length Bias"]
+        # y_metrics= ["PQ Effect", "PQ Slope", "PQ Tradeoff Peak", "PQ Dropoff", "Peak Rank"]
+        y_metrics = ["PQ Slope", "PQ Dropoff"]
 
         return x_metrics, y_metrics
 
 
     def get_best_metrics(self):
         x_metrics, y_metrics=self.get_x_y_cols()
-        best_metrics_cols=x_metrics+y_metrics
+        best_metrics_cols=x_metrics+y_metrics+["model_name"]
         return_metrics={}
         for metric_col in best_metrics_cols:
             return_metrics[metric_col] = self.metrics[metric_col]

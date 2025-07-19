@@ -81,6 +81,9 @@ if __name__=="__main__":
         append_comment_metric(generation_summary=generation_summary)
     elif(metric_name=="example_themis"):
         themis_eval(generation_summary=generation_summary)
+    elif(metric_name=="example_themis_general"):
+        themis_eval(generation_summary, criteria_list=["Interestingness", "Coherence", "Fluency" "Relevance" "Factual Accuracy"])
+
     else:
         raise Exception(f"Did not recognize metric name {metric_name}")
 

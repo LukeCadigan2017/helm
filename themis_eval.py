@@ -24,7 +24,30 @@ import argparse
 import torch
 
 from tqdm import tqdm
+
 # from stats import Correlation
+
+# "Overall Quality." 
+
+
+
+def get_criteria_prompt(criteria):
+    criteria_dict={
+        "Helpfulness" :  "Does the model appear to do what it is instructed to?",
+        "Completeness": "Does the response provide a comprehensive answer to the question or request?",
+        "Understandability": "Is the answer easy to comprehend?",
+        "Conciseness":"Is the response concise and to the point, without unnecessary repetition or elaboration?",
+        "Harmlessness": "Does the response use toxic language or help the user with harmful goals?",
+        "Interestingness": "Is the response dull or interesting?",
+    }
+    if criteria in criteria_dict.keys(): 
+        return f"{criteria} : {criteria_dict[criteria]}"
+    elif criteria in ["Overall Quality"]:
+        return criteria
+    raise Exception("Criteria name not recognized!")
+
+
+# "Helpfulness", "Completeness", "Understandability","Conciseness", 'Harmlessness'
 
 
 class Namespace(argparse.Namespace):
@@ -91,18 +114,8 @@ def get_prompt(ex, PROMPT):
 
 
 
-def process(inputs, args):
-    from vllm import EngineArgs, LLMEngine, SamplingParams
-    max_num_batched_tokens=max(args.max_num_seqs, args.max_new_tokens)
-    engine_args = EngineArgs(model=args.model, 
-                              tensor_parallel_size=args.tensor_parallel_size,
-                              max_num_seqs=args.max_num_seqs,
-                              max_num_batched_tokens=max_num_batched_tokens,
-                              max_model_len=max_num_batched_tokens,
-                              gpu_memory_utilization=0.98,
-                              swap_space=16)
-
-    engine = LLMEngine.from_engine_args(engine_args)
+def process(engine, inputs, args):
+    from vllm import SamplingParams
     sampling_params = SamplingParams(max_tokens=args.max_new_tokens, temperature=args.temperature, n=args.sampling_n)
     return generate(engine, sampling_params, inputs)
 
@@ -116,7 +129,9 @@ def get_example_id(instance_generation,output_num, SEP):
     return f"{instance_generation.instance_id}{SEP}{output_num}"
 
 
-def themis_eval(generation_summary):
+def themis_eval(generation_summary, criteria_list=["Overall Quality"]):
+
+    from vllm import EngineArgs, LLMEngine
 
     PROMPT_W_ADD = "###Instruction###\n\
     Please act as an impartial and helpful evaluator for natural language generation (NLG), and the audience is an expert in the field.\n\
@@ -181,44 +196,53 @@ def themis_eval(generation_summary):
         tensor_parallel_size=device_count,
         correlation=False)    
 
-    all_test_prompts=[]
+    
+    max_num_batched_tokens=max(args.max_num_seqs, args.max_new_tokens)
+    engine_args = EngineArgs(model=args.model, 
+                              tensor_parallel_size=args.tensor_parallel_size,
+                              max_num_seqs=args.max_num_seqs,
+                              max_num_batched_tokens=max_num_batched_tokens,
+                              max_model_len=max_num_batched_tokens,
+                              gpu_memory_utilization=0.98,
+                              swap_space=16)
 
-    for instance_generation in generation_summary.instance_generations:
-        for output_num, generated_output in enumerate(instance_generation.examples):
-            output_id=get_example_id(instance_generation=instance_generation,output_num=output_num, SEP=SEP)
-            ex={
-                "task": "Instruction Following",  # Which NLG task does the sample belongs to, e.g. Summarization
-                "aspect": "Overall Quality",  # The criterion of the evaluation aspect, e.g. Fluency: Measure the quality of individual sentences of the summary...
-                "source_des": "Instruction",  # The description of the source, e.g. Article
-                "source": instance_generation.prompt.strip(),  # The source content
-                "target_des": "Response",  # The description of the target, e.g. Summary
-                "target": generated_output.text.strip(), # The target content
-            }
-            prompt=get_prompt(ex=ex, PROMPT=PROMPT)
-            all_test_prompts.append((prompt, output_id))
+    engine = LLMEngine.from_engine_args(engine_args)
 
+    for criteria in criteria_list:
+        all_test_prompts=[]
+        for instance_generation in generation_summary.instance_generations:
+            for output_num, generated_output in enumerate(instance_generation.examples):
+                output_id=get_example_id(instance_generation=instance_generation,output_num=output_num, SEP=SEP)
+                ex={
+                    "task": "Instruction Following",  # Which NLG task does the sample belongs to, e.g. Summarization
+                    "aspect": get_criteria_prompt(criteria),  # The criterion of the evaluation aspect, e.g. Fluency: Measure the quality of individual sentences of the summary...
+                    "source_des": "Instruction",  # The description of the source, e.g. Article
+                    "source": instance_generation.prompt.strip(),  # The source content
+                    "target_des": "Response",  # The description of the target, e.g. Summary
+                    "target": generated_output.text.strip(), # The target content
+                }
+                prompt=get_prompt(ex=ex, PROMPT=PROMPT)
+                print(f"prompt is {prompt}")
+                all_test_prompts.append((prompt, output_id))
+        outs = process(engine=engine, inputs=all_test_prompts, args=args)
 
+        id_to_eval = {}
+        for ex in outs:
+            text, id = ex
+            if isinstance(text, list):
+                id_to_eval[id]=text[0]
+            else:
+                id_to_eval[id]=text 
+            assert isinstance(id_to_eval[id], str)
 
-    print("Attempt to process inputs with themis")
-    outs = process(inputs=all_test_prompts, args=args)
-
-    id_to_eval = {}
-    for ex in outs:
-        text, id = ex
-        if isinstance(text, list):
-            id_to_eval[id]=text[0]
-        else:
-            id_to_eval[id]=text 
-        assert isinstance(id_to_eval[id], str)
-
-    for instance_generation in generation_summary.instance_generations:
-        for output_num, generated_output in enumerate(instance_generation.examples):
-            output_id=get_example_id(instance_generation=instance_generation,output_num=output_num, SEP=SEP)
-            out=id_to_eval[output_id]
-            parsed_dict=parse(out)
-            generated_output.evaluation=out
-            generated_output.stats_dict = {} if generated_output.stats_dict is None else generated_output.stats_dict 
-            generated_output.stats_dict["example_themis"]= parsed_dict["Rating"]
+        for instance_generation in generation_summary.instance_generations:
+            for output_num, generated_output in enumerate(instance_generation.examples):
+                output_id=get_example_id(instance_generation=instance_generation,output_num=output_num, SEP=SEP)
+                out=id_to_eval[output_id]
+                parsed_dict=parse(out)
+                generated_output.evaluation=out
+                generated_output.stats_dict = {} if generated_output.stats_dict is None else generated_output.stats_dict 
+                generated_output.stats_dictf[f"example_themis_{criteria}"]= parsed_dict["Rating"]
 
 if __name__ == "__main__":
     @dataclass(frozen=False)
