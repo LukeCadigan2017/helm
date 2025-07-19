@@ -206,6 +206,7 @@ def themis_eval(generation_summary, criteria_list=["Overall Quality"]):
 
     engine = LLMEngine.from_engine_args(engine_args)
 
+    print(f"\n\n\n\n---------------------\n criteria list is {criteria_list}")
     for criteria in criteria_list:
         all_test_prompts=[]
         for instance_generation in generation_summary.instance_generations:
@@ -220,8 +221,8 @@ def themis_eval(generation_summary, criteria_list=["Overall Quality"]):
                     "target": generated_output.text.strip(), # The target content
                 }
                 prompt=get_prompt(ex=ex, PROMPT=PROMPT)
-                # print(f"prompt is {prompt}")
                 all_test_prompts.append((prompt, output_id))
+        print(f"prompt is {all_test_prompts[-1][0]}")
         outs = process(engine=engine, inputs=all_test_prompts, args=args)
 
         id_to_eval = {}
