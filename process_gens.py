@@ -91,10 +91,29 @@ def get_process_gen_params(test_name):
             custom_metrics=[]
             instance_metrics=[]
             compare_metric="example_themis"
+
+        elif(mode=="instruct_all"):
+            print("\n\n----------------\n NOTE: ONLY PRINTING 4 tasks ----------------\n")
+            # task_names=["open_assistant:language=en,num_respondents=1,","self_instruct:num_respondents=1,"]
+            task_names=[
+                        "self_instruct_num_respondents_1_",
+                        # "anthropic_hh_rlhf_subset_hh_num_respondents_1_",
+                        # "vicuna_num_respondents_1_",
+                        #  "koala_num_respondents_1_", 
+                        # "anthropic_hh_rlhf_subset_red_team_num_respondents_1_",
+                        # "grammar_path_src_helm_benchmark_scenarios_best_chatgpt_prompts.yaml_tags_num_respondents_1_"
+                        ]
+            
+            custom_metrics=[]
+            instance_metrics=[]
+            # "Helpfulness", "Completeness", "Understandability","Conciseness", 'Harmlessness', "Interestingness"
+            # compare_metric="example_themis"
+            compare_metric="Helpfulness"
         else:
             raise Exception(f"Did not recognize mode {mode}")
         assert isinstance(task_names, list)
         assert isinstance(task_names[0],str)
+        print(f"mode is {mode }task_names is {task_names}")
         return task_names, custom_metrics, instance_metrics, compare_metric
 
     root_folder=f"snellius_copies/helm_output"
@@ -240,6 +259,12 @@ def get_process_gen_params(test_name):
         num_beams_list=[1]
         models=["Qwen_Qwen3_8B"]
         
+    elif(test_name=="instruct_all"):
+        mode = "instruct_all"
+        suite_name="sample_100_eval_100_first_inst_0"
+        num_beams_list=[1]
+        models=["Qwen_Qwen3_8B"]
+
 
     elif(test_name=="qwen_25_instruct"):
         mode = "instruct"

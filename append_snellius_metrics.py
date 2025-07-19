@@ -82,7 +82,8 @@ if __name__=="__main__":
     elif(metric_name=="example_themis_general"):
         themis_eval(generation_summary=generation_summary)
     elif(metric_name=="example_themis"):
-        themis_eval(generation_summary, criteria_list=["Helpfulness", "Completeness", "Understandability","Conciseness", 'Harmlessness', "Interestingness"])
+        # themis_eval(generation_summary, criteria_list=["Helpfulness", "Completeness", "Understandability","Conciseness", 'Harmlessness', "Interestingness"])
+        themis_eval(generation_summary, criteria_list=["Helpfulness"])
                     # ["Interestingness", "Coherence", "Fluency" "Relevance" "Factual Accuracy"]
 
     else:
