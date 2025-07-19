@@ -42,12 +42,10 @@ def get_criteria_prompt(criteria):
     }
     if criteria in criteria_dict.keys(): 
         return f"{criteria} : {criteria_dict[criteria]}"
-    elif criteria in ["Overall Quality"]:
-        return criteria
-    raise Exception("Criteria name not recognized!")
+    raise Exception(f"Criteria name {criteria} not recognized!")
 
 
-# "Helpfulness", "Completeness", "Understandability","Conciseness", 'Harmlessness'
+
 
 
 class Namespace(argparse.Namespace):
