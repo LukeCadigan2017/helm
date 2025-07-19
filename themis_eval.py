@@ -242,7 +242,7 @@ def themis_eval(generation_summary, criteria_list=["Overall Quality"]):
                 parsed_dict=parse(out)
                 generated_output.evaluation=out
                 generated_output.stats_dict = {} if generated_output.stats_dict is None else generated_output.stats_dict 
-                generated_output.stats_dictf[f"example_themis_{criteria}"]= parsed_dict["Rating"]
+                generated_output.stats_dict[f"example_themis_{criteria}"]= parsed_dict["Rating"]
 
 if __name__ == "__main__":
     @dataclass(frozen=False)
