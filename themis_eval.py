@@ -251,11 +251,11 @@ def themis_eval(generation_summary, criteria_list=["Overall Quality"]):
                 generated_output.stats_dict = {} if generated_output.stats_dict is None else generated_output.stats_dict 
                 generated_output.stats_dict[f"{criteria}"]= parsed_dict["Rating"]
 
-                print("\n\n\n\n")
-                print(f"Evaluation is {out}")
-                print(f"Rating is {parsed_dict['Rating']}")
-                print(f'Saved rating is is {generated_output.stats_dict[f"{criteria}"]}')
-                print(f"criteria is {criteria}")
+                # print("\n\n\n\n")
+                # print(f"Evaluation is {out}")
+                # print(f"Rating is {parsed_dict['Rating']}")
+                # print(f'Saved rating is is {generated_output.stats_dict[f"{criteria}"]}')
+                # print(f"criteria is {criteria}")
 
 if __name__ == "__main__":
     @dataclass(frozen=False)
