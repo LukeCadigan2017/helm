@@ -76,8 +76,8 @@ class Namespace(argparse.Namespace):
 
 #     return {"Analysis": out, "Rating": 0}
 
-def parse_text(text):
-    matches = re.findall(r'Rating:\s*(\d+)', text)
+def parse(out: str):
+    matches = re.findall(r'Rating:\s*(\d+)', out)
     if matches:
         last_rating = int(matches[-1])
         if 1 <= last_rating <= 10:
