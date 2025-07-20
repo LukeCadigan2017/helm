@@ -9,7 +9,7 @@ from helm.common.request import (GeneratedOutput)
 # from helm.common.gpu_utils import get_torch_device_name
 
 
-
+import re
 import os
 import sys
 import json
