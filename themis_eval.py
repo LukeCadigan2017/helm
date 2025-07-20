@@ -64,17 +64,25 @@ class Namespace(argparse.Namespace):
     correlation: bool
 
 
-def parse(out: str):
-    last_line = out.split('\n')[-1]
-    if last_line.startswith("Rating: "):
-        try: 
-            rating = float(last_line[8:])
-            if math.isfinite(rating):
-                return {"Analysis": '\n'.join(out.split('\n')[:-1]), "Rating": rating}
-        except:
-            pass
+# def parse(out: str):
+#     last_line = out.split('\n')[-1]
+#     if last_line.startswith("Rating: "):
+#         try: 
+#             rating = float(last_line[8:])
+#             if math.isfinite(rating):
+#                 return {"Analysis": '\n'.join(out.split('\n')[:-1]), "Rating": rating}
+#         except:
+#             pass
 
-    return {"Analysis": out, "Rating": 0}
+#     return {"Analysis": out, "Rating": 0}
+
+def parse_text(text):
+    matches = re.findall(r'Rating:\s*(\d+)', text)
+    if matches:
+        last_rating = int(matches[-1])
+        if 1 <= last_rating <= 10:
+            return {"Rating": last_rating}
+    return {"Rating": 0}
 
 
 def generate(engine, sampling_params, test_prompts, use_tqdm: bool = True):
@@ -156,7 +164,7 @@ def themis_eval(generation_summary, criteria_list=["Overall Quality"]):
     PROMPT = "###Instruction###\n\
     Please act as an impartial and helpful evaluator for natural language generation (NLG), and the audience is an expert in the field.\n\
     Your task is to evaluate the quality of {task} strictly based on the given evaluation criterion.\n\
-    Begin the evaluation by providing your analysis concisely and accurately, and then on the next line, start with \"Rating:\" followed by your rating on a Likert scale from 1 to 5 (higher means better).\n\
+    Begin the evaluation by providing your analysis concisely and accurately, and then on the next line, start with \"Rating:\" followed by your rating on a Likert scale from 1 to 10 (higher means better).\n\
     You MUST keep to the strict boundaries of the evaluation criterion and focus solely on the issues and errors involved; otherwise, you will be penalized.\n\
     Make sure you read and understand these instructions, as well as the following evaluation criterion and example content, carefully.\n\
     \n\
