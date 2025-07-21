@@ -190,6 +190,11 @@ def themis_eval(generation_summary, criteria_list=["Overall Quality"]):
         handlers=[logging.StreamHandler(sys.stdout)],
     )
 
+
+    #changes: 
+    # max_model_len is now 2048*2 instead of max_num_batched_tokens (which was 2048)
+    # max_num_seqs 2048 --) 1536
+    # max_new_tokens: still 2048
     device_count=torch.cuda.device_count()
     args = Namespace(
         test_dir="",
@@ -208,7 +213,7 @@ def themis_eval(generation_summary, criteria_list=["Overall Quality"]):
                               tensor_parallel_size=args.tensor_parallel_size,
                               max_num_seqs=args.max_num_seqs,
                               max_num_batched_tokens=max_num_batched_tokens,
-                              max_model_len=max_num_batched_tokens,
+                              max_model_len=2048*2,
                               gpu_memory_utilization=0.98,
                               swap_space=16)
 
