@@ -89,7 +89,7 @@ export EXACT_MODE=false
 export INSTRUCT=true
 export RUN_MODEL=true
 export DISABLE_CACHE=true
-export TEMPLATE=true
+export TEMPLATE=false
 # export SNELLIUS_METRICS="example_comet"
 
 ######## USE THESE ########

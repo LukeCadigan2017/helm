@@ -13,6 +13,51 @@ model_deployments:
   ######################### Luke Real Models #########################
   ####################################################################
 
+
+
+
+  ######################### Mistal ######################### 
+
+  - name: mistralai/Mistral-7B-v0.3
+    model_name: mistralai/Mistral-7B-v0.3
+    tokenizer_name: mistralai/Mistral-7B-v0.3
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: mistralai/Mistral-7B-v0.3
+
+  - name: mistralai/Mistral-7B-Instruct-v0.3
+    model_name: mistralai/Mistral-7B-Instruct-v0.3
+    tokenizer_name: mistralai/Mistral-7B-Instruct-v0.3
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: mistralai/Mistral-7B-Instruct-v0.3
+
+  - name: mistralai/Ministral-8B-Instruct-2410
+    model_name: mistralai/Ministral-8B-Instruct-2410
+    tokenizer_name: mistralai/Ministral-8B-Instruct-2410
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: mistralai/Ministral-8B-Instruct-2410
+
+  - name: mistralai/Mathstral-7B-v0.1
+    model_name: mistralai/Mathstral-7B-v0.1
+    tokenizer_name: mistralai/Mathstral-7B-v0.1
+    max_sequence_length: 32768
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args: 
+        pretrained_model_name_or_path: mistralai/Mathstral-7B-v0.1
+
+
+  ######################### Olmo ######################### 
+
+
   - name: Qwen/Qwen2.5-7B-Instruct
     model_name: Qwen/Qwen2.5-7B-Instruct
     tokenizer_name: Qwen/Qwen2.5-7B-Instruct

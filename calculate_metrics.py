@@ -9,7 +9,7 @@ from helm.common.request import (GeneratedOutput, Token)
 
 import PostMetric
 import pandas as pd
-
+from pygam import LinearGAM, s, f
 from helm.benchmark.metrics.statistic import Stat
 from typing import Dict, Optional
 

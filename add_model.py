@@ -13,20 +13,21 @@ def get_deploy_str(model_name):
   
 def get_tokenizer(model_name):
 
-  try:
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    eos_token = tokenizer.eos_token
-    bos_token = tokenizer.bos_token
+  # try:
+  tokenizer = AutoTokenizer.from_pretrained(model_name)
+  eos_token = tokenizer.eos_token
+  bos_token = tokenizer.bos_token
 
-    return f"""  - name: {model_name} 
-      tokenizer_spec:
-        class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
-        args:
-          pretrained_model_name_or_path: {model_name}
-      end_of_text_token: "{eos_token}"
-      prefix_token: "{bos_token}" """
-  except:
-    return"failed to load tokenizer"
+  return f"""  - name: {model_name} 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: {model_name}
+    end_of_text_token: "{eos_token}"
+    prefix_token: "{bos_token}" """
+  # except:
+    
+    # return"failed to load tokenizer"
 
 def get_metadata(model_name,model_base, model_ext):
   return f"""  - name: {model_name}
@@ -64,8 +65,8 @@ model_tuples=[]
 # for model_name in "allenai/OLMoE-1B-7B-0125","allenai/OLMoE-1B-7B-0125-SFT","allenai/OLMoE-1B-7B-0125-DPO","allenai/OLMoE-1B-7B-0125-Instruct","allenai/OLMoE-1B-7B-0125-RM":
 # for model_name in ["allenai/OLMo-2-1124-7B", "allenai/OLMo-2-1124-13B", "allenai/OLMo-2-1124-7B-SFT ", "allenai/OLMo-2-1124-13B-SFT", "allenai/OLMo-2-1124-7B-DPO", "allenai/OLMo-2-1124-13B-DPO"]:
 # for model_name in ["Qwen/Qwen3-14B"]:
-
-for model_name in ["Qwen/Qwen3-0.6B", "Qwen/Qwen3-1.7B", "Qwen/Qwen3-4B", "Qwen/Qwen3-32B"]:
+for model_name in ["mistralai/Mistral-7B-v0.3", "mistralai/Mistral-7B-Instruct-v0.3", "mistralai/Ministral-8B-Instruct-2410", "mistralai/Mathstral-7B-v0.1" ]:
+# for model_name in ["Qwen/Qwen3-0.6B", "Qwen/Qwen3-1.7B", "Qwen/Qwen3-4B", "Qwen/Qwen3-32B"]:
 # for model_name in ["Qwen/Qwen2.5-7B-Instruct", "Qwen/Qwen2.5-14B-Instruct"]:
 # for model_name in ["allenai/OLMo-2-1124-13B-Instruct-GGUF"]:
   split_name = model_name.strip().split("/")  
@@ -85,15 +86,15 @@ for model_tuple in model_tuples:
   
   model_names.append(f"{model_base}/{model_ext}")
 
-
+print("--------")
+print("\n\n".join(deploy_strs))
 
 print("--------")
 print("code ./src/helm/config/model_deployments.yaml")
 print("--------")
 print("\n")
 
-
-print("\n\n".join(deploy_strs))
+print("\n\n".join(token_strs))
 
 print("code ./src/helm/config/tokenizer_configs.yaml")
 print("--------")
@@ -101,7 +102,7 @@ print("\n")
 
 print("--------")
 
-print("\n\n".join(token_strs))
+print("\n\n".join(metadata_strs))
 
 print("--------")
 print("code ./src/helm/config/model_metadata.yaml")
@@ -109,7 +110,6 @@ print("--------")
 print("\n")
 print("--------")
 
-print("\n\n".join(metadata_strs))
 
 print("\n".join(model_names))
 

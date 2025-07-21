@@ -14,6 +14,45 @@ tokenizer_configs:
   ######################### Luke Real Models #########################
   ####################################################################
 
+
+
+  ######################### Mistal ######################### 
+
+  - name: mistralai/Mistral-7B-v0.3 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: mistralai/Mistral-7B-v0.3
+    end_of_text_token: "</s>"
+    prefix_token: "<s>" 
+
+  - name: mistralai/Mistral-7B-Instruct-v0.3 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: mistralai/Mistral-7B-Instruct-v0.3
+    end_of_text_token: "</s>"
+    prefix_token: "<s>" 
+
+  - name: mistralai/Ministral-8B-Instruct-2410 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: mistralai/Ministral-8B-Instruct-2410
+    end_of_text_token: "</s>"
+    prefix_token: "<s>" 
+
+  - name: mistralai/Mathstral-7B-v0.1 
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: mistralai/Mathstral-7B-v0.1
+    end_of_text_token: "</s>"
+    prefix_token: "<s>" 
+
+
+
+  ######################### Qwen ######################### 
   - name: Qwen/Qwen2.5-7B-Instruct 
     tokenizer_spec:
       class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"

@@ -3,7 +3,7 @@ import statistics
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-
+from calculate_metrics import Calculate_Metrics
 
 import pandas as pd
 from helm.benchmark.runner import InstanceGenerations,GenerationSummary
@@ -81,6 +81,10 @@ def get_model_details(model_name):
 
         "meta_llama_Llama_3.1_8B_Instruct_template":{"size": 8, "suite": "llama","model_type":"instruct",  "name":"Llama 8B Instruct Template"},
         "allenai_OLMo_2_1124_13B_Instruct_template":{"size": 13, "suite":  "olmo","model_type":"instruct", "name":"Olmo 13B Instruct Template" },
+
+        'fairseq_sparsemax':{"name":"Sparsemax"},
+                'fairseq_softmax':{"name":"Softmax"}
+
         
     }
     
@@ -624,3 +628,13 @@ def append_to_dict(cur_dict, key_list, value):
         append_to_dict(cur_dict[cur_key], key_list[1:], value)
     else:
         cur_dict[cur_key]=value
+
+
+def get_metrics_models_dict(dfs_by_model, compare_metric):
+    metrics_dict={}
+    for model, model_df in dfs_by_model.items():
+            metrics=Calculate_Metrics(model_df, compare_metric).get_best_metrics()
+            for metric_name, metric_value in metrics.items():
+                if metric_name != "model_name":
+                    append_to_dict(metrics_dict, [metric_name,model ], metric_value)   
+    return metrics_dict
