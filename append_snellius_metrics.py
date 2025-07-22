@@ -79,8 +79,9 @@ if __name__=="__main__":
 
     if(metric_name=="example_comet"):
         append_comment_metric(generation_summary=generation_summary)
-    elif(metric_name=="example_themis_general"):
-        themis_eval(generation_summary=generation_summary)
+    elif(metric_name=="example_themis_test"):
+        # themis_eval(generation_summary=generation_summary, )
+        themis_eval(generation_summary, criteria_list=["Helpfulness"])
     elif(metric_name=="example_themis"):
         themis_eval(generation_summary, criteria_list=["Helpfulness", "Completeness", "Understandability","Conciseness", 'Harmlessness', "Interestingness"])
         # themis_eval(generation_summary, criteria_list=["Helpfulness"])
