@@ -57,8 +57,8 @@ export NUM_THREADS=1
 # export TASK=instruct
 # export EOS_TYPE=""
 
-export TASK=wmt
-# export TASK=instruct
+# export TASK=wmt
+export TASK=instruct
 # export TASK=gsm
 # export EOS_TYPE="task"
 
@@ -86,10 +86,10 @@ export EXACT_MODE=false
 
 
 
-export INSTRUCT=true
+# export INSTRUCT=true
 export RUN_MODEL=true
 export DISABLE_CACHE=true
-export TEMPLATE=false
+export TEMPLATE=true
 # export SNELLIUS_METRICS="example_comet"
 
 ######## USE THESE ########

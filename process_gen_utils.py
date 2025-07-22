@@ -31,6 +31,9 @@ import warnings
 
 from typing import List
 
+from pygam import LinearGAM, s
+import matplotlib.pyplot as plt
+
 def get_text(example):
     return "".join([token.text for token in example.tokens])
 def get_ids(example):
@@ -417,34 +420,38 @@ def plot_smooth_spline(df, xlabel, ylabel, groupby='example_idx', title=None, tr
     
 
 
-from pygam import LinearGAM, s
 
 
 
-def plot_gam(df, compare_metric):
+
+def plot_gam(df, compare_metric, ax):
+
+    if(ax is None):
+        _, ax = plt.subplots(figsize=(10, 10))
+    
     grouped = df.groupby("example_idx")[["rank", compare_metric]].mean()
 
 
     # Assuming df is your dataframe
-    X = grouped["rank"].values.reshape(-1,1)
-    y = grouped[compare_metric].values.reshape( -1)
+    X = grouped["rank"].values
+    y = grouped[compare_metric].values
 
 
-    gam = LinearGAM(s(0)).gridsearch(X, y)
+    gam = LinearGAM(s(0))
 
-    gam.summary()
+    # Fit the model to the data
+    gam.fit(X, y)
 
     X_pred = np.linspace(0, 100,200).reshape(-1, 1)
     y_pred = gam.predict(X_pred)
 
-    plt.figure(figsize=(10, 6))
-    plt.scatter(X, y, label='Data', alpha=0.5)
-    plt.plot(X_pred, y_pred, label='GAM Prediction', color='red')
-    plt.xlabel('X')
-    plt.ylabel('y')
-    plt.legend()
-    plt.show()
+    # Plot the results
 
+
+
+    ax.scatter(X, y, label='Data', alpha=0.5)
+    ax.plot(X_pred, y_pred, label='GAM Prediction', color='red')
+    return ax
 
 def plot_spline(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20, error_bar=False):
     if(ax is None):
@@ -537,7 +544,7 @@ def get_winrate_by_rank(df,compare_metric,ax=None):
 
 def plot_constrained_spline(df, xlabel, ylabel, groupby='example_idx', title=None, trend_line="None",ax=None, nbins=20, error_bar=False):
     if(ax is None):
-        _, ax = plt.subplots(figsize=(50, 50))
+        _, ax = plt.subplots(figsize=(10, 10))
     warnings.simplefilter(action='ignore', category=FutureWarning)
     if(groupby=="bins"):
         
