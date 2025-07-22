@@ -405,7 +405,7 @@ class HuggingFaceServer:
                 )
 
             elif(template):
-                print("Applying chat template!!!!")
+                # print("Applying chat template!!!!", flush=True)
                 messages = [
                     {"role": "user", "content": prompt}
                 ]
