@@ -30,7 +30,7 @@ def get_self_instruct_spec(num_respondents: int, num_beams: int=1,num_return_seq
         args={},
     )
 
-    adapter_spec = get_instruct_adapter_spec(beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size,exact_mode=(exact_mode_str=="true")), template=(template=="true"), num_outputs=num_return_sequences)
+    adapter_spec = get_instruct_adapter_spec(beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size,exact_mode=(exact_mode_str=="true"), template=(template=="true")), num_outputs=num_return_sequences)
 
     return RunSpec(
         name="self_instruct",
@@ -48,7 +48,7 @@ def get_vicuna_spec(num_respondents: int, category: str = "all", num_beams: int=
         args={"category": category},
     )
 
-    adapter_spec = get_instruct_adapter_spec(beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size,exact_mode=(exact_mode_str=="true")), template=(template=="true"), num_outputs=num_return_sequences)
+    adapter_spec = get_instruct_adapter_spec(beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size,exact_mode=(exact_mode_str=="true"), template=(template=="true")), num_outputs=num_return_sequences)
 
     return RunSpec(
         name=f"vicuna:category={category}",  # TODO: add args
@@ -66,7 +66,7 @@ def get_grammar_spec(num_respondents: int, path: str, tags: str, num_beams: int=
         args={"path": path, "tags": tags},
     )
 
-    adapter_spec = get_instruct_adapter_spec(beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size,exact_mode=(exact_mode_str=="true")), template=(template=="true"), num_outputs=num_return_sequences)
+    adapter_spec = get_instruct_adapter_spec(beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size,exact_mode=(exact_mode_str=="true"), template=(template=="true")), num_outputs=num_return_sequences)
 
     return RunSpec(
         name=f"grammar:path={path},tags={tags}",
@@ -84,7 +84,7 @@ def get_open_assistant_spec(num_respondents: int, language: str, num_beams: int=
         args={"language": language},
     )
 
-    adapter_spec = get_instruct_adapter_spec(beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size,exact_mode=(exact_mode_str=="true")), template=(template=="true"), num_outputs=num_return_sequences)
+    adapter_spec = get_instruct_adapter_spec(beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size,exact_mode=(exact_mode_str=="true"), template=(template=="true")), num_outputs=num_return_sequences)
 
     return RunSpec(
         name=f"open_assistant:language={language}",
@@ -102,7 +102,7 @@ def get_koala_spec(num_respondents: int, num_beams: int=1,num_return_sequences=1
         args={},
     )
 
-    adapter_spec = get_instruct_adapter_spec(beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size,exact_mode=(exact_mode_str=="true")), template=(template=="true"), num_outputs=num_return_sequences)
+    adapter_spec = get_instruct_adapter_spec(beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size,exact_mode=(exact_mode_str=="true"), template=(template=="true")), num_outputs=num_return_sequences)
 
     return RunSpec(
         name="koala",
@@ -120,7 +120,7 @@ def get_anthropic_hh_rlhf_spec(num_respondents: int, subset: str, num_beams: int
         args={"subset": subset},
     )
 
-    adapter_spec = get_instruct_adapter_spec(beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size,exact_mode=(exact_mode_str=="true")), template=(template=="true"), num_outputs=num_return_sequences)
+    adapter_spec = get_instruct_adapter_spec(beam_params=BeamParams(num_beams=num_beams, num_return_sequences=num_return_sequences, top_p=top_p, top_k=top_k, temperature=temperature,batch_size=batch_size,exact_mode=(exact_mode_str=="true"), template=(template=="true")), num_outputs=num_return_sequences)
 
     return RunSpec(
         name=f"anthropic_hh_rlhf:subset={subset}",
