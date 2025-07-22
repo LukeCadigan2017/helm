@@ -65,7 +65,8 @@ model_tuples=[]
 # for model_name in "allenai/OLMoE-1B-7B-0125","allenai/OLMoE-1B-7B-0125-SFT","allenai/OLMoE-1B-7B-0125-DPO","allenai/OLMoE-1B-7B-0125-Instruct","allenai/OLMoE-1B-7B-0125-RM":
 # for model_name in ["allenai/OLMo-2-1124-7B", "allenai/OLMo-2-1124-13B", "allenai/OLMo-2-1124-7B-SFT ", "allenai/OLMo-2-1124-13B-SFT", "allenai/OLMo-2-1124-7B-DPO", "allenai/OLMo-2-1124-13B-DPO"]:
 # for model_name in ["Qwen/Qwen3-14B"]:
-for model_name in ["mistralai/Mistral-7B-v0.3", "mistralai/Mistral-7B-Instruct-v0.3", "mistralai/Ministral-8B-Instruct-2410", "mistralai/Mathstral-7B-v0.1" ]:
+# for model_name in ["mistralai/Mistral-7B-v0.3", "mistralai/Mistral-7B-Instruct-v0.3", "mistralai/Ministral-8B-Instruct-2410", "mistralai/Mathstral-7B-v0.1" ]:
+for model_name in ["google/gemma-3-4b-pt", "google/gemma-3-4b-it", "google/gemma-3-1b-pt", "google/gemma-3-1b-it", "google/gemma-3-12b-pt", "google/gemma-3-12b-it"]:
 # for model_name in ["Qwen/Qwen3-0.6B", "Qwen/Qwen3-1.7B", "Qwen/Qwen3-4B", "Qwen/Qwen3-32B"]:
 # for model_name in ["Qwen/Qwen2.5-7B-Instruct", "Qwen/Qwen2.5-14B-Instruct"]:
 # for model_name in ["allenai/OLMo-2-1124-13B-Instruct-GGUF"]:
