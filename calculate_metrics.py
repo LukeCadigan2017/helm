@@ -98,7 +98,7 @@ class Calculate_Metrics():
 
         res=linregress(self.x, self.y)
         lin_effect= 100*res.slope
-        self.metrics["PQ Slope"]=lin_effect
+        self.metrics["PQ Slope"]=float(lin_effect)
 
 
     def gam_metrics(self):
@@ -136,17 +136,18 @@ class Calculate_Metrics():
 
         degen_intral=ave_diff*(100-pred_peak_x)/100
 
-        self.metrics["PQ Dropoff"]=degen_intral
+        self.metrics["PQ Integral"]=float(degen_intral)
 
 
     def get_length_stats(self):
         length_y = self.grouped["completion_length"].values.reshape( -1)
         res=linregress(self.x, length_y)
         length_lin_effect= 100*res.slope
-        self.metrics["Length Bias"]=-1*length_lin_effect
+        # self.metrics["Length Bias"]=float(-1*length_lin_effect)
         self.metrics["length_100"]=length_y[0]
         self.metrics["length_0"]=length_y[-1]
         self.metrics["length_ave"]=np.mean(length_y)
+        self.metrics["Length Bias"]= (self.metrics["length_ave"]-self.metrics["length_100"])/self.metrics["length_ave"]
 
 
     def get_calculated_stats(self):
@@ -154,7 +155,7 @@ class Calculate_Metrics():
         #top and bottom of distribution
         self.metrics["0_rank_diff"]=self.metrics["0_rank"] - self.metrics["Average Score"]
         self.metrics["100_rank_diff"]=self.metrics["100_rank"] - self.metrics["Average Score"]
-        self.metrics["PQ Tradeoff Peak"] =self.metrics["pred_peak_y"] - self.metrics["100_rank"]
+        self.metrics["PQ Dropoff"] =self.metrics["pred_peak_y"] - self.metrics["100_rank"]
 
 
     # Probability-Quality metrics
@@ -169,10 +170,13 @@ class Calculate_Metrics():
 
     def get_x_y_cols(self):
         x_metrics=["Average Score", "Entropy", "Length Bias"]
-        # y_metrics= ["PQ Effect", "PQ Slope", "PQ Tradeoff Peak", "PQ Dropoff", "Peak Rank"]
-        y_metrics = ["PQ Slope", "PQ Dropoff"]
+        # y_metrics= ["PQ Effect", "PQ Slope", "PQ Dropoff", "PQ Integral", "Peak Rank"]
+        y_metrics = ["PQ Slope", "Peak Rank" , "PQ Dropoff"]
+        # PQ Integral
 
         return x_metrics, y_metrics
+    
+  
 
 
     def get_best_metrics(self):

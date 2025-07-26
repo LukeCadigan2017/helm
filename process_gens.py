@@ -90,19 +90,29 @@ def get_process_gen_params(test_name):
                         ]
             custom_metrics=[]
             instance_metrics=[]
-            compare_metric="example_themis"
+            compare_metric="Helpfulness"
 
-        elif(mode=="instruct_all"):
+        elif(mode=="self_instruct"):
             print("\n\n----------------\n NOTE: ONLY PRINTING 4 tasks ----------------\n")
             # task_names=["open_assistant:language=en,num_respondents=1,","self_instruct:num_respondents=1,"]
             task_names=[
-                        "self_instruct_num_respondents_1_",
-                        # "anthropic_hh_rlhf_subset_hh_num_respondents_1_",
-                        # "vicuna_num_respondents_1_",
-                        #  "koala_num_respondents_1_", 
-                        # "anthropic_hh_rlhf_subset_red_team_num_respondents_1_",
-                        # "grammar_path_src_helm_benchmark_scenarios_best_chatgpt_prompts.yaml_tags_num_respondents_1_"
+                        "self_instruct_num_respondents_1_"
                         ]
+            custom_metrics=[]
+            instance_metrics=[]
+            compare_metric="Helpfulness"
+
+        # elif(mode=="instruct_all"):
+        #     print("\n\n----------------\n NOTE: ONLY PRINTING 4 tasks ----------------\n")
+        #     # task_names=["open_assistant:language=en,num_respondents=1,","self_instruct:num_respondents=1,"]
+        #     task_names=[
+        #                 "self_instruct_num_respondents_1_",
+        #                 "anthropic_hh_rlhf_subset_hh_num_respondents_1_",
+        #                 "vicuna_num_respondents_1_",
+        #                 #  "koala_num_respondents_1_", 
+        #                 # "anthropic_hh_rlhf_subset_red_team_num_respondents_1_",
+        #                 # "grammar_path_src_helm_benchmark_scenarios_best_chatgpt_prompts.yaml_tags_num_respondents_1_"
+        #                 ]
             
             custom_metrics=[]
             instance_metrics=[]
@@ -195,6 +205,24 @@ def get_process_gen_params(test_name):
         ]
 
 
+    elif(test_name=="mistral_wmt"):
+        mode = "wmt"
+        suite_name="sample_100_eval_500_first_inst_0"
+        num_beams_list=[1]
+        models=[
+            "mistralai/Mistral-7B-Instruct-v0.3",
+            # "mistralai/Mistral-7B-v0.3"
+        ]
+    elif(test_name=="gemma_wmt"):
+        mode = "wmt"
+        suite_name="sample_100_eval_500_first_inst_0"
+        num_beams_list=[1]
+        models=[
+        "google/gemma-3-4b-pt", "google/gemma-3-4b-it", 
+        "google/gemma-3-1b-pt", "google/gemma-3-1b-it", 
+        ]
+
+
     elif(test_name=="only_qwen_8b"):
         mode = "wmt"
         suite_name="sample_100_eval_500_first_inst_0"
@@ -203,6 +231,7 @@ def get_process_gen_params(test_name):
             "Qwen/Qwen3-8B"
         ]
 
+############### Template ###############
 
 
     elif(test_name=="llama_template"):
@@ -217,6 +246,9 @@ def get_process_gen_params(test_name):
         suite_name="sample_100_eval_500_first_inst_0_template_true"
         models=["allenai_OLMo_2_1124_13B_Instruct"]
 
+
+
+############### GSM ###############
 
     elif(test_name=="gsm_samples1_1"):
         mode = "gsm"
@@ -240,6 +272,15 @@ def get_process_gen_params(test_name):
         num_beams_list=[1]
         models=["Qwen_Qwen3_8B"]
 
+    elif(test_name=="gsm_gemma_test"):
+        mode = "gsm"
+        suite_name="sample_2_eval_500_first_inst_0"
+        num_beams_list=[1]
+        models=["google/gemma-3-4b-it"]
+
+
+
+############### Sparsemax ###############
     elif(test_name=="fairseq_softmax"):
         mode = "wmt"
         suite_name="fairseq"
@@ -252,18 +293,28 @@ def get_process_gen_params(test_name):
         num_beams_list=[1]
         models=["fairseq_sparsemax"]
 
+
+
+    ############### Instruct ###############
     
     elif(test_name=="instruct"):
         mode = "instruct"
         suite_name="sample_100_eval_100_first_inst_0"
         num_beams_list=[1]
         models=["Qwen_Qwen3_8B"]
-        
-    elif(test_name=="instruct_all"):
-        mode = "instruct_all"
+        override_compare_metric="example_themis"
+
+    elif(test_name=="gemma_instruct"):
+        mode = "self_instruct"
         suite_name="sample_100_eval_100_first_inst_0"
         num_beams_list=[1]
-        models=["Qwen_Qwen3_8B"]
+        models=["google/gemma-3-4b-it"]
+        
+    # elif(test_name=="instruct_all"):
+    #     mode = "instruct_all"
+    #     suite_name="sample_100_eval_100_first_inst_0"
+    #     num_beams_list=[1]
+    #     models=["Qwen_Qwen3_8B"]
 
 
     elif(test_name=="qwen_25_instruct"):
@@ -280,11 +331,58 @@ def get_process_gen_params(test_name):
         num_beams_list=[1]
         models=["allenai_OLMo_2_1124_13B_Instruct"]
 
-    elif(test_name=="current_test"):
+
+# beam_instruct
+# beam_gsm_olmo
+# beam_gsm_llama
+# beam_wmt_olmo
+# beam_wmt_llama
+
+
+    ############### BEAM TEST ###############
+
+    elif (test_name=="beam_instruct"):
+        mode="instruct"
+        suite_name="full_instruct_1_samples_100_evals"
+        num_beams_list=[2,4,8]
+        models=["allenai_OLMo_2_1124_13B_Instruct"]
+        override_compare_metric="example_themis"
+
+
+    elif(test_name=="beam_gsm_olmo"):
+        mode = "gsm"
+        suite_name="sample_1_eval_1000"
+        num_beams_list=[2,4,8]
+        models=["allenai_OLMo_2_1124_13B_Instruct"]
+    
+    elif(test_name=="beam_gsm_llama"):
+        mode = "gsm"
+        suite_name="sample_1_eval_1000"
+        num_beams_list=[2,4,8]
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
+
+
+    #Note: no comet
+    elif(test_name=="beam_wmt_olmo"):
         mode = "wmt"
-        suite_name="sample_100_eval_500_first_inst_0"
-        num_beams_list=[1]
-        models=["meta-llama/Llama-3.1-8B"]
+        suite_name="sample_1_eval_1000"
+        num_beams_list=[2,4,8, 16]
+        models=[ "allenai_OLMo_2_1124_13B_Instruct"]
+        override_custom_metrics=[PostMetric.BLEU4_METRIC()]
+        override_compare_metric="BLEU_4"
+
+
+    elif(test_name=="beam_wmt_llama"):
+        mode = "wmt"
+        suite_name="sample_1_eval_1000"
+        num_beams_list=[2,4,8,16,32,64, 128]
+        models=["meta_llama_Llama_3.1_8B_Instruct"]
+        override_custom_metrics=[PostMetric.BLEU4_METRIC()]
+        override_compare_metric="BLEU_4"
+
+
+
+
 
 
 
@@ -296,6 +394,10 @@ def get_process_gen_params(test_name):
     task_names, custom_metrics, instance_metrics, compare_metric= get_metrics(mode)
     if override_task_names:
         task_names= override_task_names
+    if override_compare_metric:
+        compare_metric=override_compare_metric
+    if override_custom_metrics:
+        custom_metrics=override_custom_metrics
     return root_folder, num_beams_list, models, custom_metrics, task_names, suite_name, instance_metrics, compare_metric
     
 

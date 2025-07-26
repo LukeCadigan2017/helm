@@ -38,7 +38,7 @@ def get_text(example):
     return "".join([token.text for token in example.tokens])
 def get_ids(example):
     return [token.token_id for token in example.tokens]
-
+READABLE_LABELS={"beam_num": "Beam Num", "example_themis":"Themis Score", "BLEU_4": "BLEU_4", "final_num_exact_match":"Final Num Match", "example_comet":"COMET"}
 
 
 def get_model_details(model_name):
@@ -46,44 +46,44 @@ def get_model_details(model_name):
 
     info_dict={
         #olmo
-        "allenai_OLMo_2_0425_1B_Instruct":{"size": 1, "suite":  "olmo","model_type":"instruct", "name":"Olmo 1B Instruct"},
-        "allenai_OLMo_2_0425_1B":{"size": 1, "suite":  "olmo","model_type":"base", "name":"Olmo 1B Base"},
+        "allenai_OLMo_2_0425_1B_Instruct":{"size": 1, "suite":  "OLMo","model_type":"instruct", "name":"Olmo 1B Instruct"},
+        "allenai_OLMo_2_0425_1B":{"size": 1, "suite":  "OLMo","model_type":"base", "name":"Olmo 1B Base"},
 
-        "allenai_OLMo_2_1124_7B_Instruct":{"size": 7, "suite":  "olmo","model_type":"instruct", "name":"Olmo 7B Instruct" },
-        "allenai_OLMo_2_1124_7B":{"size": 7, "suite":  "olmo","model_type":"base", "name":"Olmo 7B Base" },
+        "allenai_OLMo_2_1124_7B_Instruct":{"size": 7, "suite":  "OLMo","model_type":"instruct", "name":"Olmo 7B Instruct" },
+        "allenai_OLMo_2_1124_7B":{"size": 7, "suite":  "OLMo","model_type":"base", "name":"Olmo 7B Base" },
 
-        "allenai_OLMo_2_1124_13B_Instruct":{"size": 13, "suite":  "olmo","model_type":"instruct", "name":"Olmo 13B Instruct" },
-        "allenai_OLMo_2_1124_13B":{"size": 13, "suite":  "olmo","model_type":"base", "name":"Olmo 13B Base" },
+        "allenai_OLMo_2_1124_13B_Instruct":{"size": 13, "suite":  "OLMo","model_type":"instruct", "name":"Olmo 13B Instruct" },
+        "allenai_OLMo_2_1124_13B":{"size": 13, "suite":  "OLMo","model_type":"base", "name":"Olmo 13B Base" },
 
         #llama instruct
-        "meta_llama_Llama_3.2_1B_Instruct":{"size": 1, "suite": "llama","model_type":"instruct",  "name":"Llama 1B Instruct"},
-        "meta_llama_Llama_3.2_1B":{"size": 1, "suite": "llama","model_type":"base",  "name":"Llama 1B Base"},
+        "meta_llama_Llama_3.2_1B_Instruct":{"size": 1, "suite": "Llama","model_type":"instruct",  "name":"Llama 1B Instruct"},
+        "meta_llama_Llama_3.2_1B":{"size": 1, "suite": "Llama","model_type":"base",  "name":"Llama 1B Base"},
 
-        "meta_llama_Llama_3.1_8B_Instruct":{"size": 8, "suite": "llama","model_type":"instruct",  "name":"Llama 8B Instruct"},
-        "meta_llama_Llama_3.1_8B":{"size": 8, "suite": "llama","model_type":"base",  "name":"Llama 8B Base"},
+        "meta_llama_Llama_3.1_8B_Instruct":{"size": 8, "suite": "Llama","model_type":"instruct",  "name":"Llama 8B Instruct"},
+        "meta_llama_Llama_3.1_8B":{"size": 8, "suite": "Llama","model_type":"base",  "name":"Llama 8B Base"},
 
         
-        "meta-llama/Meta-Llama-3-70B-Instruct":{"size": 70, "suite": "llama","model_type":"instruct",  "name":"Llama 70B Instruct"},
-        "allenai/OLMo-2-0325-32B-Instruct":{"size": 32, "suite": "olmo","model_type":"base",  "name":"Olmo 32 Base"},
+        "meta-llama/Meta-Llama-3-70B-Instruct":{"size": 70, "suite": "Llama","model_type":"instruct",  "name":"Llama 70B Instruct"},
+        "allenai/OLMo-2-0325-32B-Instruct":{"size": 32, "suite": "OLMo","model_type":"base",  "name":"Olmo 32 Base"},
         
         # #compare types
-        "allenai_OLMo_2_1124_7B_DPO":{"size": 7, "suite":  "olmo","model_type":"dpo", "name":"Olmo 7B DPO" },
-        "allenai_OLMo_2_1124_7B_SFT":{"size": 7, "suite":  "olmo","model_type":"sft", "name":"Olmo 7B SFT" },
+        "allenai_OLMo_2_1124_7B_DPO":{"size": 7, "suite":  "OLMo","model_type":"dpo", "name":"Olmo 7B DPO" },
+        "allenai_OLMo_2_1124_7B_SFT":{"size": 7, "suite":  "OLMo","model_type":"sft", "name":"Olmo 7B SFT" },
 
-        "allenai_OLMo_2_1124_13B_DPO":{"size": 13, "suite":  "olmo","model_type":"dpo", "name":"Olmo 13B DPO" },
-        "allenai_OLMo_2_1124_13B_SFT":{"size": 13, "suite":  "olmo","model_type":"sft", "name":"Olmo 13B SFT" },
+        "allenai_OLMo_2_1124_13B_DPO":{"size": 13, "suite":  "OLMo","model_type":"dpo", "name":"Olmo 13B DPO" },
+        "allenai_OLMo_2_1124_13B_SFT":{"size": 13, "suite":  "OLMo","model_type":"sft", "name":"Olmo 13B SFT" },
 
-        "allenai_OLMo_2_1124_13B_DPO":{"size": 13, "suite":  "olmo","model_type":"dpo", "name":"Olmo 13B DPO" },
-        "allenai_OLMo_2_1124_13B_SFT":{"size": 13, "suite":  "olmo","model_type":"sft", "name":"Olmo 13B SFT" },
+        "allenai_OLMo_2_1124_13B_DPO":{"size": 13, "suite":  "OLMo","model_type":"dpo", "name":"Olmo 13B DPO" },
+        "allenai_OLMo_2_1124_13B_SFT":{"size": 13, "suite":  "OLMo","model_type":"sft", "name":"Olmo 13B SFT" },
 
-        "Qwen_Qwen3_0.6B":{"size": 0.6, "suite":  "qwen","model_type":"base", "name":"Qwen 0.6B" },
-        "Qwen_Qwen3_1.7B":{"size": 1.7, "suite":  "qwen","model_type":"base", "name":"Qwen 1.7B" },
-        "Qwen_Qwen3_4B":{"size": 4, "suite":  "qwen","model_type":"base", "name":"Qwen 4B" },
-        "Qwen_Qwen3_8B":{"size": 8, "suite":  "qwen","model_type":"base", "name":"Qwen 8B" },
-        "Qwen_Qwen3_32B":{"size": 32, "suite":  "qwen","model_type":"base", "name":"Qwen 32B" },
+        "Qwen_Qwen3_0.6B":{"size": 0.6, "suite":  "Qwen","model_type":"base", "name":"Qwen 0.6B" },
+        "Qwen_Qwen3_1.7B":{"size": 1.7, "suite":  "Qwen","model_type":"base", "name":"Qwen 1.7B" },
+        "Qwen_Qwen3_4B":{"size": 4, "suite":  "Qwen","model_type":"base", "name":"Qwen 4B" },
+        "Qwen_Qwen3_8B":{"size": 8, "suite":  "Qwen","model_type":"base", "name":"Qwen 8B" },
+        "Qwen_Qwen3_32B":{"size": 32, "suite":  "Qwen","model_type":"base", "name":"Qwen 32B" },
 
-        "meta_llama_Llama_3.1_8B_Instruct_template":{"size": 8, "suite": "llama","model_type":"instruct",  "name":"Llama 8B Instruct Template"},
-        "allenai_OLMo_2_1124_13B_Instruct_template":{"size": 13, "suite":  "olmo","model_type":"instruct", "name":"Olmo 13B Instruct Template" },
+        "meta_llama_Llama_3.1_8B_Instruct_template":{"size": 8, "suite": "Llama","model_type":"instruct",  "name":"Llama 8B Instruct Template"},
+        "allenai_OLMo_2_1124_13B_Instruct_template":{"size": 13, "suite":  "OLMo","model_type":"instruct", "name":"Olmo 13B Instruct Template" },
 
         'fairseq_sparsemax':{"name":"Sparsemax"},
                 'fairseq_softmax':{"name":"Softmax"}
@@ -424,7 +424,7 @@ def plot_smooth_spline(df, xlabel, ylabel, groupby='example_idx', title=None, tr
 
 
 
-def plot_gam(df, compare_metric, ax):
+def plot_gam(df, compare_metric, ax,color, label):
 
     if(ax is None):
         _, ax = plt.subplots(figsize=(10, 10))
@@ -446,6 +446,10 @@ def plot_gam(df, compare_metric, ax):
     y_pred = gam.predict(X_pred)
 
     # Plot the results
+    ax.scatter(X, y, alpha=0.5, color=color, label=label)
+    ax.plot(X_pred, y_pred, color=color)
+    return ax
+
 
 
 
@@ -645,3 +649,62 @@ def get_metrics_models_dict(dfs_by_model, compare_metric):
                 if metric_name != "model_name":
                     append_to_dict(metrics_dict, [metric_name,model ], metric_value)   
     return metrics_dict
+
+
+def create_plots(kwargs_array, graph_func, figsize=None):
+    nrows=len(kwargs_array)
+    ncols=max(len(s) for s in kwargs_array)
+
+    if figsize is None:
+        figsize=(nrows*5, ncols*5)
+        print(f"figsize is {figsize}")
+    _, axes=plt.subplots(nrows=nrows, ncols= ncols, figsize=figsize)
+    
+    for row, kwargs_vect in enumerate(kwargs_array):
+        for col in range(ncols):
+            ax=axes[row][col]
+            if col < len(kwargs_vect):
+                kwargs=kwargs_vect[col]
+                kwargs["ax"]=ax
+                ax=graph_func(**kwargs)
+            else:
+                ax.axis('off')
+    plt.tight_layout()
+
+
+def create_plots(kwargs_array, graph_func, compare_metric, figsize=None):
+
+
+    #green-blue attempt
+    # color_array=['#ff0015', "#ff00ea", "#9500ff", "#1500ff"]
+
+    cmap = plt.get_cmap('seismic')
+    color_array = [cmap(i) for i in [0.15, 0.35, 0.65, 0.85]]
+    # color_array = [cmap(i) for i in np.linspace(0.25, 0.6, 4)]
+
+    # =["#1f77b4",  "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"]
+
+    ncols=len( kwargs_array)
+
+
+    if figsize is None:
+        figsize=(1*5, ncols*5)
+        print(f"figsize is {figsize}")
+    _, axes=plt.subplots(nrows=1, ncols= ncols, figsize=figsize)
+    
+    for col, kwargs_vect in enumerate(kwargs_array):
+
+        ax=axes[col] if ncols>1 else axes
+        for idx, kwargs in enumerate(kwargs_vect):
+            kwargs["ax"]=ax
+
+            if "color" not in kwargs.keys():
+                kwargs["color"]=color_array[idx]
+            ax=graph_func(**kwargs)
+        ax.legend()
+        ax.set_xlabel("Rank")
+
+    left_ax=  axes[0] if ncols>1 else axes
+    left_ax.set_ylabel(READABLE_LABELS[compare_metric])
+    plt.tight_layout()
+    plt.xlabel="Rank"
